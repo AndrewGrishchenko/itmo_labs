@@ -1,7 +1,5 @@
-#!/bin/bash
+cd /home/studs/s408498/lab0
 
-#cd /home/s408298/lab0
-cd lab0
 chmod a=wx cacnea4
 
 cd cacnea4
