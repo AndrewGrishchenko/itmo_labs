@@ -1,4 +1,4 @@
-cd /home/studs/s408498/lab0
+cd $HOME/lab0
 
 rm -f flareon0
 rm -f larvesta8/infernape

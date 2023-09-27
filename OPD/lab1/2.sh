@@ -1,5 +1,4 @@
-#cd /home/studs/s408498/lab0
-cd lab0
+cd $HOME/lab0
 
 chmod a=wx cacnea4
 

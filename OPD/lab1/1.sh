@@ -1,5 +1,4 @@
-#mkdir /home/studs/s408498/lab0 && cd /home/studs/s408498/lab0
-mkdir lab0 && cd lab0
+mkdir $HOME/lab0 && cd $HOME/lab0
 
 mkdir -p cacnea4/liepard cacnea4/swadloon cacnea4/mismagius
 

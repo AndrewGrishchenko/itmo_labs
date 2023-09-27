@@ -1,7 +1,6 @@
 shopt -s extglob
 
-#cd /home/studs/s408498/lab0
-cd lab0
+cd $HOME/lab0
 
 chmod +w larvesta8
 ln -f flareon0 larvesta8/chinglingflareon
