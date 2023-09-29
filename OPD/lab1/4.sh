@@ -10,7 +10,7 @@ cd $HOME/lab0
 
 #2 только файлы? если нет то можно ли grep studs? и можно ли сортировать по размеру файла в блоках
 echo -e '\n2.'
-ls -lRs 2> /tmp/error | grep ' l[^ ]' | sort -r | head -n4
+ls -lRS 2> /tmp/error | grep ' l[^ ]' | grep -v ^d | head -n4
 
 #3
 echo -e '\n3.'
@@ -20,7 +20,7 @@ cd ..
 
 #4 только файлы?
 echo -e '\n4.'
-ls -lRurp | grep -v /$ | head -n4
+ls -ltuRr 2> /dev/null | grep ^[-l] | head -n4
 
 #5
 echo -e '\n5.'
@@ -28,4 +28,4 @@ cat flareon0 2> /dev/null | grep -v t$
 
 #6
 echo -e '\n6.'
-ls -lR | grep 4$ | sort -k2 | head -n4
+ls -lR | grep 4$ | sort -rk2 | head -n4
