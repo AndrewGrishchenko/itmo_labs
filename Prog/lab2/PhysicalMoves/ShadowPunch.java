@@ -13,4 +13,14 @@ public class ShadowPunch extends PhysicalMove {
     public String describe() {
         return "using physical attack Shadow Punch";
     }
+
+    public double calcBaseDamage(Pokemon attacker, Pokemon defender) {
+        double damage = super.calcBaseDamage(attacker, defender);
+
+        if (damage > 0.25f) {
+            System.out.println(defender.toString() + ": мне больно (DMG: " + Double.toString(damage) + ")");
+        }
+
+        return damage;
+    }
 }
