@@ -1,0 +1,24 @@
+<data>
+    <first_name>Adam</first_name>
+    <last_name>Bertran</last_name>
+    <hair_color>Brown</hair_color>
+    <married>true</married>
+    <spouse>
+        <name>Miranda</name>
+        <occupation>mom</occupation>
+        <interests>Instagram</interests>
+    </spouse>
+    <dog_count>2</dog_count>
+    <dogs>
+        <dog1>
+            <name>Ellioth</name>
+            <breed>Shin-Tzu</breed>
+            <color>black/white</color>
+        </dog1>
+        <dog2>
+            <name>Brody</name>
+            <breed>Shin-Tzu</breed>
+            <color>black/white</color>
+        </dog2>
+    </dogs>
+</data>

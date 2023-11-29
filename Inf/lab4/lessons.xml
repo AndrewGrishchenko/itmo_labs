@@ -1,0 +1,18 @@
+<day>
+  <lesson>
+    <Type>Практика</Type>
+    <Name>Линейная алгебра</Name>
+    <Start>"11:40"</Start>
+    <End>"13:10"</End>
+    <Teacher>Рванова Алла</Teacher>
+    <Auditory>ауд. 2426, Кронверкский пр., д.49, лит.А</Auditory>
+  </lesson>
+  <lesson>
+    <Type>Лекция</Type>
+    <Name>Линейная алгебра</Name>
+    <Start>"13:30"</Start>
+    <End>"15:00"</End>
+    <Teacher>Попов Игорь Юрьевич</Teacher>
+    <Auditory>ауд. 1404, Кронверкский пр., д.49, лит.А</Auditory>
+  </lesson>
+</day>
