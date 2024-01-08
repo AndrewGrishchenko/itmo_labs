@@ -1,0 +1,63 @@
+@startuml uml
+enum Place {
+    Home
+    Valley
+    Forest
+    Hills
+    SeaCoast
+}
+
+abstract class Entity {
+    -String name
+    -Place place
+    +String getName()
+    +Place getPlace()
+}
+
+interface Noisable {
+    +void makeNoise()
+}
+
+class Young {
+    #boolean isNoising = false
+    +void makeNoise()
+    +String toString()
+    +boolean equals()
+    +int hashCode()
+}
+
+class Old {
+    +String toString()
+    +boolean equals()
+    +int hashCode()
+}
+
+class ForestRat {
+    +void makeNoise()
+    +String toString()
+    +boolean equals()
+    +int hashCode()
+}
+
+interface Spreadable {
+    +void spread()
+}
+
+class News {
+    -String title
+    -String description
+    +String getTitle()
+    +String getDescription()
+    +void spread()
+    +String toString()
+    +boolean equals()
+    +int hashCode()
+}
+
+Noisable <|.. Young
+Entity <|-- Young
+Entity <|-- Old
+Young <|-- ForestRat
+Spreadable <|.. News
+
+@enduml
