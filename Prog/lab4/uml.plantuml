@@ -1,0 +1,109 @@
+@startuml uml
+enum Place {
+    Home
+    Valley
+    Forest
+    Hills
+    SeaCoast
+}
+
+abstract class Entity {
+    -String name
+    -Place place
+    +String getName()
+    +Place getPlace()
+}
+
+interface Noisable {
+    +void makeNoise()
+}
+
+class Young {
+    #boolean isNoising = false
+    +void makeNoise()
+    +String toString()
+    +boolean equals()
+    +int hashCode()
+}
+
+class Old {
+    +String toString()
+    +boolean equals()
+    +int hashCode()
+}
+
+class ForestRat <<anonymous>> {
+    +void makeNoise()
+    +String toString()
+    +boolean equals()
+    +int hashCode()
+}
+
+interface Spreadable {
+    +void spread()
+}
+
+class Paper {
+    -ArrayList<News> news
+    +addNew()
+    +News getNew()
+    +Release()
+}
+
+class News <<local>> {
+    -String title
+    -String description
+    +String getTitle()
+    +String getDescription()
+    +void spread()
+    +String toString()
+    +boolean equals()
+    +int hashCode()
+}
+
+class SearchPlaces {
+    -ArrayList<SearchPlace> places
+    -SearchPlace hiddenPlace
+    +setHiddenPlace()
+    +ArrayList<SearchPlace> getAll()
+    +SearchPlace getByName()
+    +SearchPlace get()
+}
+
+class SearchPlace <<nested non-static>> {
+    -String name
+    -boolean wasSearched = false
+    +String getName()
+    +boolean wasSearched()
+    +search()
+}
+
+class Searches {
+    +{static} int powerMark
+    +{static} SearchPlaces places
+    -{static} boolean bagFound = false
+    {static} setBagFound()
+}
+
+class Search <<nested static>> {
+    +{static} boolean isBagFound()
+    {static} primarySearch()
+    {static} secondarySearch()
+    {static} finalSearch()
+}
+
+exception NewsEmptyException
+exception placeNotFoundException 
+
+Noisable <|.. Young
+Entity <|-- Young
+Entity <|-- Old
+Young +-- ForestRat
+Spreadable <|.. News
+Paper +-- News
+SearchPlaces +-- SearchPlace
+Searches +-- Search
+Paper ..> NewsEmptyException: <<throws>>
+SearchPlaces ..> placeNotFoundException: <<throws>>
+
+@enduml
