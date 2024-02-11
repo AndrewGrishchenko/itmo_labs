@@ -1,0 +1,32 @@
+<Tickets>
+    <ticket>
+        <name>ticket1</name>
+        <coordinates>
+            <x>1</x>
+            <y>2</y>
+        </coordinates>
+        <price>100</price>
+        <type>USUAL</type>
+        <event>
+            <name>event1</name>
+            <!-- <date>2015-01-01</date> -->
+            <ticketsCount>1</ticketsCount>
+            <description>desc1</description>
+        </event>
+    </ticket>
+    <ticket>
+        <name>ticket2</name>
+        <coordinates>
+            <x>3</x>
+            <y>4</y>
+        </coordinates>
+        <price>200</price>
+        <type>VIP</type>
+        <event>
+            <name>event2</name>
+            <!-- <date>2020-01-01</date> -->
+            <ticketsCount>2</ticketsCount>
+            <description>desc2</description>
+        </event>
+    </ticket>
+</Tickets>

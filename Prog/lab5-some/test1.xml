@@ -1,0 +1,16 @@
+<data>
+    <Ticket>
+        <name>ticket1</name>
+        <coordinates>
+            <x>1</x>
+            <y>2</y>
+        </coordinates>
+        <price>100</price>
+        <type>USUAL</type>
+        <event>
+            <name>event1</name>
+            <ticketscount>1</ticketscount>
+            <description>desc1</description>
+        </event>
+    </Ticket>
+</data>
