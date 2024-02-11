@@ -9,7 +9,7 @@
         <type>USUAL</type>
         <event>
             <name>event1</name>
-            <!-- <date>2015-01-01</date> -->
+            <date>2023-01-23 15:30:55 Europe/Moscow</date>
             <ticketsCount>1</ticketsCount>
             <description>desc1</description>
         </event>
@@ -24,7 +24,7 @@
         <type>VIP</type>
         <event>
             <name>event2</name>
-            <!-- <date>2020-01-01</date> -->
+            <date>2020-01-23 15:30:55 Europe/Paris</date>
             <ticketsCount>2</ticketsCount>
             <description>desc2</description>
         </event>

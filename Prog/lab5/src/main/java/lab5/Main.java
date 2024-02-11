@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.util.Scanner;
 
 import lab5.adapters.ScannerAdapter;
+import lab5.commands.Clear;
 import lab5.commands.Exit;
 import lab5.commands.Help;
 import lab5.commands.Show;
@@ -22,6 +23,7 @@ public class Main {
             addCommand(new Exit(console));
             addCommand(new Help(console));
             addCommand(new Show(console, collectionManager));
+            addCommand(new Clear(console, collectionManager));
         }};
 
         //TODO: check args length and throw exception
@@ -31,10 +33,6 @@ public class Main {
         } catch (IOException e) {
             e.printStackTrace();
         }
-        
-        // for (int i = 0; i < collectionManager.getCollection().size(); i++) {
-        //     console.println(collectionManager.getCollection().get(i+1).toString());
-        // }
         
         new Runner(console, collectionManager, commandManager).interactiveMode();
     }

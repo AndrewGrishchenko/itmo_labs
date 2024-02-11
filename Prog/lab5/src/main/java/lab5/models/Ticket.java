@@ -45,9 +45,9 @@ public class Ticket implements Comparable<Ticket> {
     public String toString() {
         String s = "Ticket{\n  id='" + String.valueOf(id) + "'\n  name='" + name + "'\n  coordinates={\n    x='" + String.valueOf(coordinates.getX())
         + "'\n    y='" + String.valueOf(coordinates.getY()) + "'}\n  price='" + String.valueOf(price) + "'\n  type='" + String.valueOf(type)
-        + "'\n  event={\n    id='" + String.valueOf(event.getId()) + "'\n    name='" + event.getName() + "'\n    ticketsCount='" + String.valueOf(event.getTicketsCount())
-        + "'\n    description='" + event.getDescription() + "'}\n";
-        return s; 
+        + "'\n  event={\n    id='" + String.valueOf(event.getId()) + "'\n    name='" + event.getName() + "'\n    date='" + event.getDate().toString()
+        + "'\n    ticketsCount='" + String.valueOf(event.getTicketsCount()) + "'\n    description='" + event.getDescription() + "'}\n";
+        return s;
     }
 
     @Override

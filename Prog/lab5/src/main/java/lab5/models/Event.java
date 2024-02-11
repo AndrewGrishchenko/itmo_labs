@@ -1,5 +1,7 @@
 package lab5.models;
 
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 
 public class Event {
@@ -49,8 +51,11 @@ public class Event {
         return date;
     }
 
-    public void setDate(ZonedDateTime date) {
-        this.date = date;
+    public void setDate(String date) {
+        String[] parts = date.split(" ");
+        LocalDateTime ldt = LocalDateTime.parse(parts[0] + "T" + parts[1]);
+        ZonedDateTime zdt = ldt.atZone(ZoneId.of(parts[2]));
+        this.date = zdt;
     }
 
     public Long getTicketsCount() {

@@ -3,7 +3,6 @@ package lab5.managers;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -39,7 +38,7 @@ public class CollectionManager {
         
         XmlMapper xmlMapper = new XmlMapper();
         // xmlMapper.registerModule(new JavaTimeModule());
-        xmlMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+        // xmlMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss a z"));
         try {
             Tickets map = xmlMapper.readValue(xml, Tickets.class);
             List<Ticket> ticketsList = map.getTickets();
