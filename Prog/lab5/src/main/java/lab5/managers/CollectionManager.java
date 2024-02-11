@@ -37,8 +37,6 @@ public class CollectionManager {
         scanner.close();
         
         XmlMapper xmlMapper = new XmlMapper();
-        // xmlMapper.registerModule(new JavaTimeModule());
-        // xmlMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd HH:mm:ss a z"));
         try {
             Tickets map = xmlMapper.readValue(xml, Tickets.class);
             List<Ticket> ticketsList = map.getTickets();
@@ -59,9 +57,20 @@ public class CollectionManager {
         sortSequence.clear();
     }
 
+    public void removeTicketById(int id) {
+        collection.remove(id);
+        for (int i = 0; i < sortSequence.size(); i++) {
+            if (sortSequence.get(i) == id) {
+                sortSequence.remove(i);
+                return;
+            }
+        }
+    }
+
     private void validateAll() throws InvalidDataException {
         for (Ticket ticket : collection.values()) {
             if (!ticket.validate()) {
+                removeTicketById(ticket.getId());
                 if (!ticket.getCoordinates().validate()) {
                     throw new InvalidDataException("Тикет с id=" + String.valueOf(ticket.getId()) + " имеет невалидные координаты!"); 
                 }

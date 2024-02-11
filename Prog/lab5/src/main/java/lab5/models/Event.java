@@ -52,6 +52,10 @@ public class Event {
     }
 
     public void setDate(String date) {
+        if (date == null) {
+            this.date = null;
+            return;
+        }
         String[] parts = date.split(" ");
         LocalDateTime ldt = LocalDateTime.parse(parts[0] + "T" + parts[1]);
         ZonedDateTime zdt = ldt.atZone(ZoneId.of(parts[2]));

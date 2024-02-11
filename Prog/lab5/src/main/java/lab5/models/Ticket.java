@@ -38,6 +38,8 @@ public class Ticket implements Comparable<Ticket> {
         if (price <= 0) return false;
         if (type == null) return false;
         if (event == null) return false;
+        if (!coordinates.validate()) return false;
+        if (!event.validate()) return false;
         return true;
     }
 
