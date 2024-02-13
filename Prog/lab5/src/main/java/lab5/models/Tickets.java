@@ -9,7 +9,15 @@ public class Tickets {
     @JacksonXmlElementWrapper(useWrapping = false)
     private List<Ticket> ticket = new ArrayList<>();
 
-    public List<Ticket> getTickets() {
+    public List<Ticket> getTicket() {
         return ticket;
+    }
+
+    public void setTicket(List<Ticket> ticket) {
+        this.ticket = ticket;
+    }
+
+    public void addTicket(Ticket ticket) {
+        this.ticket.add(ticket);
     }
 }

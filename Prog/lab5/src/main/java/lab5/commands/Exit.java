@@ -11,7 +11,7 @@ public class Exit extends Command {
     }
 
     @Override
-    public boolean run() {
+    public boolean run(String[] args) {
         console.println("Завершение программы...");
         return true;
     }

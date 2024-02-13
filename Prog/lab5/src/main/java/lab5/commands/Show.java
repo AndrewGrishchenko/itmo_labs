@@ -16,7 +16,7 @@ public class Show extends Command {
     }
 
     @Override
-    public boolean run() {
+    public boolean run(String[] args) {
         String message = "";
         List<Integer> keySet = collectionManager.getKeys();
         for (Integer key : keySet) {

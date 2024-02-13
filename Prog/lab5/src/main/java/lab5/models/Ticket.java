@@ -1,9 +1,12 @@
 package lab5.models;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Ticket implements Comparable<Ticket> {
-    private static int nextId = 1;
+    private static List<Integer> usedId = new ArrayList<>();
+    private static int lastId = 0;
 
     private int id; //Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
     private String name; //Поле не может быть null, Строка не может быть пустой
@@ -14,17 +17,40 @@ public class Ticket implements Comparable<Ticket> {
     private Event event; //Поле не может быть null
 
     public Ticket() {
-        this.id = nextId;
-        nextId++;
+        this.id = getNextId();
         creationDate = LocalDateTime.now();
     }
 
-    public Ticket(String name, Coordinates coordinates, LocalDateTime creationDate, int price, TicketType type, Event event) {
-        this.id = nextId;
-        nextId++;
+    public Ticket(int id) {
+        this.id = id;
+        creationDate = LocalDateTime.now();
+    }
+
+    private static int getNextId() {
+        int id = lastId + 1;
+        boolean found = false;
+        while (!found) {
+            if (containsId(id)) id += 1;
+            else found = true;
+        }
+        lastId = id;
+        usedId.add(id);
+        return id;
+    }
+
+    private static boolean containsId(int id) {
+        for (int i = 0; i < usedId.size(); i++) {
+            if (usedId.get(i) == id) return true;
+        }
+        return false;
+    }
+
+
+    public Ticket(String name, Coordinates coordinates, int price, TicketType type, Event event) {
+        this.id = getNextId();
         this.name = name;
         this.coordinates = coordinates;
-        this.creationDate = creationDate;
+        this.creationDate = LocalDateTime.now();
         this.price = price;
         this.type = type;
         this.event = event;

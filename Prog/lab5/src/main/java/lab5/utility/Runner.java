@@ -48,10 +48,10 @@ public class Runner {
 
         switch (userCommand[0]) {
             case "exit":
-                command.run();
+                command.run(userCommand);
                 return ExitCode.EXIT;
             default:
-                if (!command.run()) return ExitCode.ERROR;
+                if (!command.run(userCommand)) return ExitCode.ERROR;
                 break;
         }
         

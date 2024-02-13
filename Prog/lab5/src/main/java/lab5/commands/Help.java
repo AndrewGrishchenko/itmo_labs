@@ -11,7 +11,7 @@ public class Help extends Command {
     }
 
     @Override
-    public boolean run() {
+    public boolean run(String[] args) {
         String message = "help: вывести справку по доступным командам\n"
         + "info: вывести в стандартный поток вывода информацию о коллекции (тип, дата инициализации, количество элементов и т.д.)\n"
         + "show: вывести в стандартный поток вывода все элементы коллекции в строковом представлении\n"
@@ -27,7 +27,7 @@ public class Help extends Command {
         + "remove_lower_key null: удалить из коллекции все элементы, ключ которых меньше, чем заданный\n"
         + "remove_any_by_event event: удалить из коллекции один элемент, значение поля event которого эквивалентно заданному\n"
         + "filter_greater_than_event event: вывести элементы, значение поля event которых больше заданного\n"
-        + "print_field_descending_event: вывести значения поля event всех элементов в порядке убывания";
+        + "print_field_descending_event: вывести значения поля event всех элементов в порядке убывания\n";
         console.println(message);
         return true;
     }

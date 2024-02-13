@@ -14,7 +14,7 @@ public class Clear extends Command {
     }
 
     @Override
-    public boolean run() {
+    public boolean run(String[] args) {
         collectionManager.clearCollection();
         console.println("Коллекция очищена!");
         return true;

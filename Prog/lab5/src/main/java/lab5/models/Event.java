@@ -3,9 +3,13 @@ package lab5.models;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
+import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Event {
-    private static int nextId = 1;
+    private static List<Integer> usedId = new ArrayList<>();
+    private static int lastId = 0;
 
     private final Integer id; //Поле не может быть null, Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
     private String name; //Поле не может быть null, Строка не может быть пустой
@@ -14,17 +18,34 @@ public class Event {
     private String description; //Поле может быть null
 
     public Event () {
-        this.id = nextId;
-        nextId++;   
+        this.id = getNextId();
     }
 
     public Event (String name, ZonedDateTime date, Long ticketsCount, String description) {
-        this.id = nextId;
-        nextId++;
+        this.id = getNextId();
         this.name = name;
         this.date = date;
         this.ticketsCount = ticketsCount;
         this.description = description;
+    }
+
+    private static int getNextId() {
+        int id = lastId + 1;
+        boolean found = false;
+        while (!found) {
+            if (containsId(id)) id += 1;
+            else found = true;
+        }
+        lastId = id;
+        usedId.add(id);
+        return id;
+    }
+
+    private static boolean containsId(int id) {
+        for (int i = 0; i < usedId.size(); i++) {
+            if (usedId.get(i) == id) return true;
+        }
+        return false;
     }
 
     public boolean validate() {
@@ -47,8 +68,8 @@ public class Event {
         this.name = name;
     }
 
-    public ZonedDateTime getDate() {
-        return date;
+    public String getDate() {
+        return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss ").format(date) + date.getZone().toString();
     }
 
     public void setDate(String date) {
