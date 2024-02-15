@@ -4,6 +4,7 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -72,12 +73,16 @@ public class Event {
         return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss ").format(date) + date.getZone().toString();
     }
 
-    public void setDate(String date) {
+    public void setDate(String date) throws DateTimeParseException {
         if (date == null) {
             this.date = null;
             return;
         }
         String[] parts = date.split(" ");
+        if (parts.length != 3) {
+            throw new DateTimeParseException("", date, 0);
+        }
+        
         LocalDateTime ldt = LocalDateTime.parse(parts[0] + "T" + parts[1]);
         ZonedDateTime zdt = ldt.atZone(ZoneId.of(parts[2]));
         this.date = zdt;

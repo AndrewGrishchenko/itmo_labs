@@ -8,8 +8,10 @@ import lab5.commands.Exit;
 import lab5.commands.Help;
 import lab5.commands.Insert;
 import lab5.commands.RemoveKey;
+import lab5.commands.RemoveLower;
 import lab5.commands.Save;
 import lab5.commands.Show;
+import lab5.commands.Update;
 import lab5.managers.CollectionManager;
 import lab5.managers.CommandManager;
 import lab5.utility.Runner;
@@ -37,6 +39,8 @@ public class Main {
             addCommand(new RemoveKey(console, collectionManager));
             addCommand(new Save(console, collectionManager, fileName));
             addCommand(new Insert(console, collectionManager));
+            addCommand(new Update(console, collectionManager));
+            addCommand(new RemoveLower(console, collectionManager));
         }};
         
         new Runner(console, collectionManager, commandManager).interactiveMode();

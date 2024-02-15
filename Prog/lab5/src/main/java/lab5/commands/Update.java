@@ -2,19 +2,18 @@ package lab5.commands;
 
 import java.time.format.DateTimeParseException;
 
-import lab5.exceptions.IdNotUniqueException;
-import lab5.exceptions.InvalidDataException;
+import lab5.exceptions.IdNotFoundException;
 import lab5.exceptions.TooManyArgumentsException;
 import lab5.managers.CollectionManager;
 import lab5.models.Ticket;
 import lab5.utility.console.Console;
 
-public class Insert extends Command {
+public class Update extends Command {
     private Console console;
     private CollectionManager collectionManager;
-
-    public Insert(Console console, CollectionManager collectionManager) {
-        super("insert", "добавить новый элемент с заданным ключом", "'insert <key>'");
+    
+    public Update(Console console, CollectionManager collectionManager) {
+        super("update", "обновить значение элемента коллекции, id которого равен заданному", "'update <id>'");
         this.console = console;
         this.collectionManager = collectionManager;
     }
@@ -22,39 +21,38 @@ public class Insert extends Command {
     @Override
     public boolean run(String[] args) {
         if (args.length != 2) {
-            console.println(this.getUsage());
+            console.println(getUsage());
             return false;
         }
-        
+
         try {
             int id = Integer.parseInt(args[1]);
-            if (collectionManager.hasId(id)) throw new IdNotUniqueException("Тикет с данным id=" + args[1] + " уже существует!"); 
+            Ticket ticket = collectionManager.getTicketById(id);
+            Ticket oldTicket = new Ticket(ticket);
 
-            Ticket ticket = new Ticket(id);
             ticket.fillData(console);
 
             if (!ticket.validate()) {
-                console.printErr("Данные не прошли валидацию; тикет не был создан!");
+                ticket.restoreData(oldTicket);
+                console.printErr("Данные не прошли валидацию; тикет не был обновлен");
                 return false;
             }
-            console.println("Тикет был создан!");
-            collectionManager.addTicket(ticket);
+            collectionManager.changeTicketById(id, ticket);
+            console.println("Тикет обновлен!");
 
             return true;
-        } catch (NumberFormatException e) {
-            console.printErr("данные должны являться числом!");
-        } catch (IdNotUniqueException e) {
+        } catch (IdNotFoundException e) {
             console.printErr(e.getMessage());
         } catch (TooManyArgumentsException e) {
             console.printErr(e.getMessage());
-        } catch (InvalidDataException e) {
-            console.printErr(e.getMessage());
+        } catch (NumberFormatException e) {
+            console.printErr("данные должны являться числом!");
         } catch (IllegalArgumentException e) {
             console.printErr("Введенные данные неверны!");
         } catch (DateTimeParseException e) {
             console.printErr("ошибка формата даты!");
         }
 
-        return false;
+        return true;
     }
 }

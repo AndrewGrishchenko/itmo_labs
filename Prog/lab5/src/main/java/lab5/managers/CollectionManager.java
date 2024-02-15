@@ -94,6 +94,50 @@ public class CollectionManager {
         }
     }
 
+    public Ticket getTicketById(int id) throws IdNotFoundException {
+        if (!collection.containsKey(id)) {
+            throw new IdNotFoundException("Тикета с id=" + String.valueOf(id + " не существует!"));
+        }
+
+        return collection.get(id);
+    }
+
+    public void changeTicketById(int id, Ticket ticket) throws IdNotFoundException {
+        if (!collection.containsKey(id)) {
+            throw new IdNotFoundException("Тикета с id=" + String.valueOf(id) + " не существует!");
+        }
+
+        collection.replace(id, ticket);
+    }
+
+    public ArrayList<Ticket> toArray() {
+        ArrayList<Ticket> tickets = new ArrayList<>();
+        for (int i = 0; i < sortSequence.size(); i++) {
+            tickets.add(collection.get(sortSequence.get(i)));
+        }
+        return tickets;
+    }
+
+    public void removeLowerThanTicket(Ticket ticket) {
+        System.out.println("sortSequence:");
+
+        for (int item : sortSequence) {
+            System.out.print(String.valueOf(item) + " ");
+        }
+        System.out.println();
+
+        while (collection.get(sortSequence.get(0)).compareTo(ticket) < 0)
+        {
+            if (collection.get(sortSequence.get(0)).compareTo(ticket) >= 0) break;
+
+            System.out.println("removing ticket with id " + String.valueOf(sortSequence.get(0)));
+            collection.remove(sortSequence.get(0));
+            sortSequence.remove(0);
+        }
+
+        
+    }
+
     private void validateAll() throws InvalidDataException {
         for (Ticket ticket : collection.values()) { 
             if (!ticket.validate()) {
@@ -121,10 +165,6 @@ public class CollectionManager {
 
     public int size() {
         return collection.size();
-    }
-
-    public Ticket get(int key) {
-        return collection.get(key);
     }
 
     public List<Integer> getKeys() {

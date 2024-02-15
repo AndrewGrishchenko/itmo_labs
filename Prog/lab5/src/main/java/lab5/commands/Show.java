@@ -1,8 +1,9 @@
 package lab5.commands;
 
-import java.util.List;
+import java.util.ArrayList;
 
 import lab5.managers.CollectionManager;
+import lab5.models.Ticket;
 import lab5.utility.console.Console;
 
 public class Show extends Command {
@@ -18,9 +19,9 @@ public class Show extends Command {
     @Override
     public boolean run(String[] args) {
         String message = "";
-        List<Integer> keySet = collectionManager.getKeys();
-        for (Integer key : keySet) {
-            message += collectionManager.get(key).toString();
+        ArrayList<Ticket> tickets = collectionManager.toArray();
+        for (Ticket ticket : tickets) {
+            message += ticket.toString();
         }
         console.println(message);
         return true;

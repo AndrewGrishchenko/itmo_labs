@@ -4,6 +4,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import lab5.adapters.ScannerAdapter;
+import lab5.exceptions.TooManyArgumentsException;
+import lab5.utility.console.Console;
+
 public class Ticket implements Comparable<Ticket> {
     private static List<Integer> usedId = new ArrayList<>();
     private static int lastId = 0;
@@ -26,6 +30,26 @@ public class Ticket implements Comparable<Ticket> {
         creationDate = LocalDateTime.now();
     }
 
+    public Ticket(Ticket another) {
+        this.id = another.getId();
+        this.name = another.getName();
+        this.coordinates = another.getCoordinates();
+        this.creationDate = another.getCreationDate();
+        this.price = another.getPrice();
+        this.type = another.getType();
+        this.event = another.getEvent();
+    }
+
+    public Ticket(String name, Coordinates coordinates, int price, TicketType type, Event event) {
+        this.id = getNextId();
+        this.name = name;
+        this.coordinates = coordinates;
+        this.creationDate = LocalDateTime.now();
+        this.price = price;
+        this.type = type;
+        this.event = event;
+    }
+
     private static int getNextId() {
         int id = lastId + 1;
         boolean found = false;
@@ -43,17 +67,6 @@ public class Ticket implements Comparable<Ticket> {
             if (usedId.get(i) == id) return true;
         }
         return false;
-    }
-
-
-    public Ticket(String name, Coordinates coordinates, int price, TicketType type, Event event) {
-        this.id = getNextId();
-        this.name = name;
-        this.coordinates = coordinates;
-        this.creationDate = LocalDateTime.now();
-        this.price = price;
-        this.type = type;
-        this.event = event;
     }
 
     public boolean validate() {
@@ -83,6 +96,48 @@ public class Ticket implements Comparable<Ticket> {
         return this.getPrice() - other.getPrice();
     }
 
+    public void fillData(Console console) throws TooManyArgumentsException {
+        console.print("Введите name: ");
+        this.setName(ScannerAdapter.getString());
+
+        Coordinates coordinates = this.getCoordinates() == null ? new Coordinates() : this.getCoordinates();
+        console.print("Введите x: ");
+        coordinates.setX(ScannerAdapter.getDouble());
+
+        console.print("Введите y: ");
+        coordinates.setY(ScannerAdapter.getDouble());
+        this.setCoordinates(coordinates);
+
+        console.print("Введите price: ");
+        this.setPrice(ScannerAdapter.getInt());
+
+        console.print("Введите type: ");
+        this.setType(TicketType.valueOf(ScannerAdapter.getString()));
+
+        Event event = this.getEvent() == null ? new Event() : this.getEvent();
+        console.print("Введите name: ");
+        event.setName(ScannerAdapter.getString());
+
+        console.print("Введите date: ");
+        event.setDate(ScannerAdapter.getString());
+
+        console.print("Введите ticketsCount: ");
+        event.setTicketsCount(ScannerAdapter.getLong());
+        
+        console.print("Введите description: ");
+        event.setDescription(ScannerAdapter.getString());
+        this.setEvent(event);
+    }
+
+    public void restoreData(Ticket oldTicket) {
+        this.name = oldTicket.getName();
+        this.coordinates = oldTicket.getCoordinates();
+        this.creationDate = oldTicket.getCreationDate();
+        this.price = oldTicket.getPrice();
+        this.type = oldTicket.getType();
+        this.event = oldTicket.getEvent();
+    }
+
     public int getId() {
         return id;
     }
@@ -101,6 +156,10 @@ public class Ticket implements Comparable<Ticket> {
 
     public void setCoordinates(Coordinates coordinates) {
         this.coordinates = coordinates;
+    }
+
+    public LocalDateTime getCreationDate() {
+        return creationDate;
     }
 
     public int getPrice() {
