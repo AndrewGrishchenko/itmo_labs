@@ -2,6 +2,7 @@ package lab5.commands;
 
 import java.time.format.DateTimeParseException;
 
+import lab5.exceptions.InvalidDataException;
 import lab5.exceptions.TooManyArgumentsException;
 import lab5.managers.CollectionManager;
 import lab5.models.Ticket;
@@ -29,12 +30,14 @@ public class RemoveLower extends Command {
             ticket.fillData(console);
 
             if (!ticket.validate()) {
-                console.printErr("данные не прошли валидацию!");
-                return false;
+                throw new InvalidDataException("Тикет имеет невалидные данные!");
             }
 
             collectionManager.removeLowerThanTicket(ticket);
             console.println("тикеты удалены!");
+            return true;
+        } catch (InvalidDataException e) {
+            console.printErr(e.getMessage());
         } catch (TooManyArgumentsException e) {
             console.printErr(e.getMessage());
         } catch (NumberFormatException e) {
@@ -45,6 +48,6 @@ public class RemoveLower extends Command {
             console.printErr("ошибка формата даты!");
         }
 
-        return true;
+        return false;
     }
 }

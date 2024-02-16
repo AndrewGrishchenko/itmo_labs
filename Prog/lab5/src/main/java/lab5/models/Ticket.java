@@ -3,6 +3,9 @@ package lab5.models;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
 import lab5.adapters.ScannerAdapter;
 import lab5.exceptions.TooManyArgumentsException;
@@ -12,9 +15,11 @@ public class Ticket implements Comparable<Ticket> {
     private static List<Integer> usedId = new ArrayList<>();
     private static int lastId = 0;
 
+    @JsonIgnore
     private int id; //Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
     private String name; //Поле не может быть null, Строка не может быть пустой
     private Coordinates coordinates; //Поле не может быть null
+    @JsonIgnore
     private LocalDateTime creationDate; //Поле не может быть null, Значение этого поля должно генерироваться автоматически
     private int price; //Значение поля должно быть больше 0
     private TicketType type; //Поле не может быть null
@@ -69,7 +74,7 @@ public class Ticket implements Comparable<Ticket> {
         return false;
     }
 
-    public boolean validate() {
+    public boolean validate()  {
         if (id <= 0) return false;
         if (name == null || name.isEmpty()) return false;
         if (coordinates == null) return false;
@@ -85,10 +90,25 @@ public class Ticket implements Comparable<Ticket> {
     @Override
     public String toString() {
         String s = "Ticket{\n  id='" + String.valueOf(id) + "'\n  name='" + name + "'\n  coordinates={\n    x='" + String.valueOf(coordinates.getX())
-        + "'\n    y='" + String.valueOf(coordinates.getY()) + "'}\n  price='" + String.valueOf(price) + "'\n  type='" + String.valueOf(type)
-        + "'\n  event={\n    id='" + String.valueOf(event.getId()) + "'\n    name='" + event.getName() + "'\n    date='" + event.getDate().toString()
-        + "'\n    ticketsCount='" + String.valueOf(event.getTicketsCount()) + "'\n    description='" + event.getDescription() + "'}\n";
+        + "'\n    y='" + String.valueOf(coordinates.getY()) + "'}\n  creationDate='" + getCreationDate().toString() + "\n  price='" + String.valueOf(price)
+        + "'\n  type='" + String.valueOf(type) + "'\n  event={\n    id='" + String.valueOf(event.getId()) + "'\n    name='" + event.getName()
+        + "'\n    date='" + event.getDate() + "'\n    ticketsCount='" + String.valueOf(event.getTicketsCount())
+        + "'\n    description='" + event.getDescription() + "'}\n";
         return s;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || obj.getClass() != getClass()) return false;
+
+        Ticket other = (Ticket) obj;
+        return Objects.equals(getName(), other.getName())
+        && Objects.equals(getCoordinates(), other.getCoordinates())
+        && Objects.equals(getCreationDate(), other.getCreationDate())
+        && Objects.equals(getPrice(), other.getPrice())
+        && Objects.equals(getType(), other.getType())
+        && Objects.equals(getEvent(), other.getEvent());
     }
 
     @Override
@@ -97,34 +117,34 @@ public class Ticket implements Comparable<Ticket> {
     }
 
     public void fillData(Console console) throws TooManyArgumentsException {
-        console.print("Введите name: ");
+        console.print("Введите name (String): ");
         this.setName(ScannerAdapter.getString());
 
         Coordinates coordinates = this.getCoordinates() == null ? new Coordinates() : this.getCoordinates();
-        console.print("Введите x: ");
+        console.print("Введите coordinates.x (double): ");
         coordinates.setX(ScannerAdapter.getDouble());
 
-        console.print("Введите y: ");
+        console.print("Введите coordinates.y (double): ");
         coordinates.setY(ScannerAdapter.getDouble());
         this.setCoordinates(coordinates);
 
-        console.print("Введите price: ");
+        console.print("Введите price (int): ");
         this.setPrice(ScannerAdapter.getInt());
 
-        console.print("Введите type: ");
+        console.print("Введите type (VIP, USUAL, BUDGETARY, CHEAP): ");
         this.setType(TicketType.valueOf(ScannerAdapter.getString()));
 
         Event event = this.getEvent() == null ? new Event() : this.getEvent();
-        console.print("Введите name: ");
+        console.print("Введите event.name (String): ");
         event.setName(ScannerAdapter.getString());
 
-        console.print("Введите date: ");
+        console.print("Введите event.date (формат: 2020-01-23 15:30:55 Europe/Moscow): ");
         event.setDate(ScannerAdapter.getString());
 
-        console.print("Введите ticketsCount: ");
+        console.print("Введите event.ticketsCount (int): ");
         event.setTicketsCount(ScannerAdapter.getLong());
         
-        console.print("Введите description: ");
+        console.print("Введите description (String): ");
         event.setDescription(ScannerAdapter.getString());
         this.setEvent(event);
     }
@@ -183,6 +203,7 @@ public class Ticket implements Comparable<Ticket> {
     }
 
     public void setEvent(Event event) {
+        event.setId(id);
         this.event = event;
     }
 }

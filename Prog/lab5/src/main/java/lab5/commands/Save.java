@@ -26,7 +26,8 @@ public class Save extends Command {
         } catch (FileNotFoundException e) {
             console.printErr("Файл не найден!");
         } catch (IOException e) {
-            console.printErr("Ошибка ввода/вывода!");
+            e.printStackTrace();
+            // console.printErr("Ошибка ввода/вывода!");
         }
         
         return false;

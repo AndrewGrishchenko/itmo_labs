@@ -9,12 +9,12 @@ import lab5.managers.CollectionManager;
 import lab5.models.Ticket;
 import lab5.utility.console.Console;
 
-public class Update extends Command {
+public class ReplaceIfLower extends Command {
     private Console console;
     private CollectionManager collectionManager;
-    
-    public Update(Console console, CollectionManager collectionManager) {
-        super("update", "обновить значение элемента коллекции, id которого равен заданному", "'update <id>'");
+
+    public ReplaceIfLower(Console console, CollectionManager collectionManager) {
+        super("replace_if_lower", "заменить значение по ключу, если новое значение меньше старого", "'replace_if_lower <key>'");
         this.console = console;
         this.collectionManager = collectionManager;
     }
@@ -28,22 +28,24 @@ public class Update extends Command {
 
         try {
             int id = Integer.parseInt(args[1]);
-            Ticket ticket = collectionManager.getTicketById(id);
-            Ticket oldTicket = new Ticket(ticket);
+            Ticket oldTicket = collectionManager.getTicketById(id);
+            Ticket newTicket = new Ticket();
+            newTicket.fillData(console);
 
-            ticket.fillData(console);
-
-            if (!ticket.validate()) {
-                ticket.restoreData(oldTicket);
-                throw new InvalidDataException("Данные не прошли валидацию; тикет не был обновлен");
+            if (!newTicket.validate()) {
+                throw new InvalidDataException("Тикет имеет невалидные данные!");
             }
-            collectionManager.changeTicketById(id, ticket);
-            console.println("Тикет обновлен!");
+
+            if (oldTicket.compareTo(newTicket) > 0) {
+                collectionManager.changeTicketById(oldTicket.getId(), newTicket);
+                console.println("Тикет заменен!");
+            }
+            else {
+                console.println("Новое значение больше старого; тикет не заменен!");
+            }
 
             return true;
         } catch (InvalidDataException e) {
-            console.printErr(e.getMessage());
-        } catch (IdNotFoundException e) {
             console.printErr(e.getMessage());
         } catch (TooManyArgumentsException e) {
             console.printErr(e.getMessage());
@@ -53,8 +55,10 @@ public class Update extends Command {
             console.printErr("Введенные данные неверны!");
         } catch (DateTimeParseException e) {
             console.printErr("ошибка формата даты!");
+        } catch (IdNotFoundException e) {
+            console.printErr(e.getMessage());
         }
-
-        return true;
+        
+        return false;
     }
 }

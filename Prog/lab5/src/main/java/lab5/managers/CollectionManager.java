@@ -5,6 +5,7 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintWriter;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -18,19 +19,25 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import lab5.exceptions.IdNotFoundException;
 import lab5.exceptions.InvalidDataException;
+import lab5.models.Event;
 import lab5.models.Ticket;
 import lab5.models.Tickets;
-import lab5.utility.TicketsComparator;
+import lab5.utility.EventComparator;
+import lab5.utility.TicketComparator;
 
 public class CollectionManager {
     private HashMap<Integer, Ticket> collection = new HashMap<>();
     private List<Integer> sortSequence = new ArrayList<>();
 
+    private LocalDateTime initTime;
+    private LocalDateTime lastUpdateTime;
+
     public void addTicket(Ticket ticket) throws InvalidDataException {
         collection.put(ticket.getId(), ticket);
         sortSequence.add(ticket.getId());
         validateAll();
-        sort();        
+        sort();      
+        save();  
     }
 
     public void dumpData(String fileName) throws InvalidDataException, IdNotFoundException, FileNotFoundException, IOException {
@@ -40,8 +47,11 @@ public class CollectionManager {
 
         Scanner scanner = new Scanner(inputStreamReader).useDelimiter("\\A");
         String xml = scanner.hasNext() ? scanner.next() : "";
-        scanner.close();
         
+        scanner.close();
+        inputStreamReader.close();
+        fileInputStream.close();
+
         XmlMapper xmlMapper = new XmlMapper();
 
         Tickets map = xmlMapper.readValue(xml, Tickets.class);
@@ -53,6 +63,8 @@ public class CollectionManager {
 
         validateAll();
         sort();
+        initTime = LocalDateTime.now();
+        lastUpdateTime = initTime;
     }
 
     private Tickets toTickets() {
@@ -79,6 +91,7 @@ public class CollectionManager {
     public void clearCollection() {
         collection.clear();
         sortSequence.clear();
+        save();
     }
 
     public void removeTicketById(int id) throws IdNotFoundException {
@@ -89,6 +102,7 @@ public class CollectionManager {
         for (int i = 0; i < sortSequence.size(); i++) {
             if (sortSequence.get(i) == id) {
                 sortSequence.remove(i);
+                save();
                 return;
             }
         }
@@ -108,6 +122,7 @@ public class CollectionManager {
         }
 
         collection.replace(id, ticket);
+        save();
     }
 
     public ArrayList<Ticket> toArray() {
@@ -119,23 +134,56 @@ public class CollectionManager {
     }
 
     public void removeLowerThanTicket(Ticket ticket) {
-        System.out.println("sortSequence:");
-
-        for (int item : sortSequence) {
-            System.out.print(String.valueOf(item) + " ");
-        }
-        System.out.println();
-
-        while (collection.get(sortSequence.get(0)).compareTo(ticket) < 0)
-        {
-            if (collection.get(sortSequence.get(0)).compareTo(ticket) >= 0) break;
-
-            System.out.println("removing ticket with id " + String.valueOf(sortSequence.get(0)));
+        while (collection.get(sortSequence.get(0)).compareTo(ticket) < 0) {
             collection.remove(sortSequence.get(0));
             sortSequence.remove(0);
+            if (sortSequence.size() == 0) break;
+        }
+        save();
+    }
+
+    public boolean removeOneByEvent(Event event) {
+        for (int i = 0; i < sortSequence.size(); i++) {
+            if (event.equals(collection.get(sortSequence.get(i)).getEvent())) {
+                collection.remove(collection.get(sortSequence.get(i)).getId());
+                sortSequence.remove(i);
+                save();
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public void removeLowerThanId(int id) {
+        while(sortSequence.get(0) < id) {
+            collection.remove(sortSequence.get(0));
+            sortSequence.remove(0);
+            if (sortSequence.size() == 0) break;
+        }
+        save();
+    }
+
+    public List<Ticket> filterGreaterByEvent(Event event) {
+        List<Ticket> sorted = new ArrayList<>();
+
+        for (Ticket ticket : collection.values()) {
+            if (ticket.getEvent().compareTo(event) > 0) {
+                sorted.add(ticket);
+            } 
+        }
+        return sorted;
+    }
+
+    public List<Event> sortedDescendingEvents() {
+        List<Event> events = new ArrayList<>();
+        for (Ticket ticket : collection.values()) {
+            events.add(ticket.getEvent());
         }
 
-        
+        Comparator<Event> eventComparator = new EventComparator();
+        Collections.sort(events, eventComparator);
+        Collections.reverse(events);
+        return events;
     }
 
     private void validateAll() throws InvalidDataException {
@@ -159,7 +207,7 @@ public class CollectionManager {
     }
 
     private void sort() {
-        Comparator<Integer> ticketsComparator = new TicketsComparator(collection);
+        Comparator<Integer> ticketsComparator = new TicketComparator(collection);
         Collections.sort(sortSequence, ticketsComparator);
     }
 
@@ -173,5 +221,25 @@ public class CollectionManager {
 
     public boolean hasId(int key) {
         return collection.containsKey(key);
+    }
+
+    private void save() {
+        lastUpdateTime = LocalDateTime.now();
+    }
+
+    public String getInitTime() {
+        return initTime.toString();
+    }
+
+    public String getLastUpdateTime() {
+        return lastUpdateTime.toString();
+    }
+
+    public String getType() {
+        return collection.getClass().toString();
+    }
+
+    public int getSize() {
+        return collection.size();
     }
 }

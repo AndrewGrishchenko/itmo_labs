@@ -28,14 +28,13 @@ public class Insert extends Command {
         
         try {
             int id = Integer.parseInt(args[1]);
-            if (collectionManager.hasId(id)) throw new IdNotUniqueException("Тикет с данным id=" + args[1] + " уже существует!"); 
+            if (collectionManager.hasId(id)) throw new IdNotUniqueException("Тикет с id=" + args[1] + " уже существует!"); 
 
             Ticket ticket = new Ticket(id);
             ticket.fillData(console);
 
             if (!ticket.validate()) {
-                console.printErr("Данные не прошли валидацию; тикет не был создан!");
-                return false;
+                throw new InvalidDataException("Тикет имеет невалидные данные!");
             }
             console.println("Тикет был создан!");
             collectionManager.addTicket(ticket);

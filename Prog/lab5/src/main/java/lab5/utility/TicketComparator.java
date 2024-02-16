@@ -5,10 +5,10 @@ import java.util.HashMap;
 
 import lab5.models.Ticket;
 
-public class TicketsComparator implements Comparator<Integer> {
+public class TicketComparator implements Comparator<Integer> {
     private HashMap<Integer, Ticket> collection;
     
-    public TicketsComparator(HashMap<Integer, Ticket> collection) {
+    public TicketComparator(HashMap<Integer, Ticket> collection) {
         this.collection = collection;
     }
     

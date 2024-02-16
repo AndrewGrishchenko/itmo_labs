@@ -1,6 +1,5 @@
 <Tickets>
   <ticket>
-    <id>1</id>
     <name>ticket1</name>
     <coordinates>
       <x>1.0</x>
@@ -9,15 +8,13 @@
     <price>100</price>
     <type>USUAL</type>
     <event>
-      <id>1</id>
       <name>event1</name>
       <date>2023-01-23 15:30:55 Europe/Moscow</date>
-      <ticketsCount>1</ticketsCount>
+      <ticketsCount>2</ticketsCount>
       <description>desc1</description>
     </event>
   </ticket>
   <ticket>
-    <id>2</id>
     <name>ticket2</name>
     <coordinates>
       <x>3.0</x>
@@ -26,12 +23,10 @@
     <price>200</price>
     <type>VIP</type>
     <event>
-      <id>2</id>
       <name>event2</name>
       <date>2020-01-23 15:30:55 Europe/Paris</date>
-      <ticketsCount>2</ticketsCount>
+      <ticketsCount>3</ticketsCount>
       <description>desc2</description>
     </event>
   </ticket>
 </Tickets>
-

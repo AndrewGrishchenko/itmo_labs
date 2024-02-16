@@ -1,5 +1,7 @@
 package lab5.models;
 
+import java.util.Objects;
+
 public class Coordinates {
     private double x; //Максимальное значение поля: 87
     private Double y; //Значение поля должно быть больше -194, Поле не может быть null
@@ -17,6 +19,21 @@ public class Coordinates {
         if (x > 87) return false;
         if (y <= -194 || y == null) return false;
         return true;
+    }
+
+    @Override
+    public String toString() {
+        String s = "Coordinates{\n  x='" + String.valueOf(getX()) + "'\n  y='" + String.valueOf(getY()) + "'}\n";
+        return s;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || getClass() != obj.getClass()) return false;
+
+        Coordinates other = (Coordinates) obj;
+        return Objects.equals(getX(), other.getX()) && Objects.equals(getY(), other.getY());
     }
 
     public void setX(double x) {

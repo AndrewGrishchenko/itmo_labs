@@ -5,48 +5,36 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Objects;
 
-public class Event {
-    private static List<Integer> usedId = new ArrayList<>();
-    private static int lastId = 0;
+import com.fasterxml.jackson.annotation.JsonIgnore;
 
-    private final Integer id; //Поле не может быть null, Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
+import lab5.adapters.ScannerAdapter;
+import lab5.exceptions.TooManyArgumentsException;
+import lab5.utility.console.Console;
+
+public class Event implements Comparable<Event> {
+
+    @JsonIgnore
+    private Integer id; //Поле не может быть null, Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
     private String name; //Поле не может быть null, Строка не может быть пустой
     private ZonedDateTime date; //Поле не может быть null
     private Long ticketsCount; //Поле может быть null, Значение поля должно быть больше 0
     private String description; //Поле может быть null
 
-    public Event () {
-        this.id = getNextId();
+    public Event() {
+        this.id = 1;
+    }
+
+    public Event(int id) {
+        this.id = id;
     }
 
     public Event (String name, ZonedDateTime date, Long ticketsCount, String description) {
-        this.id = getNextId();
         this.name = name;
         this.date = date;
         this.ticketsCount = ticketsCount;
         this.description = description;
-    }
-
-    private static int getNextId() {
-        int id = lastId + 1;
-        boolean found = false;
-        while (!found) {
-            if (containsId(id)) id += 1;
-            else found = true;
-        }
-        lastId = id;
-        usedId.add(id);
-        return id;
-    }
-
-    private static boolean containsId(int id) {
-        for (int i = 0; i < usedId.size(); i++) {
-            if (usedId.get(i) == id) return true;
-        }
-        return false;
     }
 
     public boolean validate() {
@@ -57,8 +45,50 @@ public class Event {
         return true;
     }
 
+    @Override
+    public int compareTo(Event other) {
+        return (int) (this.ticketsCount - other.getTicketsCount());
+    }
+
+    @Override
+    public String toString() {
+        String s = "Event{\n  id='" + String.valueOf(getId()) + "'\n  name='" + getName() + "'\n  date='" + getDate()
+        + "'\n  ticketsCount='" + String.valueOf(getTicketsCount()) + "'\n  description='" + getDescription() + "'}\n";
+        return s;
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (obj == null || obj.getClass() != getClass()) return false;
+
+        Event other = (Event) obj;
+        return Objects.equals(getName(), other.getName())
+        && Objects.equals(getDate(), other.getDate())
+        && Objects.equals(getTicketsCount(), other.getTicketsCount())
+        && Objects.equals(getDescription(), other.getDescription());
+    }
+
+    public void fillData(Console console) throws TooManyArgumentsException {
+        console.print("Введите name (String): ");
+        this.setName(ScannerAdapter.getString());
+
+        console.print("Введите date (формат: 2020-01-23 15:30:55 Europe/Moscow): ");
+        this.setDate(ScannerAdapter.getString());
+
+        console.print("Введите ticketsCount (int): ");
+        this.setTicketsCount(ScannerAdapter.getLong());
+        
+        console.print("Введите description (String): ");
+        this.setDescription(ScannerAdapter.getString());
+    }
+
     public Integer getId() {
         return id;
+    }
+
+    public void setId(int id) {
+        this.id = id;
     }
 
     public String getName() {

@@ -22,7 +22,7 @@ public class Runner {
     }
 
     public void interactiveMode() {
-        try {
+        // try {
             ExitCode commandStatus;
             String[] userInput;
 
@@ -32,9 +32,9 @@ public class Runner {
                 commandStatus = launchCommand(userInput);
             } while (commandStatus != ExitCode.EXIT);
 
-        } catch (Exception e) {
-            console.printErr(e.getMessage());
-        }
+        // } catch (Exception e) {
+        //     console.printErr(e.getMessage());
+        // }
     }
 
     private ExitCode launchCommand(String[] userCommand) {
