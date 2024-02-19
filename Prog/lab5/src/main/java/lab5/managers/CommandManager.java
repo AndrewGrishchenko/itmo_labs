@@ -21,4 +21,8 @@ public class CommandManager {
         }
         return null;
     }
+
+    public boolean invokeCommand(String[] args) {
+        return getCommand(args[0]).run(args);
+    }
 }

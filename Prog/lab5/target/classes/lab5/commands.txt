@@ -1,1 +1,12 @@
-insert 3
+clear
+insert 1
+ticket1
+1
+2
+100
+VIP
+event1
+2020-01-01 22:20:12 Europe/Moscow
+1
+desc1
+show

@@ -4,6 +4,7 @@ import java.util.Scanner;
 
 import lab5.adapters.ScannerAdapter;
 import lab5.commands.Clear;
+import lab5.commands.ExecuteScript;
 import lab5.commands.Exit;
 import lab5.commands.FilterGreaterThanEvent;
 import lab5.commands.Help;
@@ -20,6 +21,7 @@ import lab5.commands.Show;
 import lab5.commands.Update;
 import lab5.managers.CollectionManager;
 import lab5.managers.CommandManager;
+import lab5.models.ScanMode;
 import lab5.utility.Runner;
 import lab5.utility.console.StandardConsole;
 
@@ -27,7 +29,7 @@ public class Main {
     public static void main(String[] args) {
         final StandardConsole console = new StandardConsole();
         final CollectionManager collectionManager = new CollectionManager();
-        ScannerAdapter.setScanner(new Scanner(System.in));
+        ScannerAdapter.addScanner(ScanMode.INTERACTIVE, new Scanner(System.in));
 
         //TODO: check args length and throw exception
         final String fileName = "/home/andrew/itmo_labs/Prog/lab5/src/main/java/lab5/test1.xml";
@@ -54,6 +56,7 @@ public class Main {
             addCommand(new PrintFieldDescendingEvent(console, collectionManager));
             addCommand(new Info(console, collectionManager, fileName));
         }};
+        commandManager.addCommand(new ExecuteScript(console, collectionManager, commandManager));
         
         new Runner(console, collectionManager, commandManager).interactiveMode();
     }
