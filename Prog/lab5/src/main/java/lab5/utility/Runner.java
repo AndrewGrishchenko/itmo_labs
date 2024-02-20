@@ -1,10 +1,10 @@
 package lab5.utility;
 
+import lab5.adapters.ConsoleAdapter;
 import lab5.adapters.ScannerAdapter;
 import lab5.commands.Command;
 import lab5.managers.CollectionManager;
 import lab5.managers.CommandManager;
-import lab5.utility.console.Console;
 
 public class Runner {
     public enum ExitCode {
@@ -13,11 +13,9 @@ public class Runner {
         EXIT,
     }
 
-    private final Console console;
     private final CommandManager commandManager;
 
-    public Runner(Console console, CollectionManager collectionManager, CommandManager commandManager) {
-        this.console = console;
+    public Runner(CollectionManager collectionManager, CommandManager commandManager) {
         this.commandManager = commandManager;
     }
 
@@ -27,7 +25,7 @@ public class Runner {
             String[] userInput;
 
             do {
-                console.prompt();
+                ConsoleAdapter.prompt();
                 userInput = ScannerAdapter.getUserInput();
                 commandStatus = launchCommand(userInput);
             } while (commandStatus != ExitCode.EXIT);
@@ -42,7 +40,7 @@ public class Runner {
         
         Command command = commandManager.getCommand(userCommand[0]);
         if (command == null) {
-            console.printErr("Неизвестная команда!");
+            ConsoleAdapter.printErr("Неизвестная команда!");
             return ExitCode.ERROR;
         }
 

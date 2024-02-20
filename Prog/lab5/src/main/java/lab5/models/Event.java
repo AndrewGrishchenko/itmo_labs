@@ -9,9 +9,9 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import lab5.adapters.ConsoleAdapter;
 import lab5.adapters.ScannerAdapter;
 import lab5.exceptions.TooManyArgumentsException;
-import lab5.utility.console.Console;
 
 public class Event implements Comparable<Event> {
 
@@ -69,17 +69,17 @@ public class Event implements Comparable<Event> {
         && Objects.equals(getDescription(), other.getDescription());
     }
 
-    public void fillData(Console console) throws TooManyArgumentsException {
-        console.print("Введите name (String): ");
+    public void fillData() throws TooManyArgumentsException {
+        ConsoleAdapter.print("Введите name (String): ");
         this.setName(ScannerAdapter.getString());
 
-        console.print("Введите date (формат: 2020-01-23 15:30:55 Europe/Moscow): ");
+        ConsoleAdapter.print("Введите date (формат: 2020-01-23 15:30:55 Europe/Moscow): ");
         this.setDate(ScannerAdapter.getString());
 
-        console.print("Введите ticketsCount (int): ");
+        ConsoleAdapter.print("Введите ticketsCount (int): ");
         this.setTicketsCount(ScannerAdapter.getLong());
         
-        console.print("Введите description (String): ");
+        ConsoleAdapter.print("Введите description (String): ");
         this.setDescription(ScannerAdapter.getString());
     }
 

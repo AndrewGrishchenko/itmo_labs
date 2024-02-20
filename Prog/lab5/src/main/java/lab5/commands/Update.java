@@ -1,28 +1,27 @@
 package lab5.commands;
 
 import java.time.format.DateTimeParseException;
+import java.time.zone.ZoneRulesException;
 
+import lab5.adapters.ConsoleAdapter;
 import lab5.exceptions.IdNotFoundException;
 import lab5.exceptions.InvalidDataException;
 import lab5.exceptions.TooManyArgumentsException;
 import lab5.managers.CollectionManager;
 import lab5.models.Ticket;
-import lab5.utility.console.Console;
 
 public class Update extends Command {
-    private Console console;
     private CollectionManager collectionManager;
     
-    public Update(Console console, CollectionManager collectionManager) {
+    public Update(CollectionManager collectionManager) {
         super("update", "обновить значение элемента коллекции, id которого равен заданному", "'update <id>'");
-        this.console = console;
         this.collectionManager = collectionManager;
     }
 
     @Override
     public boolean run(String[] args) {
         if (args.length != 2) {
-            console.println(getUsage());
+            ConsoleAdapter.println(getUsage());
             return false;
         }
 
@@ -31,28 +30,30 @@ public class Update extends Command {
             Ticket ticket = collectionManager.getTicketById(id);
             Ticket oldTicket = new Ticket(ticket);
 
-            ticket.fillData(console);
+            ticket.fillData();
 
             if (!ticket.validate()) {
                 ticket.restoreData(oldTicket);
                 throw new InvalidDataException("Данные не прошли валидацию; тикет не был обновлен");
             }
             collectionManager.changeTicketById(id, ticket);
-            console.println("Тикет обновлен!");
+            ConsoleAdapter.println("Тикет обновлен!");
 
             return true;
         } catch (InvalidDataException e) {
-            console.printErr(e.getMessage());
+            ConsoleAdapter.printErr(e.getMessage());
         } catch (IdNotFoundException e) {
-            console.printErr(e.getMessage());
+            ConsoleAdapter.printErr(e.getMessage());
         } catch (TooManyArgumentsException e) {
-            console.printErr(e.getMessage());
+            ConsoleAdapter.printErr(e.getMessage());
         } catch (NumberFormatException e) {
-            console.printErr("данные должны являться числом!");
+            ConsoleAdapter.printErr("данные должны являться числом!");
         } catch (IllegalArgumentException e) {
-            console.printErr("Введенные данные неверны!");
+            ConsoleAdapter.printErr("Введенные данные неверны!");
         } catch (DateTimeParseException e) {
-            console.printErr("ошибка формата даты!");
+            ConsoleAdapter.printErr("ошибка формата даты!");
+        } catch (ZoneRulesException e) {
+            ConsoleAdapter.printErr("ошибка формата зоны!");
         }
 
         return true;

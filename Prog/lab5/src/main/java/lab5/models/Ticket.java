@@ -7,9 +7,9 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import lab5.adapters.ConsoleAdapter;
 import lab5.adapters.ScannerAdapter;
 import lab5.exceptions.TooManyArgumentsException;
-import lab5.utility.console.Console;
 
 public class Ticket implements Comparable<Ticket> {
     private static List<Integer> usedId = new ArrayList<>();
@@ -116,35 +116,35 @@ public class Ticket implements Comparable<Ticket> {
         return this.getPrice() - other.getPrice();
     }
 
-    public void fillData(Console console) throws TooManyArgumentsException {
-        console.print("Введите name (String): ");
+    public void fillData() throws TooManyArgumentsException {
+        ConsoleAdapter.print("Введите name (String): ");
         this.setName(ScannerAdapter.getString());
 
         Coordinates coordinates = this.getCoordinates() == null ? new Coordinates() : this.getCoordinates();
-        console.print("Введите coordinates.x (double): ");
+        ConsoleAdapter.print("Введите coordinates.x (double): ");
         coordinates.setX(ScannerAdapter.getDouble());
 
-        console.print("Введите coordinates.y (double): ");
+        ConsoleAdapter.print("Введите coordinates.y (double): ");
         coordinates.setY(ScannerAdapter.getDouble());
         this.setCoordinates(coordinates);
 
-        console.print("Введите price (int): ");
+        ConsoleAdapter.print("Введите price (int): ");
         this.setPrice(ScannerAdapter.getInt());
 
-        console.print("Введите type (VIP, USUAL, BUDGETARY, CHEAP): ");
+        ConsoleAdapter.print("Введите type (VIP, USUAL, BUDGETARY, CHEAP): ");
         this.setType(TicketType.valueOf(ScannerAdapter.getString()));
 
         Event event = this.getEvent() == null ? new Event() : this.getEvent();
-        console.print("Введите event.name (String): ");
+        ConsoleAdapter.print("Введите event.name (String): ");
         event.setName(ScannerAdapter.getString());
 
-        console.print("Введите event.date (формат: 2020-01-23 15:30:55 Europe/Moscow): ");
+        ConsoleAdapter.print("Введите event.date (формат: 2020-01-23 15:30:55 Europe/Moscow): ");
         event.setDate(ScannerAdapter.getString());
 
-        console.print("Введите event.ticketsCount (int): ");
+        ConsoleAdapter.print("Введите event.ticketsCount (int): ");
         event.setTicketsCount(ScannerAdapter.getLong());
         
-        console.print("Введите description (String): ");
+        ConsoleAdapter.print("Введите description (String): ");
         event.setDescription(ScannerAdapter.getString());
         this.setEvent(event);
     }

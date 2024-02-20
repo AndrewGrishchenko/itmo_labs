@@ -1,18 +1,20 @@
 package lab5.commands;
 
-import lab5.utility.console.Console;
+import lab5.adapters.ConsoleAdapter;
 
 public class Exit extends Command {
-    private final Console console;
-
-    public Exit(Console console) {
+    public Exit() {
         super("exit", "завершить программу (без сохранения в файл)", "'exit'");
-        this.console = console;
     }
 
     @Override
     public boolean run(String[] args) {
-        console.println("Завершение программы...");
+        if (args.length != 1) {
+            ConsoleAdapter.println(getUsage());
+            return false;
+        }
+        
+        ConsoleAdapter.println("Завершение программы...");
         return true;
     }
 }

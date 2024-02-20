@@ -1,16 +1,14 @@
 package lab5.commands;
 
+import lab5.adapters.ConsoleAdapter;
 import lab5.managers.CollectionManager;
-import lab5.utility.console.Console;
 
 public class Info extends Command {
-    private Console console;
     private CollectionManager collectionManager;
     private String fileName;
 
-    public Info(Console console, CollectionManager collectionManager, String fileName) {
+    public Info(CollectionManager collectionManager, String fileName) {
         super("info", "вывести в стандартный поток вывода информацию о коллекции (тип, дата инициализации, количество элементов и т.д.)", "'info'");
-        this.console = console;
         this.collectionManager = collectionManager;
         this.fileName = fileName;
     }
@@ -18,7 +16,7 @@ public class Info extends Command {
     @Override
     public boolean run(String[] args) {
         if (args.length != 1) {
-            console.println(getUsage());
+            ConsoleAdapter.println(getUsage());
             return false;
         }
 
@@ -28,7 +26,7 @@ public class Info extends Command {
         + "\n  Количество элементов: " + collectionManager.getSize()
         + "\n  Название xml файла: " + fileName + "\n";
 
-        console.println(message);
+        ConsoleAdapter.println(message);
         return true;
     }
 }

@@ -12,7 +12,7 @@ public abstract class Command implements Executable {
     public Command(String name, String description, String usage) {
         this.name = name;
         this.description = description;
-        this.usage = "Использование: " + usage;
+        this.usage = usage;
     }
 
     public String getName() {
@@ -24,7 +24,11 @@ public abstract class Command implements Executable {
     }
 
     public String getUsage() {
-        return usage;
+        return "Использование: " + usage;
+    }
+
+    public String getInfo() {
+        return usage + ": " + description;
     }
 
     @Override

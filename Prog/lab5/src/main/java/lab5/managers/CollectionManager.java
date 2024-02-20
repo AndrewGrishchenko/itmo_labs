@@ -40,8 +40,10 @@ public class CollectionManager {
         save();  
     }
 
-    public void dumpData(String fileName) throws InvalidDataException, IdNotFoundException, FileNotFoundException, IOException {
-        //TODO: check file existance
+    public void dumpData(String fileName) throws FileNotFoundException, IOException, InvalidDataException {
+        initTime = LocalDateTime.now();
+        lastUpdateTime = initTime;
+        
         FileInputStream fileInputStream = new FileInputStream(fileName);
         InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
 
@@ -63,8 +65,6 @@ public class CollectionManager {
 
         validateAll();
         sort();
-        initTime = LocalDateTime.now();
-        lastUpdateTime = initTime;
     }
 
     private Tickets toTickets() {
@@ -77,14 +77,17 @@ public class CollectionManager {
     }
 
     public void saveData(String fileName) throws JsonProcessingException, FileNotFoundException {
-        XmlMapper xmlMapper = new XmlMapper();
-        xmlMapper.enable(SerializationFeature.INDENT_OUTPUT);
-
-        Tickets tickets = toTickets();
-        String xml = xmlMapper.writeValueAsString(tickets);
-
         PrintWriter printWriter = new PrintWriter(fileName);
-        printWriter.println(xml);
+        if (collection.isEmpty()) printWriter.println();
+        else {
+            XmlMapper xmlMapper = new XmlMapper();
+            xmlMapper.enable(SerializationFeature.INDENT_OUTPUT);
+
+            Tickets tickets = toTickets();
+            String xml = xmlMapper.writeValueAsString(tickets);
+
+            printWriter.println(xml);
+        }
         printWriter.close();
     }
 
