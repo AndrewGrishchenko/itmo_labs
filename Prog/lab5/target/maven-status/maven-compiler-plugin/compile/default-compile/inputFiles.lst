@@ -29,6 +29,7 @@
 /home/andrew/itmo_labs/Prog/lab5/src/main/java/lab5/commands/ExecuteScript.java
 /home/andrew/itmo_labs/Prog/lab5/src/main/java/lab5/commands/RemoveAnyByEvent.java
 /home/andrew/itmo_labs/Prog/lab5/src/main/java/lab5/commands/Update.java
+/home/andrew/itmo_labs/Prog/lab5/src/main/java/lab5/models/ExitCode.java
 /home/andrew/itmo_labs/Prog/lab5/src/main/java/lab5/exceptions/IncompleteScriptRuntimeException.java
 /home/andrew/itmo_labs/Prog/lab5/src/main/java/lab5/models/TicketType.java
 /home/andrew/itmo_labs/Prog/lab5/src/main/java/lab5/managers/CollectionManager.java

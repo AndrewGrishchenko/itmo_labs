@@ -11,6 +11,9 @@ import lab5.adapters.ConsoleAdapter;
 import lab5.adapters.ScannerAdapter;
 import lab5.exceptions.TooManyArgumentsException;
 
+/**
+ * Класс Ticket
+ */
 public class Ticket implements Comparable<Ticket> {
     private static List<Integer> usedId = new ArrayList<>();
     private static int lastId = 0;
@@ -25,16 +28,27 @@ public class Ticket implements Comparable<Ticket> {
     private TicketType type; //Поле не может быть null
     private Event event; //Поле не может быть null
 
+    /**
+     * Конструктор класса
+     */
     public Ticket() {
         this.id = getNextId();
         creationDate = LocalDateTime.now();
     }
 
+    /**
+     * Конструктор класса
+     * @param id значение id
+     */
     public Ticket(int id) {
         this.id = id;
         creationDate = LocalDateTime.now();
     }
 
+    /**
+     * Конструктор класса на основе другого объекта класса
+     * @param another другой объект класса
+     */
     public Ticket(Ticket another) {
         this.id = another.getId();
         this.name = another.getName();
@@ -45,6 +59,17 @@ public class Ticket implements Comparable<Ticket> {
         this.event = another.getEvent();
     }
 
+    /**
+     * Конструктор класса с данными
+     * @param name значение name
+     * @param coordinates значение coordinates
+     * @param price значение price
+     * @param type значение type
+     * @param event значение event
+     * @see Coordinates
+     * @see TicketType
+     * @see Event
+     */
     public Ticket(String name, Coordinates coordinates, int price, TicketType type, Event event) {
         this.id = getNextId();
         this.name = name;
@@ -55,6 +80,10 @@ public class Ticket implements Comparable<Ticket> {
         this.event = event;
     }
 
+    /**
+     * Возвращает следующее свободное id
+     * @return следующее свободное id
+     */
     private static int getNextId() {
         int id = lastId + 1;
         boolean found = false;
@@ -67,6 +96,11 @@ public class Ticket implements Comparable<Ticket> {
         return id;
     }
 
+    /**
+     * Проверяет наличие заданного id
+     * @param id значение id
+     * @return возвращает true если такой id уже есть, false в противном случае
+     */
     private static boolean containsId(int id) {
         for (int i = 0; i < usedId.size(); i++) {
             if (usedId.get(i) == id) return true;
@@ -74,6 +108,10 @@ public class Ticket implements Comparable<Ticket> {
         return false;
     }
 
+    /**
+     * Проверяет валидность данных
+     * @return возвращает true если все данные валидны, false в противном случае
+     */
     public boolean validate()  {
         if (id <= 0) return false;
         if (name == null || name.isEmpty()) return false;
@@ -116,6 +154,10 @@ public class Ticket implements Comparable<Ticket> {
         return this.getPrice() - other.getPrice();
     }
 
+    /**
+     * Заполняет данные объекта из консоли или скрипта
+     * @throws TooManyArgumentsException возникает при наличии слишком большого количества аргументов
+     */
     public void fillData() throws TooManyArgumentsException {
         ConsoleAdapter.print("Введите name (String): ");
         this.setName(ScannerAdapter.getString());
@@ -149,6 +191,10 @@ public class Ticket implements Comparable<Ticket> {
         this.setEvent(event);
     }
 
+    /**
+     * Восстанавливает значения из старого объекта
+     * @param oldTicket старый объект
+     */
     public void restoreData(Ticket oldTicket) {
         this.name = oldTicket.getName();
         this.coordinates = oldTicket.getCoordinates();
@@ -158,50 +204,104 @@ public class Ticket implements Comparable<Ticket> {
         this.event = oldTicket.getEvent();
     }
 
+    /**
+     * Возвращает значение id
+     * @return значение id
+     */
     public int getId() {
         return id;
     }
 
+    /**
+     * Возвращает значение name
+     * @return значение name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Устанавливает значение name
+     * @param name значение name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Возвращает значение coordinates
+     * @return значение coordinates
+     * @see Coordinates
+     */
     public Coordinates getCoordinates() {
         return coordinates;
     }
 
+    /**
+     * Устанавливает значение coordinates
+     * @param coordinates значение coordinates
+     * @see Coordinates
+     */
     public void setCoordinates(Coordinates coordinates) {
         this.coordinates = coordinates;
     }
 
+    /**
+     * Возвращает время создания
+     * @return время создания
+     */
     public LocalDateTime getCreationDate() {
         return creationDate;
     }
 
+    /**
+     * Возвращает значение price
+     * @return значение price
+     */
     public int getPrice() {
         return price;
     }
 
+    /**
+     * Устанавливает значение price
+     * @param price значение price
+     */
     public void setPrice(int price) {
         this.price = price;
     }
 
+    /**
+     * Возвращает значение type
+     * @return значение type
+     * @see TicketType
+     */
     public TicketType getType() {
         return type;
     }
 
+    /**
+     * Устанавливает значение type
+     * @param type значение type
+     * @see TicketType
+     */
     public void setType(TicketType type) {
         this.type = type;
     }
 
+    /**
+     * Возвращает значение event
+     * @return значение event
+     * @see Event
+     */
     public Event getEvent() {
         return event;
     }
 
+    /**
+     * Устанавливает значение event
+     * @param event значение event
+     * @see Event
+     */
     public void setEvent(Event event) {
         event.setId(id);
         this.event = event;

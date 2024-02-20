@@ -10,16 +10,29 @@ import lab5.exceptions.TooManyArgumentsException;
 import lab5.managers.CollectionManager;
 import lab5.models.Event;
 import lab5.models.Ticket;
-import lab5.utility.Runner.ExitCode;
+import lab5.models.ExitCode;
 
+/**
+ * Команда 'filter_greater_than_event'. Выводит элементы, значение поля event которых больше заданных
+ */
 public class FilterGreaterThanEvent extends Command {
     private CollectionManager collectionManager;
 
+    /**
+     * Конструктор команды
+     * @param collectionManager менеджер коллекции
+     * @see CollectionManager
+     */
     public FilterGreaterThanEvent(CollectionManager collectionManager) {
         super("filter_greater_than_event", "вывести элементы, значение поля event которых больше заданных", "'filter_greater_than_event'");
         this.collectionManager = collectionManager;
     }
 
+    /**
+     * Запуск команды
+     * @return код завершения команды
+     * @see ExitCode
+     */
     @Override
     public ExitCode run(String[] args) {
         if (args.length != 1) {

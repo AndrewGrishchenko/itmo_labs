@@ -14,7 +14,7 @@ lab5/commands/RemoveAnyByEvent.class
 lab5/commands/Exit.class
 lab5/utility/interfaces/Executable.class
 lab5/commands/ExecuteScript.class
-lab5/utility/Runner$ExitCode.class
+lab5/models/ExitCode.class
 lab5/commands/Command.class
 lab5/commands/FilterGreaterThanEvent.class
 lab5/managers/CommandManager.class

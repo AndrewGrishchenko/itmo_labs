@@ -9,16 +9,29 @@ import lab5.exceptions.InvalidDataException;
 import lab5.exceptions.TooManyArgumentsException;
 import lab5.managers.CollectionManager;
 import lab5.models.Ticket;
-import lab5.utility.Runner.ExitCode;
+import lab5.models.ExitCode;
 
+/**
+ * Команда 'insert'. Добавляет ноый элемент с заданным ключом
+ */
 public class Insert extends Command {
     private CollectionManager collectionManager;
 
+    /**
+     * Конструктор команды
+     * @param collectionManager менеджер коллекции
+     * @see CollectionManager
+     */
     public Insert(CollectionManager collectionManager) {
         super("insert", "добавить новый элемент с заданным ключом", "'insert <key>'");
         this.collectionManager = collectionManager;
     }
 
+    /**
+     * Запуск команды
+     * @return код завершения команды
+     * @see ExitCode
+     */
     @Override
     public ExitCode run(String[] args) {
         if (args.length != 2) {

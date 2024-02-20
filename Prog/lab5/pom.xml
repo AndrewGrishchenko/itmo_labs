@@ -80,31 +80,20 @@
         <plugin>
           <artifactId>maven-jar-plugin</artifactId>
           <version>3.0.2</version>
-          <!-- <configuration>
-            <archive>
-              <manifest>
-                <addClasspath>true</addClasspath>
-                <mainClass>lab5.Main</mainClass>
-              </manifest>
-            </archive>
-          </configuration> -->
         </plugin>
         <plugin>
           <artifactId>maven-assembly-plugin</artifactId>
           <version>3.6.0</version>
-
           <configuration>
             <descriptorRefs>
               <descriptorRef>jar-with-dependencies</descriptorRef>
             </descriptorRefs>
-
             <archive>
               <manifest>
                 <mainClass>lab5.Main</mainClass>
               </manifest>
             </archive>
           </configuration>
-
           <executions>
               <execution>
                   <id>make-assembly</id>
@@ -112,21 +101,18 @@
                   <goals>
                       <goal>single</goal>
                   </goals>
-                  <!-- <configuration>
-                      <archive>
-                        <manifest>
-                            <mainClass>
-                                lab5.Main
-                            </mainClass>
-                        </manifest>
-                      </archive>
-                      <descriptorRefs>
-                          <descriptorRef>jar-with-dependencies</descriptorRef>
-                      </descriptorRefs>
-                  </configuration> -->
               </execution>
           </executions>
-      </plugin>
+        </plugin>
+        <plugin>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-javadoc-plugin</artifactId>
+            <version>3.6.2</version>
+            <!-- <configuration>
+                <source>1.8</source>
+                <target>1.8</target>
+            </configuration> -->
+        </plugin>
         <plugin>
           <artifactId>maven-install-plugin</artifactId>
           <version>2.5.2</version>

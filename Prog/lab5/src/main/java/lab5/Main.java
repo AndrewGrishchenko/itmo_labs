@@ -13,7 +13,14 @@ import lab5.managers.CommandManager;
 import lab5.models.ScanMode;
 import lab5.utility.Runner;
 
+/**
+ * Главный класс
+ */
 public class Main {
+    /**
+     * Главный метод
+     * @param args аргументы командной строки
+     */
     public static void main(String[] args) {
         final CollectionManager collectionManager = new CollectionManager();
         ScannerAdapter.addScanner(ScanMode.INTERACTIVE, new Scanner(System.in));
@@ -53,7 +60,7 @@ public class Main {
         commandManager.addCommand(new ExecuteScript(commandManager));
         commandManager.addCommand(new Help(commandManager));
         
-        new Runner(collectionManager, commandManager).interactiveMode();
+        new Runner(collectionManager, commandManager).run();
     
         //TODO: redo some exception catching
         //TODO: redo some exceptions
@@ -62,5 +69,7 @@ public class Main {
         //TODO: test all
         //TODO: add javadoc
         //TODO: make uml
+
+        //TODO: Double and double stuff
     }
 }

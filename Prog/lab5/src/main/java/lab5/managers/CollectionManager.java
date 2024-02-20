@@ -25,6 +25,9 @@ import lab5.models.Tickets;
 import lab5.utility.EventComparator;
 import lab5.utility.TicketComparator;
 
+/**
+ * Менеджер коллекции
+ */
 public class CollectionManager {
     private HashMap<Integer, Ticket> collection = new HashMap<>();
     private List<Integer> sortSequence = new ArrayList<>();
@@ -32,6 +35,12 @@ public class CollectionManager {
     private LocalDateTime initTime;
     private LocalDateTime lastUpdateTime;
 
+    /**
+     * Добавляет элемент в коллекцию
+     * @param ticket элемент
+     * @throws InvalidDataException возникает при наличии невалидных данных
+     * @see Ticket
+     */
     public void addTicket(Ticket ticket) throws InvalidDataException {
         collection.put(ticket.getId(), ticket);
         sortSequence.add(ticket.getId());
@@ -40,6 +49,13 @@ public class CollectionManager {
         save();  
     }
 
+    /**
+     * Загружает коллекцию из файла
+     * @param fileName имя файла
+     * @throws FileNotFoundException возникает при отсутствии файла
+     * @throws IOException возникает про ошибке ввода/вывода
+     * @throws InvalidDataException возникает при наличии невалидных данных
+     */
     public void dumpData(String fileName) throws FileNotFoundException, IOException, InvalidDataException {
         initTime = LocalDateTime.now();
         lastUpdateTime = initTime;
@@ -67,6 +83,10 @@ public class CollectionManager {
         sort();
     }
 
+    /**
+     * Конвертирует коллекцию в объект класса {@link Tickets}
+     * @return Объект класса {@link Tickets}
+     */
     private Tickets toTickets() {
         Tickets tickets = new Tickets();
         for (int i = 0; i < sortSequence.size(); i++) {
@@ -76,6 +96,12 @@ public class CollectionManager {
         return tickets;
     }
 
+    /**
+     * Сохраняет коллекцию в файл
+     * @param fileName имя файла для сохранения
+     * @throws JsonProcessingException возникает при ошибке парсинга
+     * @throws FileNotFoundException возникает при отсутствии файла
+     */
     public void saveData(String fileName) throws JsonProcessingException, FileNotFoundException {
         PrintWriter printWriter = new PrintWriter(fileName);
         if (collection.isEmpty()) printWriter.println();
@@ -91,12 +117,20 @@ public class CollectionManager {
         printWriter.close();
     }
 
+    /**
+     * Очищает коллекцию
+     */
     public void clearCollection() {
         collection.clear();
         sortSequence.clear();
         save();
     }
 
+    /**
+     * Удаляет элемент коллекции по ключу
+     * @param id ключ
+     * @throws IdNotFoundException возникает при отсутствии элемента с заданным ключом
+     */
     public void removeTicketById(int id) throws IdNotFoundException {
         if (!collection.containsKey(id)) {
             throw new IdNotFoundException("Тикета с id=" + String.valueOf(id) + " не существует!");
@@ -111,6 +145,13 @@ public class CollectionManager {
         }
     }
 
+    /**
+     * Возвращает элемент коллекции по ключу
+     * @param id ключ
+     * @return элемент коллекции
+     * @throws IdNotFoundException возникает при отсутствии элемента с заданным ключом
+     * @see Ticket
+     */
     public Ticket getTicketById(int id) throws IdNotFoundException {
         if (!collection.containsKey(id)) {
             throw new IdNotFoundException("Тикета с id=" + String.valueOf(id + " не существует!"));
@@ -119,6 +160,13 @@ public class CollectionManager {
         return collection.get(id);
     }
 
+    /**
+     * Заменяет элемент коллекции по ключу
+     * @param id ключ
+     * @param ticket новый элемент коллекции
+     * @throws IdNotFoundException возникает при отсутствии элемента с заданным ключом
+     * @see Ticket
+     */
     public void changeTicketById(int id, Ticket ticket) throws IdNotFoundException {
         if (!collection.containsKey(id)) {
             throw new IdNotFoundException("Тикета с id=" + String.valueOf(id) + " не существует!");
@@ -128,6 +176,11 @@ public class CollectionManager {
         save();
     }
 
+    /**
+     * Конвертирует элементы коллекции в список
+     * @return список элементов коллекции
+     * @see Ticket
+     */
     public ArrayList<Ticket> toArray() {
         ArrayList<Ticket> tickets = new ArrayList<>();
         for (int i = 0; i < sortSequence.size(); i++) {
@@ -136,6 +189,10 @@ public class CollectionManager {
         return tickets;
     }
 
+    /**
+     * Удаляет элементы коллекции, меньшие чем заданный
+     * @param ticket заданный элемент типа {@link Ticket}
+     */
     public void removeLowerThanTicket(Ticket ticket) {
         while (collection.get(sortSequence.get(0)).compareTo(ticket) < 0) {
             collection.remove(sortSequence.get(0));
@@ -145,6 +202,11 @@ public class CollectionManager {
         save();
     }
 
+    /**
+     * Удаляет один элемент коллекции, значение поля event которого эквивалентно заданному
+     * @param event заданное значение типа {@link Event}
+     * @return возвращает true если был удален хотя бы один элемент, и false в противном случае
+     */
     public boolean removeOneByEvent(Event event) {
         for (int i = 0; i < sortSequence.size(); i++) {
             if (event.equals(collection.get(sortSequence.get(i)).getEvent())) {
@@ -157,6 +219,10 @@ public class CollectionManager {
         return false;
     }
 
+    /**
+     * Удаляет все элементы коллекции, id которых меньше чем заданный
+     * @param id заданный id
+     */
     public void removeLowerThanId(int id) {
         while(sortSequence.get(0) < id) {
             collection.remove(sortSequence.get(0));
@@ -166,6 +232,12 @@ public class CollectionManager {
         save();
     }
 
+    /**
+     * Возвращает список элементов коллекции, значение поля event которых больше заданного
+     * @param event заданное значение event
+     * @return список элементов коллекции, значение поля event которых больше заданного
+     * @see Event
+     */
     public List<Ticket> filterGreaterByEvent(Event event) {
         List<Ticket> sorted = new ArrayList<>();
 
@@ -177,6 +249,10 @@ public class CollectionManager {
         return sorted;
     }
 
+    /**
+     * Возвращает список элементов типа {@link Event} в порядке убывания
+     * @return список элементов типа {@link Event} в порядке убывания
+     */
     public List<Event> sortedDescendingEvents() {
         List<Event> events = new ArrayList<>();
         for (Ticket ticket : collection.values()) {
@@ -189,6 +265,10 @@ public class CollectionManager {
         return events;
     }
 
+    /**
+     * Проверяет валидность всех элементов коллекции
+     * @throws InvalidDataException возникает при наличии невалидных данных
+     */
     private void validateAll() throws InvalidDataException {
         for (Ticket ticket : collection.values()) { 
             if (!ticket.validate()) {
@@ -209,39 +289,66 @@ public class CollectionManager {
         }
     }
 
+    /**
+     * Сортирует коллекцию
+     */
     private void sort() {
         Comparator<Integer> ticketsComparator = new TicketComparator(collection);
         Collections.sort(sortSequence, ticketsComparator);
     }
 
-    public int size() {
-        return collection.size();
-    }
-
+    /**
+     * Возвращает список ключей коллекции
+     * @return список ключей коллекции
+     */
     public List<Integer> getKeys() {
         return sortSequence;
     }
 
+    /**
+     * Проверяет наличие элемента коллекции по ключу
+     * @param key ключ
+     * @return true если элемент присутствует, и false в противном случае
+     */
     public boolean hasId(int key) {
         return collection.containsKey(key);
     }
 
+    /**
+     * Обновляет дату последнего изменения коллекции
+     */
     private void save() {
         lastUpdateTime = LocalDateTime.now();
     }
 
+    /**
+     * Возврашает время инициализации коллекции в строковом представлении
+     * @return время инициализации коллекции в строковом представлении
+     */
     public String getInitTime() {
         return initTime.toString();
     }
 
+    /**
+     * Возвращает время последнего изменения коллекции в строковом представлении
+     * @return время последнего изменения коллекции в строковом представлении
+     */
     public String getLastUpdateTime() {
         return lastUpdateTime.toString();
     }
 
+    /**
+     * Возвращает тип коллекции в строковом представлении
+     * @return тип коллекции в строковом представлении
+     */
     public String getType() {
         return collection.getClass().toString();
     }
 
+    /**
+     * Возвращает размер коллекции
+     * @return размер коллекции
+     */
     public int getSize() {
         return collection.size();
     }

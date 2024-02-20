@@ -9,16 +9,29 @@ import lab5.exceptions.InvalidDataException;
 import lab5.exceptions.TooManyArgumentsException;
 import lab5.managers.CollectionManager;
 import lab5.models.Ticket;
-import lab5.utility.Runner.ExitCode;
+import lab5.models.ExitCode;
 
+/**
+ * Команда 'replace_if_lower'. Заменяет значение по ключу, если новое значение меньше старого
+ */
 public class ReplaceIfLower extends Command {
     private CollectionManager collectionManager;
 
+    /**
+     * Конструктор команды
+     * @param collectionManager менеджер коллекции
+     * @see CollectionManager
+     */
     public ReplaceIfLower(CollectionManager collectionManager) {
         super("replace_if_lower", "заменить значение по ключу, если новое значение меньше старого", "'replace_if_lower <key>'");
         this.collectionManager = collectionManager;
     }
 
+    /**
+     * Запуск команды
+     * @return код завершения команды
+     * @see ExitCode
+     */
     @Override
     public ExitCode run(String[] args) {
         if (args.length != 2) {

@@ -4,6 +4,9 @@ import java.util.Comparator;
 
 import lab5.models.Event;
 
+/**
+ * Компаратор для объектов класса {@link Event}
+ */
 public class EventComparator implements Comparator<Event> {
     @Override
     public int compare(Event o1, Event o2) {

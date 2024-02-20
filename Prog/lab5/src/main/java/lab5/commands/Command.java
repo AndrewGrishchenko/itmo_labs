@@ -4,31 +4,48 @@ import java.util.Objects;
 
 import lab5.utility.interfaces.Executable;
 
+/**
+ * Абстракный класс команд
+ */
 public abstract class Command implements Executable {
     private final String name;
     private final String description;
     private final String usage;
 
+    /**
+     * Конструктор абстрактного класса команды
+     * @param name наименование команды
+     * @param description описание команды
+     * @param usage использование команды
+     */
     public Command(String name, String description, String usage) {
         this.name = name;
         this.description = description;
         this.usage = usage;
     }
 
+    /**
+     * Возвращает имя команды
+     * @return имя команды
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Возвращает описание команды
+     * @return описание команды
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Возвращает использование команды
+     * @return использование команды
+     */
     public String getUsage() {
         return "Использование: " + usage;
-    }
-
-    public String getInfo() {
-        return usage + ": " + description;
     }
 
     @Override
@@ -46,6 +63,6 @@ public abstract class Command implements Executable {
 
     @Override
     public String toString() {
-        return "Command{name='" + name + "', description='" + description + "'}";
+        return usage + ": " + description;
     }
 }

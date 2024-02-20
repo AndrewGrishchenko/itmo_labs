@@ -13,8 +13,10 @@ import lab5.adapters.ConsoleAdapter;
 import lab5.adapters.ScannerAdapter;
 import lab5.exceptions.TooManyArgumentsException;
 
+/**
+ * Класс Event
+ */
 public class Event implements Comparable<Event> {
-
     @JsonIgnore
     private Integer id; //Поле не может быть null, Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
     private String name; //Поле не может быть null, Строка не может быть пустой
@@ -22,14 +24,29 @@ public class Event implements Comparable<Event> {
     private Long ticketsCount; //Поле может быть null, Значение поля должно быть больше 0
     private String description; //Поле может быть null
 
+    /**
+     * <p>Конструктор класса с установленным id=1</p>
+     * <p>Не использовать для хранения в коллекции!</p>
+     */
     public Event() {
         this.id = 1;
     }
 
+    /**
+     * Конструктор класса
+     * @param id значение id
+     */
     public Event(int id) {
         this.id = id;
     }
 
+    /**
+     * Конструктор класса с данными
+     * @param name значение name
+     * @param date значение date
+     * @param ticketsCount значение ticketsCount
+     * @param description значение description
+     */
     public Event (String name, ZonedDateTime date, Long ticketsCount, String description) {
         this.name = name;
         this.date = date;
@@ -37,6 +54,10 @@ public class Event implements Comparable<Event> {
         this.description = description;
     }
 
+    /**
+     * Проверяет валидность данных
+     * @return возвращает true если все данные валидны, false в противном случае
+     */
     public boolean validate() {
         if (id == null || id <= 0) return false;
         if (name == null || name.isEmpty()) return false;
@@ -69,6 +90,10 @@ public class Event implements Comparable<Event> {
         && Objects.equals(getDescription(), other.getDescription());
     }
 
+    /**
+     * Заполняет данные объекта из консоли или скрипта
+     * @throws TooManyArgumentsException возникает при наличии слишком большого количества аргументов
+     */
     public void fillData() throws TooManyArgumentsException {
         ConsoleAdapter.print("Введите name (String): ");
         this.setName(ScannerAdapter.getString());
@@ -83,26 +108,51 @@ public class Event implements Comparable<Event> {
         this.setDescription(ScannerAdapter.getString());
     }
 
+    /**
+     * Возвращает значение id
+     * @return значение id
+     */
     public Integer getId() {
         return id;
     }
 
+    /**
+     * Устанавливает значение id
+     * @param id значение id
+     */
     public void setId(int id) {
         this.id = id;
     }
 
+    /**
+     * Возвращает значение name
+     * @return значение name
+     */
     public String getName() {
         return name;
     }
 
+    /**
+     * Устанавливает значение name
+     * @param name значение name
+     */
     public void setName(String name) {
         this.name = name;
     }
 
+    /**
+     * Возвращает значение date
+     * @return значение date
+     */
     public String getDate() {
         return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss ").format(date) + date.getZone().toString();
     }
 
+    /**
+     * Устанавливает значение date
+     * @param date значение date
+     * @throws DateTimeParseException возникает при ошибке парсинга даты
+     */
     public void setDate(String date) throws DateTimeParseException {
         if (date == null) {
             this.date = null;
@@ -118,18 +168,34 @@ public class Event implements Comparable<Event> {
         this.date = zdt;
     }
 
+    /**
+     * Возвращает значение ticketsCount
+     * @return значение ticketsCount
+     */
     public Long getTicketsCount() {
         return ticketsCount;
     }
 
+    /**
+     * Устанавливает значение ticketsCount
+     * @param ticketsCount значение ticketsCount
+     */
     public void setTicketsCount(Long ticketsCount) {
         this.ticketsCount = ticketsCount;
     }
 
+    /**
+     * Возвращает значение description
+     * @return значение description
+     */
     public String getDescription() {
         return description;
     }
 
+    /**
+     * Устанавливает значение description
+     * @param description значение description
+     */
     public void setDescription(String description) {
         this.description = description;
     }

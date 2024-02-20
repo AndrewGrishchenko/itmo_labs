@@ -5,16 +5,29 @@ import java.util.ArrayList;
 import lab5.adapters.ConsoleAdapter;
 import lab5.managers.CollectionManager;
 import lab5.models.Ticket;
-import lab5.utility.Runner.ExitCode;
+import lab5.models.ExitCode;
 
+/**
+ * Команда 'show'. Выводит все элементы коллекции
+ */
 public class Show extends Command {
     private CollectionManager collectionManager;
 
+    /**
+     * Конструктор команды
+     * @param collectionManager менеджер коллекции
+     * @see CollectionManager
+     */
     public Show(CollectionManager collectionManager) {
         super("show", "вывести в стандартный поток вывода все элементы коллекции в строковом представлении", "'show'");
         this.collectionManager = collectionManager;
     }
 
+    /**
+     * Запуск команды
+     * @return код завершения команды
+     * @see ExitCode
+     */
     @Override
     public ExitCode run(String[] args) {
         if (args.length != 1) {

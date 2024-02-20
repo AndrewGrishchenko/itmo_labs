@@ -9,16 +9,29 @@ import lab5.adapters.ScannerAdapter;
 import lab5.exceptions.IncompleteScriptRuntimeException;
 import lab5.exceptions.ScriptProcessingException;
 import lab5.managers.CommandManager;
-import lab5.utility.Runner.ExitCode;
+import lab5.models.ExitCode;
 
+/**
+ * Команда 'execute_script'. Запускает скрипт из файла
+ */
 public class ExecuteScript extends Command {
     private CommandManager commandManager;
     
+    /**
+     * Конструктор команды
+     * @param commandManager менеджер команд
+     * @see CommandManager
+     */
     public ExecuteScript (CommandManager commandManager) {
         super("execute_script", "считать и исполнить скрипт из указанного файла. В скрипте содержатся команды в таком же виде, в котором их вводит пользователь в интерактивном режиме", "'execute_script <fileName>'");
         this.commandManager = commandManager;
     }
 
+    /**
+     * Запуск команды
+     * @return код завершения команды
+     * @see ExitCode
+     */
     @Override
     public ExitCode run(String[] args) {
         if (args.length != 2) {

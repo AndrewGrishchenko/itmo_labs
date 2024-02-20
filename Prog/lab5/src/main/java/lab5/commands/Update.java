@@ -9,16 +9,29 @@ import lab5.exceptions.InvalidDataException;
 import lab5.exceptions.TooManyArgumentsException;
 import lab5.managers.CollectionManager;
 import lab5.models.Ticket;
-import lab5.utility.Runner.ExitCode;
+import lab5.models.ExitCode;
 
+/**
+ * Команда 'update'. Обновляет значение элемента коллекции по ключу
+ */
 public class Update extends Command {
     private CollectionManager collectionManager;
     
+    /**
+     * Конструктор команды
+     * @param collectionManager менеджер коллекции
+     * @see CollectionManager
+     */
     public Update(CollectionManager collectionManager) {
         super("update", "обновить значение элемента коллекции, id которого равен заданному", "'update <id>'");
         this.collectionManager = collectionManager;
     }
 
+    /**
+     * Запуск команды
+     * @return код завершения команды
+     * @see ExitCode
+     */
     @Override
     public ExitCode run(String[] args) {
         if (args.length != 2) {

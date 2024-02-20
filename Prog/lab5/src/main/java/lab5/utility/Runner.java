@@ -5,21 +5,29 @@ import lab5.adapters.ScannerAdapter;
 import lab5.commands.Command;
 import lab5.managers.CollectionManager;
 import lab5.managers.CommandManager;
+import lab5.models.ExitCode;
 
+/**
+ * Раннер
+ */
 public class Runner {
-    public enum ExitCode {
-        OK,
-        ERROR,
-        EXIT,
-    }
-
     private final CommandManager commandManager;
 
+    /**
+     * Конструктор класса
+     * @param collectionManager менеджер коллекции
+     * @param commandManager менеджер команд
+     * @see CollectionManager
+     * @see CommandManager
+     */
     public Runner(CollectionManager collectionManager, CommandManager commandManager) {
         this.commandManager = commandManager;
     }
 
-    public void interactiveMode() {
+    /**
+     * Запуск раннера
+     */
+    public void run() {
         ExitCode commandStatus;
         String[] userInput;
 
@@ -35,6 +43,11 @@ public class Runner {
         } while (commandStatus != ExitCode.EXIT);
     }
 
+    /**
+     * Запускает команду
+     * @param userCommand команда пользователя, в том числе аргументы
+     * @return код завершения команды
+     */
     private ExitCode launchCommand(String[] userCommand) {
         if (userCommand.length == 1 && userCommand[0] == "") return ExitCode.OK;
         
