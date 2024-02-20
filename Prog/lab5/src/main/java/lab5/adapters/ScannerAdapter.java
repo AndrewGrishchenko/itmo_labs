@@ -31,11 +31,17 @@ public class ScannerAdapter {;
 
     public static String[] getUserInput() {
         if (currentMode == ScanMode.INTERACTIVE) {
-            return getScanner().nextLine().trim().split(" ");
+            if (getScanner().hasNextLine()) {
+                return getScanner().nextLine().trim().split(" ");
+            }
+            else {
+                return null;
+            }
         }
         else {
             if (hasNext()) {
                 String line = getScanner().nextLine();
+                ConsoleAdapter.promptFile();
                 ConsoleAdapter.println(line);
                 return new String[] { line };
             }

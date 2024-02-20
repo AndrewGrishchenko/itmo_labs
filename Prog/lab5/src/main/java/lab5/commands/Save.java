@@ -6,6 +6,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 
 import lab5.adapters.ConsoleAdapter;
 import lab5.managers.CollectionManager;
+import lab5.utility.Runner.ExitCode;
 
 public class Save extends Command {
     private CollectionManager collectionManager;
@@ -18,22 +19,22 @@ public class Save extends Command {
     }
 
     @Override
-    public boolean run(String[] args) {
+    public ExitCode run(String[] args) {
         if (args.length != 1) {
             ConsoleAdapter.println(getUsage());
-            return false;
+            return ExitCode.ERROR;
         }
         
         try {
             collectionManager.saveData(fileName);
-            ConsoleAdapter.println("файл сохранен!");
-            return true;
+            ConsoleAdapter.println("Файл сохранен!");
+            return ExitCode.OK;
         } catch (FileNotFoundException e) {
-            ConsoleAdapter.printErr("Файл не найден!");
+            ConsoleAdapter.printErr("файл не найден!");
         } catch (JsonProcessingException e) {
             ConsoleAdapter.printErr("внутренняя ошибка!");
         }
         
-        return false;
+        return ExitCode.ERROR;
     }
 }

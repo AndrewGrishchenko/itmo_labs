@@ -9,6 +9,7 @@ import lab5.adapters.ScannerAdapter;
 import lab5.exceptions.IncompleteScriptRuntimeException;
 import lab5.exceptions.ScriptProcessingException;
 import lab5.managers.CommandManager;
+import lab5.utility.Runner.ExitCode;
 
 public class ExecuteScript extends Command {
     private CommandManager commandManager;
@@ -19,10 +20,10 @@ public class ExecuteScript extends Command {
     }
 
     @Override
-    public boolean run(String[] args) {
+    public ExitCode run(String[] args) {
         if (args.length != 2) {
             ConsoleAdapter.println(getUsage());
-            return false;
+            return ExitCode.ERROR;
         }
 
         try {
@@ -37,15 +38,18 @@ public class ExecuteScript extends Command {
             while (ScannerAdapter.hasNext()) {
                 userInput = ScannerAdapter.getUserInput()[0].split(" ");
 
-                if (!commandManager.invokeCommand(userInput)) {
+                ExitCode exitCode = commandManager.invokeCommand(userInput);
+                if (exitCode == ExitCode.ERROR) {
                     throw new ScriptProcessingException(userInput[0]);
+                } else if (exitCode == ExitCode.EXIT) {
+                    ConsoleAdapter.println("Выполнение скрипта завершено!");
+                    return exitCode;
                 }
-
-                if (userInput[0] == "exit") return true;
             }
             
             ScannerAdapter.setInteractiveMode();
-            return true;
+            ConsoleAdapter.println("Выполнение скрипта завершено!");
+            return ExitCode.OK;
         } catch (FileNotFoundException e) {
             ConsoleAdapter.printErr("файл не найден!");
         } catch (ScriptProcessingException e) {
@@ -55,6 +59,7 @@ public class ExecuteScript extends Command {
         }
 
         ScannerAdapter.setInteractiveMode();
-        return false;
+        ConsoleAdapter.println("Выполнение скрипта остановлено!");
+        return ExitCode.ERROR;
     }
 }

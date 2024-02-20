@@ -2,6 +2,7 @@ package lab5.commands;
 
 import lab5.adapters.ConsoleAdapter;
 import lab5.managers.CollectionManager;
+import lab5.utility.Runner.ExitCode;
 
 public class Info extends Command {
     private CollectionManager collectionManager;
@@ -14,10 +15,10 @@ public class Info extends Command {
     }
 
     @Override
-    public boolean run(String[] args) {
+    public ExitCode run(String[] args) {
         if (args.length != 1) {
             ConsoleAdapter.println(getUsage());
-            return false;
+            return ExitCode.ERROR;
         }
 
         String message = "Информация о коллекции:\n  Тип: " + collectionManager.getType()
@@ -27,6 +28,6 @@ public class Info extends Command {
         + "\n  Название xml файла: " + fileName + "\n";
 
         ConsoleAdapter.println(message);
-        return true;
+        return ExitCode.OK;
     }
 }

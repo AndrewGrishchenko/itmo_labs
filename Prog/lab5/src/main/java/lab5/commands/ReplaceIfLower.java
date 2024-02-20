@@ -9,6 +9,7 @@ import lab5.exceptions.InvalidDataException;
 import lab5.exceptions.TooManyArgumentsException;
 import lab5.managers.CollectionManager;
 import lab5.models.Ticket;
+import lab5.utility.Runner.ExitCode;
 
 public class ReplaceIfLower extends Command {
     private CollectionManager collectionManager;
@@ -19,10 +20,10 @@ public class ReplaceIfLower extends Command {
     }
 
     @Override
-    public boolean run(String[] args) {
+    public ExitCode run(String[] args) {
         if (args.length != 2) {
             ConsoleAdapter.println(getUsage());
-            return false;
+            return ExitCode.ERROR;
         }
 
         try {
@@ -43,7 +44,7 @@ public class ReplaceIfLower extends Command {
                 ConsoleAdapter.println("Новое значение больше старого; тикет не заменен!");
             }
 
-            return true;
+            return ExitCode.OK;
         } catch (InvalidDataException e) {
             ConsoleAdapter.printErr(e.getMessage());
         } catch (TooManyArgumentsException e) {
@@ -60,6 +61,6 @@ public class ReplaceIfLower extends Command {
             ConsoleAdapter.printErr("ошибка формата зоны!");
         }
         
-        return false;
+        return ExitCode.ERROR;
     }
 }

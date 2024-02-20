@@ -1,14 +1,1 @@
-clear
-insert 1
-ticket1
-1.1
-1.2
-100
-VIP
-event1
-2020-01-01 22:12:12 Europe/Moscow
-1
-desc1
-show
-save
-exit
+insert g

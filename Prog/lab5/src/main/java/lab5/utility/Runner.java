@@ -20,19 +20,19 @@ public class Runner {
     }
 
     public void interactiveMode() {
-        // try {
-            ExitCode commandStatus;
-            String[] userInput;
+        ExitCode commandStatus;
+        String[] userInput;
 
-            do {
-                ConsoleAdapter.prompt();
-                userInput = ScannerAdapter.getUserInput();
+        do {
+            ConsoleAdapter.prompt();
+            userInput = ScannerAdapter.getUserInput();
+            if (userInput == null) {
+                ConsoleAdapter.println("exit");
+                commandStatus = launchCommand(new String[] {"exit"});
+            } else {
                 commandStatus = launchCommand(userInput);
-            } while (commandStatus != ExitCode.EXIT);
-
-        // } catch (Exception e) {
-        //     console.printErr(e.getMessage());
-        // }
+            }
+        } while (commandStatus != ExitCode.EXIT);
     }
 
     private ExitCode launchCommand(String[] userCommand) {
@@ -44,15 +44,6 @@ public class Runner {
             return ExitCode.ERROR;
         }
 
-        switch (userCommand[0]) {
-            case "exit":
-                command.run(userCommand);
-                return ExitCode.EXIT;
-            default:
-                if (!command.run(userCommand)) return ExitCode.ERROR;
-                break;
-        }
-        
-        return ExitCode.OK;
+        return command.run(userCommand);
     }
 }

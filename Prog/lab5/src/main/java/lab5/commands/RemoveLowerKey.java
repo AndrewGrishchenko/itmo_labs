@@ -2,6 +2,7 @@ package lab5.commands;
 
 import lab5.adapters.ConsoleAdapter;
 import lab5.managers.CollectionManager;
+import lab5.utility.Runner.ExitCode;
 
 public class RemoveLowerKey extends Command {
     private CollectionManager collectionManager;
@@ -12,23 +13,23 @@ public class RemoveLowerKey extends Command {
     }
 
     @Override
-    public boolean run(String[] args) {
+    public ExitCode run(String[] args) {
         if (args.length != 2) {
             ConsoleAdapter.println(getUsage());
-            return false;
+            return ExitCode.ERROR;
         }
 
         try {
             int id = Integer.parseInt(args[1]);
             collectionManager.removeLowerThanId(id);
             ConsoleAdapter.println("Тикеты удалены!");
-            return true;
+            return ExitCode.OK;
         } catch (NumberFormatException e) {
             ConsoleAdapter.printErr("данные должны являться числом!");
         } catch (IllegalArgumentException e) {
             ConsoleAdapter.printErr("Введенные данные неверны!");
         }
 
-        return false;
+        return ExitCode.ERROR;
     }
 }

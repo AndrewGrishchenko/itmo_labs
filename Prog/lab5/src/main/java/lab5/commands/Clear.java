@@ -2,6 +2,7 @@ package lab5.commands;
 
 import lab5.adapters.ConsoleAdapter;
 import lab5.managers.CollectionManager;
+import lab5.utility.Runner.ExitCode;
 
 public class Clear extends Command {
     private CollectionManager collectionManager;
@@ -12,14 +13,14 @@ public class Clear extends Command {
     }
 
     @Override
-    public boolean run(String[] args) {
+    public ExitCode run(String[] args) {
         if (args.length != 1) {
             ConsoleAdapter.println(getUsage());
-            return false;
+            return ExitCode.ERROR;
         }
-        
+
         collectionManager.clearCollection();
         ConsoleAdapter.println("Коллекция очищена!");
-        return true;
+        return ExitCode.OK;
     }
 }

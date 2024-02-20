@@ -1,6 +1,7 @@
 package lab5.commands;
 
 import lab5.adapters.ConsoleAdapter;
+import lab5.utility.Runner.ExitCode;
 
 public class Exit extends Command {
     public Exit() {
@@ -8,13 +9,13 @@ public class Exit extends Command {
     }
 
     @Override
-    public boolean run(String[] args) {
+    public ExitCode run(String[] args) {
         if (args.length != 1) {
             ConsoleAdapter.println(getUsage());
-            return false;
+            return ExitCode.ERROR;
         }
         
         ConsoleAdapter.println("Завершение программы...");
-        return true;
+        return ExitCode.EXIT;
     }
 }

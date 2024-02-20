@@ -6,7 +6,6 @@ lab5/models/ScanMode.class
 lab5/commands/Help.class
 lab5/commands/RemoveLower.class
 lab5/exceptions/IncompleteScriptRuntimeException.class
-lab5/utility/interfaces/Console.class
 lab5/exceptions/IdNotFoundException.class
 lab5/exceptions/ScriptProcessingException.class
 lab5/models/Ticket.class

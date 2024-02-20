@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import lab5.adapters.ConsoleAdapter;
 import lab5.managers.CollectionManager;
 import lab5.models.Ticket;
+import lab5.utility.Runner.ExitCode;
 
 public class Show extends Command {
     private CollectionManager collectionManager;
@@ -15,10 +16,10 @@ public class Show extends Command {
     }
 
     @Override
-    public boolean run(String[] args) {
+    public ExitCode run(String[] args) {
         if (args.length != 1) {
             ConsoleAdapter.println(getUsage());
-            return false;
+            return ExitCode.ERROR;
         }
         
         String message = "";
@@ -27,6 +28,6 @@ public class Show extends Command {
             message += ticket.toString();
         }
         ConsoleAdapter.println(message);
-        return true;
+        return ExitCode.OK;
     }
 }

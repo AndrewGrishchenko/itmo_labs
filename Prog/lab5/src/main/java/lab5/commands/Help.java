@@ -4,6 +4,7 @@ import java.util.ArrayList;
 
 import lab5.adapters.ConsoleAdapter;
 import lab5.managers.CommandManager;
+import lab5.utility.Runner.ExitCode;
 
 public class Help extends Command {
     private CommandManager commandManager;
@@ -14,10 +15,10 @@ public class Help extends Command {
     }
 
     @Override
-    public boolean run(String[] args) {
+    public ExitCode run(String[] args) {
         if (args.length != 1) {
             ConsoleAdapter.println(getUsage());
-            return false;
+            return ExitCode.ERROR;
         }
         
         // String message = "help: вывести справку по доступным командам\n"
@@ -44,6 +45,6 @@ public class Help extends Command {
         }
 
         ConsoleAdapter.println(message);
-        return true;
+        return ExitCode.OK;
     }
 }

@@ -3,6 +3,7 @@ package lab5.managers;
 import java.util.ArrayList;
 
 import lab5.commands.Command;
+import lab5.utility.Runner.ExitCode;
 
 public class CommandManager {
     private final ArrayList<Command> commands = new ArrayList<Command>();
@@ -22,7 +23,7 @@ public class CommandManager {
         return null;
     }
 
-    public boolean invokeCommand(String[] args) {
+    public ExitCode invokeCommand(String[] args) {
         return getCommand(args[0]).run(args);
     }
 }

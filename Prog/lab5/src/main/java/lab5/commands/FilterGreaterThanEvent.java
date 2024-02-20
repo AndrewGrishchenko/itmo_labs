@@ -10,6 +10,7 @@ import lab5.exceptions.TooManyArgumentsException;
 import lab5.managers.CollectionManager;
 import lab5.models.Event;
 import lab5.models.Ticket;
+import lab5.utility.Runner.ExitCode;
 
 public class FilterGreaterThanEvent extends Command {
     private CollectionManager collectionManager;
@@ -20,10 +21,10 @@ public class FilterGreaterThanEvent extends Command {
     }
 
     @Override
-    public boolean run(String[] args) {
+    public ExitCode run(String[] args) {
         if (args.length != 1) {
             ConsoleAdapter.println(getUsage());
-            return false;
+            return ExitCode.ERROR;
         }
 
         try {
@@ -40,7 +41,7 @@ public class FilterGreaterThanEvent extends Command {
                 message += ticket.toString();
             }
             ConsoleAdapter.println(message);
-            return true;
+            return ExitCode.OK;
         } catch (InvalidDataException e) {
             ConsoleAdapter.printErr(e.getMessage());
         } catch (TooManyArgumentsException e) {
@@ -55,6 +56,6 @@ public class FilterGreaterThanEvent extends Command {
             ConsoleAdapter.printErr("ошибка формата зоны!");
         }
 
-        return false;
+        return ExitCode.ERROR;
     }
 }

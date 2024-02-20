@@ -9,6 +9,7 @@ import lab5.exceptions.InvalidDataException;
 import lab5.exceptions.TooManyArgumentsException;
 import lab5.managers.CollectionManager;
 import lab5.models.Ticket;
+import lab5.utility.Runner.ExitCode;
 
 public class Insert extends Command {
     private CollectionManager collectionManager;
@@ -19,10 +20,10 @@ public class Insert extends Command {
     }
 
     @Override
-    public boolean run(String[] args) {
+    public ExitCode run(String[] args) {
         if (args.length != 2) {
             ConsoleAdapter.println(this.getUsage());
-            return false;
+            return ExitCode.ERROR;
         }
         
         try {
@@ -38,7 +39,7 @@ public class Insert extends Command {
             ConsoleAdapter.println("Тикет был создан!");
             collectionManager.addTicket(ticket);
 
-            return true;
+            return ExitCode.OK;
         } catch (NumberFormatException e) {
             ConsoleAdapter.printErr("данные должны являться числом!");
         } catch (IdNotUniqueException e) {
@@ -55,6 +56,6 @@ public class Insert extends Command {
             ConsoleAdapter.printErr("ошибка формата зоны!");
         }
 
-        return false;
+        return ExitCode.ERROR;
     }
 }

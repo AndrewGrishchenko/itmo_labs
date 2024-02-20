@@ -8,6 +8,7 @@ import lab5.exceptions.InvalidDataException;
 import lab5.exceptions.TooManyArgumentsException;
 import lab5.managers.CollectionManager;
 import lab5.models.Event;
+import lab5.utility.Runner.ExitCode;
 
 public class RemoveAnyByEvent extends Command {
     private CollectionManager collectionManager;
@@ -18,10 +19,10 @@ public class RemoveAnyByEvent extends Command {
     }
 
     @Override
-    public boolean run(String[] args) {
+    public ExitCode run(String[] args) {
         if (args.length != 1) {
             ConsoleAdapter.println(getUsage());
-            return false;
+            return ExitCode.ERROR;
         }
 
         try {
@@ -38,7 +39,7 @@ public class RemoveAnyByEvent extends Command {
             else {
                 ConsoleAdapter.println("Данный ивент нигде не используется; ни один тикет не удален");
             }
-            return true;
+            return ExitCode.OK;
         } catch (InvalidDataException e) {
             ConsoleAdapter.printErr(e.getMessage());
         } catch (TooManyArgumentsException e) {
@@ -53,6 +54,6 @@ public class RemoveAnyByEvent extends Command {
             ConsoleAdapter.printErr("ошибка формата зоны!");
         }
 
-        return false;
+        return ExitCode.ERROR;
     }
 }

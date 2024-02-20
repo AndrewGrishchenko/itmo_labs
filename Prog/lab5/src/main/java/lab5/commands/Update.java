@@ -9,6 +9,7 @@ import lab5.exceptions.InvalidDataException;
 import lab5.exceptions.TooManyArgumentsException;
 import lab5.managers.CollectionManager;
 import lab5.models.Ticket;
+import lab5.utility.Runner.ExitCode;
 
 public class Update extends Command {
     private CollectionManager collectionManager;
@@ -19,10 +20,10 @@ public class Update extends Command {
     }
 
     @Override
-    public boolean run(String[] args) {
+    public ExitCode run(String[] args) {
         if (args.length != 2) {
             ConsoleAdapter.println(getUsage());
-            return false;
+            return ExitCode.ERROR;
         }
 
         try {
@@ -39,7 +40,7 @@ public class Update extends Command {
             collectionManager.changeTicketById(id, ticket);
             ConsoleAdapter.println("Тикет обновлен!");
 
-            return true;
+            return ExitCode.OK;
         } catch (InvalidDataException e) {
             ConsoleAdapter.printErr(e.getMessage());
         } catch (IdNotFoundException e) {
@@ -56,6 +57,6 @@ public class Update extends Command {
             ConsoleAdapter.printErr("ошибка формата зоны!");
         }
 
-        return true;
+        return ExitCode.ERROR;
     }
 }
