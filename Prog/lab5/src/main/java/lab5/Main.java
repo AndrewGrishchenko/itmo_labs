@@ -62,14 +62,6 @@ public class Main {
         
         new Runner(collectionManager, commandManager).run();
     
-        //TODO: redo some exception catching
-        //TODO: redo some exceptions
-        //TODO: remove memory leaks
-        //TODO: make code clean
-        //TODO: test all
-        //TODO: add javadoc
-        //TODO: make uml
-
-        //TODO: Double and double stuff
+        //TODO: make ERROR and CRITICAL codes. e.g. when insert in script has not valid data
     }
 }

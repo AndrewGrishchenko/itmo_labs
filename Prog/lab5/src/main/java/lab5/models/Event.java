@@ -9,9 +9,7 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import lab5.adapters.ConsoleAdapter;
 import lab5.adapters.ScannerAdapter;
-import lab5.exceptions.TooManyArgumentsException;
 
 /**
  * Класс Event
@@ -90,22 +88,19 @@ public class Event implements Comparable<Event> {
         && Objects.equals(getDescription(), other.getDescription());
     }
 
+    @Override
+    public int hashCode() {
+        return Objects.hash(id, name, date, ticketsCount, description);
+    }
+
     /**
      * Заполняет данные объекта из консоли или скрипта
-     * @throws TooManyArgumentsException возникает при наличии слишком большого количества аргументов
      */
-    public void fillData() throws TooManyArgumentsException {
-        ConsoleAdapter.print("Введите name (String): ");
-        this.setName(ScannerAdapter.getString());
-
-        ConsoleAdapter.print("Введите date (формат: 2020-01-23 15:30:55 Europe/Moscow): ");
-        this.setDate(ScannerAdapter.getString());
-
-        ConsoleAdapter.print("Введите ticketsCount (int): ");
-        this.setTicketsCount(ScannerAdapter.getLong());
-        
-        ConsoleAdapter.print("Введите description (String): ");
-        this.setDescription(ScannerAdapter.getString());
+    public void fillData() {
+        this.setName(ScannerAdapter.getString("Введите name (String): "));
+        this.setDate(ScannerAdapter.getZonedDateTime("Введите date (формат: 2020-01-23 15:30:55 Europe/Moscow): "));
+        this.setTicketsCount(ScannerAdapter.getLong("Введите ticketsCount (int): "));
+        this.setDescription(ScannerAdapter.getString("Введите description (String): "));
     }
 
     /**
@@ -150,7 +145,7 @@ public class Event implements Comparable<Event> {
 
     /**
      * Устанавливает значение date
-     * @param date значение date
+     * @param date значение date в строковом представлении
      * @throws DateTimeParseException возникает при ошибке парсинга даты
      */
     public void setDate(String date) throws DateTimeParseException {
@@ -165,6 +160,14 @@ public class Event implements Comparable<Event> {
         
         LocalDateTime ldt = LocalDateTime.parse(parts[0] + "T" + parts[1]);
         ZonedDateTime zdt = ldt.atZone(ZoneId.of(parts[2]));
+        this.date = zdt;
+    }
+
+    /**
+     * Устанавливает значение date
+     * @param zdt значение date
+     */
+    public void setDate(ZonedDateTime zdt) {
         this.date = zdt;
     }
 

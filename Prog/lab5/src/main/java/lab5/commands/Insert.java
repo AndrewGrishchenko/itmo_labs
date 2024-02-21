@@ -1,12 +1,8 @@
 package lab5.commands;
 
-import java.time.format.DateTimeParseException;
-import java.time.zone.ZoneRulesException;
-
 import lab5.adapters.ConsoleAdapter;
 import lab5.exceptions.IdNotUniqueException;
 import lab5.exceptions.InvalidDataException;
-import lab5.exceptions.TooManyArgumentsException;
 import lab5.managers.CollectionManager;
 import lab5.models.Ticket;
 import lab5.models.ExitCode;
@@ -53,20 +49,12 @@ public class Insert extends Command {
             collectionManager.addTicket(ticket);
 
             return ExitCode.OK;
-        } catch (NumberFormatException e) {
-            ConsoleAdapter.printErr("данные должны являться числом!");
         } catch (IdNotUniqueException e) {
-            ConsoleAdapter.printErr(e.getMessage());
-        } catch (TooManyArgumentsException e) {
             ConsoleAdapter.printErr(e.getMessage());
         } catch (InvalidDataException e) {
             ConsoleAdapter.printErr(e.getMessage());
-        } catch (IllegalArgumentException e) {
-            ConsoleAdapter.printErr("Введенные данные неверны!");
-        } catch (DateTimeParseException e) {
-            ConsoleAdapter.printErr("ошибка формата даты!");
-        } catch (ZoneRulesException e) {
-            ConsoleAdapter.printErr("ошибка формата зоны!");
+        } catch (NumberFormatException e) {
+            ConsoleAdapter.printErr("данные должны являться числом!");
         }
 
         return ExitCode.ERROR;

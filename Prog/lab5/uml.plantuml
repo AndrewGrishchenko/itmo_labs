@@ -1,0 +1,413 @@
+@startuml uml
+
+class lab5.Main {
++static void main(String[] args)
+}
+lab5.Main --down[#AAA]-o lab5.managers.CollectionManager
+lab5.Main -down[#AAA]--o lab5.managers.CommandManager
+lab5.Main -down[#AAA]-o lab5.commands.Exit
+lab5.Main -down[#AAA]--o lab5.commands.Show
+lab5.Main -down[#AAA]-o lab5.commands.Clear
+lab5.Main --down[#AAA]-o lab5.commands.RemoveKey
+lab5.Main -down[#AAA]--o lab5.commands.Save
+lab5.Main -down[#AAA]-o lab5.commands.Insert
+lab5.Main -down[#AAA]--o lab5.commands.Update
+lab5.Main -down[#AAA]-o lab5.commands.RemoveLower
+'!>10 lab5.Main --down[#AAA]-o lab5.commands.ReplaceIfLower
+'!>10 lab5.Main -down[#AAA]--o lab5.commands.RemoveLowerKey
+'!>10 lab5.Main -down[#AAA]-o lab5.commands.RemoveAnyByEvent
+'!>10 lab5.Main -down[#AAA]--o lab5.commands.FilterGreaterThanEvent
+'!>10 lab5.Main -down[#AAA]-o lab5.commands.PrintFieldDescendingEvent
+'!>10 lab5.Main --down[#AAA]-o lab5.commands.Info
+'!>10 lab5.Main -down[#AAA]--o lab5.commands.ExecuteScript
+'!>10 lab5.Main -down[#AAA]-o lab5.commands.Help
+'!>10 lab5.Main -down[#AAA]--o lab5.utility.Runner
+
+class lab5.utility.EventComparator implements Comparator {
++int compare(Event o1, Event o2)
+}
+
+
+class lab5.utility.TicketComparator implements Comparator {
+-HashMap<Integer, Ticket> collection
++TicketComparator(HashMap<Integer, Ticket> collection)
++int compare(Integer o1, Integer o2)
+}
+
+
+class lab5.utility.Runner {
+-final CommandManager commandManager
++Runner(CollectionManager collectionManager, CommandManager commandManager)
++void run()
+-ExitCode launchCommand(String[] userCommand)
+}
+
+
+interface lab5.utility.interfaces.Executable {
++ExitCode run(String[] args)
+}
+
+
+enum lab5.models.ScanMode {
+INTERACTIVE,
+FILE
+}
+
+
+class lab5.models.Event implements Comparable {
+-Integer id
+-String name
+-ZonedDateTime date
+-Long ticketsCount
+-String description
++Event()
++Event(int id)
++Event (String name, ZonedDateTime date, Long ticketsCount, String description)
++boolean validate()
++int compareTo(Event other)
++String toString()
++boolean equals(Object obj)
++int hashCode()
++void fillData()
++Integer getId()
++void setId(int id)
++String getName()
++void setName(String name)
++String getDate()
++void setDate(String date) throws DateTimeParseException
++void setDate(ZonedDateTime zdt)
++Long getTicketsCount()
++void setTicketsCount(Long ticketsCount)
++String getDescription()
++void setDescription(String description)
+}
+
+
+enum lab5.models.TicketType {
+VIP,
+USUAL,
+BUDGETARY,
+CHEAP
+}
+
+
+class lab5.models.Coordinates {
+-double x
+-Double y
++Coordinates()
++Coordinates(double x, Double y)
++boolean validate()
++String toString()
++boolean equals(Object obj)
++int hashCode()
++double getX()
++void setX(double x)
++Double getY()
++void setY(Double y)
+}
+
+
+class lab5.models.Ticket implements Comparable {
+-static List<Integer> usedId = new ArrayList<>()
+-static int lastId = 0
+-int id
+-String name
+-Coordinates coordinates
+-LocalDateTime creationDate
+-int price
+-TicketType type
+-Event event
++Ticket()
++Ticket(int id)
++Ticket(Ticket another)
++Ticket(String name, Coordinates coordinates, int price, TicketType type, Event event)
+-static int getNextId()
+-static boolean containsId(int id)
++boolean validate()
++String toString()
++boolean equals(Object obj)
++int hashCode()
++int compareTo(Ticket other)
++void fillData()
++void restoreData(Ticket oldTicket)
++int getId()
++String getName()
++void setName(String name)
++Coordinates getCoordinates()
++void setCoordinates(Coordinates coordinates)
++LocalDateTime getCreationDate()
++int getPrice()
++void setPrice(int price)
++TicketType getType()
++void setType(TicketType type)
++void setType(String type)
++Event getEvent()
++void setEvent(Event event)
+}
+lab5.models.Ticket -down[#AAA]-o lab5.models.Coordinates
+lab5.models.Ticket --down[#AAA]-o lab5.models.Event
+
+class lab5.models.Tickets {
+-List<Ticket> ticket = new ArrayList<>()
++List<Ticket> getTicket()
++void setTicket(List<Ticket> ticket)
++void addTicket(Ticket ticket)
+}
+
+
+enum lab5.models.ExitCode {
+OK,
+ERROR,
+EXIT,
+}
+
+
+class lab5.exceptions.IdNotUniqueException extends Exception {
++IdNotUniqueException(String message)
+}
+
+
+class lab5.exceptions.IncompleteScriptRuntimeException extends RuntimeException {
++IncompleteScriptRuntimeException (String message)
++IncompleteScriptRuntimeException()
+}
+
+
+class lab5.exceptions.ScriptProcessingException extends Exception {
++ScriptProcessingException(String command)
+}
+
+
+class lab5.exceptions.IdNotFoundException extends Exception {
++IdNotFoundException(String message)
+}
+
+
+class lab5.exceptions.InvalidDataException extends Exception {
++InvalidDataException (String message)
+}
+
+
+class lab5.exceptions.TooManyArgumentsException extends Exception {
++TooManyArgumentsException(String message)
+}
+
+
+class lab5.adapters.ConsoleAdapter {
++static void print(Object obj)
++static void println(Object obj)
++static void println()
++static void printErr(Object obj)
++static void prompt()
++static void promptFile()
+}
+
+
+class lab5.adapters.ScannerAdapter {
+-static ScanMode currentMode = ScanMode.INTERACTIVE
+-static HashMap<ScanMode, Scanner> scanners = new HashMap<>()
+static
++static Scanner getScanner()
++static void addScanner(ScanMode mode, Scanner scanner)
++static boolean hasNext()
++static String[] getUserInput()
++static String getString(String message)
++static Double getDouble(String message)
++static double getPrimitiveDouble(String message)
++static int getPrimitiveInt(String message)
++static Long getLong(String message)
++static ZonedDateTime getZonedDateTime(String message)
++static TicketType getTicketType(String message)
++static ScanMode getScanMode()
++static void setInteractiveMode()
++static void setFileMode(InputStreamReader isr)
+}
+lab5.adapters.ScannerAdapter -down[#AAA]--o lab5.exceptions.IncompleteScriptRuntimeException
+lab5.adapters.ScannerAdapter -down[#AAA]-o lab5.exceptions.TooManyArgumentsException
+lab5.adapters.ScannerAdapter -down[#AAA]--o lab5.exceptions.TooManyArgumentsException
+lab5.adapters.ScannerAdapter -down[#AAA]-o lab5.exceptions.TooManyArgumentsException
+lab5.adapters.ScannerAdapter --down[#AAA]-o lab5.exceptions.TooManyArgumentsException
+
+class lab5.commands.FilterGreaterThanEvent extends lab5.commands.Command {
+-CollectionManager collectionManager
++FilterGreaterThanEvent(CollectionManager collectionManager)
++ExitCode run(String[] args)
+}
+lab5.commands.FilterGreaterThanEvent -down[#AAA]--o lab5.models.Event
+lab5.commands.FilterGreaterThanEvent -down[#AAA]-o lab5.exceptions.InvalidDataException
+
+class lab5.commands.Help extends lab5.commands.Command {
+-CommandManager commandManager
++Help (CommandManager commandManager)
++ExitCode run(String[] args)
+}
+
+
+class lab5.commands.RemoveAnyByEvent extends lab5.commands.Command {
+-CollectionManager collectionManager
++RemoveAnyByEvent(CollectionManager collectionManager)
++ExitCode run(String[] args)
+}
+lab5.commands.RemoveAnyByEvent -down[#AAA]--o lab5.models.Event
+lab5.commands.RemoveAnyByEvent -down[#AAA]-o lab5.exceptions.InvalidDataException
+
+class lab5.commands.RemoveLower extends lab5.commands.Command {
+-CollectionManager collectionManager
++RemoveLower(CollectionManager collectionManager)
++ExitCode run(String[] args)
+}
+lab5.commands.RemoveLower --down[#AAA]-o lab5.models.Ticket
+lab5.commands.RemoveLower -down[#AAA]--o lab5.exceptions.InvalidDataException
+
+class lab5.commands.Clear extends lab5.commands.Command {
+-CollectionManager collectionManager
++Clear(CollectionManager collectionManager)
++ExitCode run(String[] args)
+}
+
+
+class lab5.commands.Insert extends lab5.commands.Command {
+-CollectionManager collectionManager
++Insert(CollectionManager collectionManager)
++ExitCode run(String[] args)
+}
+lab5.commands.Insert -down[#AAA]-o lab5.exceptions.IdNotUniqueException
+lab5.commands.Insert -down[#AAA]--o lab5.models.Ticket
+lab5.commands.Insert -down[#AAA]-o lab5.exceptions.InvalidDataException
+
+class lab5.commands.Save extends lab5.commands.Command {
+-CollectionManager collectionManager
+-String fileName
++Save(CollectionManager collectionManager, String fileName)
++ExitCode run(String[] args)
+}
+
+
+class lab5.commands.PrintFieldDescendingEvent extends lab5.commands.Command {
+-CollectionManager collectionManager
++PrintFieldDescendingEvent(CollectionManager collectionManager)
++ExitCode run(String[] args)
+}
+
+
+abstract class lab5.commands.Command implements lab5.utility.interfaces.Executable {
+-final String name
+-final String description
+-final String usage
++Command(String name, String description, String usage)
++String getName()
++String getDescription()
++String getUsage()
++boolean equals(Object obj)
++int hashCode()
++String toString()
+}
+
+
+class lab5.commands.Exit extends lab5.commands.Command {
++Exit()
++ExitCode run(String[] args)
+}
+
+
+class lab5.commands.RemoveLowerKey extends lab5.commands.Command {
+-CollectionManager collectionManager
++RemoveLowerKey(CollectionManager collectionManager)
++ExitCode run(String[] args)
+}
+
+
+class lab5.commands.ReplaceIfLower extends lab5.commands.Command {
+-CollectionManager collectionManager
++ReplaceIfLower(CollectionManager collectionManager)
++ExitCode run(String[] args)
+}
+lab5.commands.ReplaceIfLower --down[#AAA]-o lab5.models.Ticket
+lab5.commands.ReplaceIfLower -down[#AAA]--o lab5.exceptions.InvalidDataException
+
+class lab5.commands.Info extends lab5.commands.Command {
+-CollectionManager collectionManager
+-String fileName
++Info(CollectionManager collectionManager, String fileName)
++ExitCode run(String[] args)
+}
+
+
+class lab5.commands.ExecuteScript extends lab5.commands.Command {
+-CommandManager commandManager
++ExecuteScript (CommandManager commandManager)
++ExitCode run(String[] args)
+}
+lab5.commands.ExecuteScript -down[#AAA]-o lab5.exceptions.ScriptProcessingException
+
+class lab5.commands.RemoveKey extends lab5.commands.Command {
+-CollectionManager collectionManager
++RemoveKey(CollectionManager collectionManager)
++ExitCode run(String[] args)
+}
+
+
+class lab5.commands.Update extends lab5.commands.Command {
+-CollectionManager collectionManager
++Update(CollectionManager collectionManager)
++ExitCode run(String[] args)
+}
+lab5.commands.Update -down[#AAA]--o lab5.models.Ticket
+lab5.commands.Update -down[#AAA]-o lab5.exceptions.InvalidDataException
+
+class lab5.commands.Show extends lab5.commands.Command {
+-CollectionManager collectionManager
++Show(CollectionManager collectionManager)
++ExitCode run(String[] args)
+}
+
+
+class lab5.managers.CommandManager {
+-final ArrayList<Command> commands = new ArrayList<Command>()
++void addCommand(Command command)
++ArrayList<Command> getCommands()
++Command getCommand(String name)
++ExitCode invokeCommand(String[] args)
+}
+
+
+class lab5.managers.CollectionManager {
+-HashMap<Integer, Ticket> collection = new HashMap<>()
+-List<Integer> sortSequence = new ArrayList<>()
+-LocalDateTime initTime
+-LocalDateTime lastUpdateTime
++void addTicket(Ticket ticket) throws InvalidDataException
++void dumpData(String fileName) throws FileNotFoundException, IOException, InvalidDataException
+-Tickets toTickets()
++void saveData(String fileName) throws JsonProcessingException, FileNotFoundException
++void clearCollection()
++void removeTicketById(int id) throws IdNotFoundException
++Ticket getTicketById(int id) throws IdNotFoundException
++void changeTicketById(int id, Ticket ticket) throws IdNotFoundException
++ArrayList<Ticket> toArray()
++void removeLowerThanTicket(Ticket ticket)
++boolean removeOneByEvent(Event event)
++void removeLowerThanId(int id)
++List<Ticket> filterGreaterByEvent(Event event)
++List<Event> sortedDescendingEvents()
+-void validateAll() throws InvalidDataException
+-void sort()
++List<Integer> getKeys()
++boolean hasId(int key)
+-void save()
++String getInitTime()
++String getLastUpdateTime()
++String getType()
++int getSize()
+}
+lab5.managers.CollectionManager --down[#AAA]-o lab5.models.Tickets
+lab5.managers.CollectionManager -down[#AAA]--o lab5.exceptions.IdNotFoundException
+lab5.managers.CollectionManager -down[#AAA]-o lab5.exceptions.IdNotFoundException
+lab5.managers.CollectionManager -down[#AAA]--o lab5.exceptions.IdNotFoundException
+lab5.managers.CollectionManager -down[#AAA]-o lab5.utility.EventComparator
+lab5.managers.CollectionManager --down[#AAA]-o lab5.exceptions.InvalidDataException
+lab5.managers.CollectionManager -down[#AAA]--o lab5.exceptions.InvalidDataException
+lab5.managers.CollectionManager -down[#AAA]-o lab5.exceptions.InvalidDataException
+lab5.managers.CollectionManager -down[#AAA]--o lab5.utility.TicketComparator
+
+@enduml

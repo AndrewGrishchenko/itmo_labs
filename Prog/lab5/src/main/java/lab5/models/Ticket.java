@@ -7,9 +7,7 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
-import lab5.adapters.ConsoleAdapter;
 import lab5.adapters.ScannerAdapter;
-import lab5.exceptions.TooManyArgumentsException;
 
 /**
  * Класс Ticket
@@ -150,44 +148,34 @@ public class Ticket implements Comparable<Ticket> {
     }
 
     @Override
+    public int hashCode() {
+        return Objects.hash(id, name, coordinates, creationDate, price, type, event);
+    }
+
+    @Override
     public int compareTo(Ticket other) {
         return this.getPrice() - other.getPrice();
     }
 
     /**
      * Заполняет данные объекта из консоли или скрипта
-     * @throws TooManyArgumentsException возникает при наличии слишком большого количества аргументов
      */
-    public void fillData() throws TooManyArgumentsException {
-        ConsoleAdapter.print("Введите name (String): ");
-        this.setName(ScannerAdapter.getString());
+    public void fillData() {
+        this.setName(ScannerAdapter.getString("Введите name (String): "));
 
         Coordinates coordinates = this.getCoordinates() == null ? new Coordinates() : this.getCoordinates();
-        ConsoleAdapter.print("Введите coordinates.x (double): ");
-        coordinates.setX(ScannerAdapter.getDouble());
-
-        ConsoleAdapter.print("Введите coordinates.y (double): ");
-        coordinates.setY(ScannerAdapter.getDouble());
+        coordinates.setX(ScannerAdapter.getPrimitiveDouble("Введите coordinates.x (double): "));
+        coordinates.setY(ScannerAdapter.getDouble("Введите coordinates.y (Double): "));
         this.setCoordinates(coordinates);
 
-        ConsoleAdapter.print("Введите price (int): ");
-        this.setPrice(ScannerAdapter.getInt());
-
-        ConsoleAdapter.print("Введите type (VIP, USUAL, BUDGETARY, CHEAP): ");
-        this.setType(TicketType.valueOf(ScannerAdapter.getString()));
+        this.setPrice(ScannerAdapter.getPrimitiveInt("Введите price (int): "));
+        this.setType(ScannerAdapter.getTicketType("Введите type (VIP, USUAL, BUDGETARY, CHEAP): "));
 
         Event event = this.getEvent() == null ? new Event() : this.getEvent();
-        ConsoleAdapter.print("Введите event.name (String): ");
-        event.setName(ScannerAdapter.getString());
-
-        ConsoleAdapter.print("Введите event.date (формат: 2020-01-23 15:30:55 Europe/Moscow): ");
-        event.setDate(ScannerAdapter.getString());
-
-        ConsoleAdapter.print("Введите event.ticketsCount (int): ");
-        event.setTicketsCount(ScannerAdapter.getLong());
-        
-        ConsoleAdapter.print("Введите description (String): ");
-        event.setDescription(ScannerAdapter.getString());
+        event.setName(ScannerAdapter.getString("Введите event.name (String): "));
+        event.setDate(ScannerAdapter.getZonedDateTime("Введите event.date (формат: 2020-01-23 15:30:55 Europe/Moscow): "));
+        event.setTicketsCount(ScannerAdapter.getLong("Введите event.ticketsCount (int): "));
+        event.setDescription(ScannerAdapter.getString("Введите description (String): "));
         this.setEvent(event);
     }
 
@@ -286,6 +274,14 @@ public class Ticket implements Comparable<Ticket> {
      */
     public void setType(TicketType type) {
         this.type = type;
+    }
+
+    /**
+     * Устанавливает значение type
+     * @param type значение type в строковом представлении
+     */
+    public void setType(String type) {
+        this.type = TicketType.valueOf(type);
     }
 
     /**

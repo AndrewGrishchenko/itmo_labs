@@ -32,7 +32,8 @@ public class Coordinates {
      */
     public boolean validate() {
         if (x > 87) return false;
-        if (y <= -194 || y == null) return false;
+        if (y == null) return false;
+        if (y <= -194) return false;
         return true;
     }
 
@@ -49,6 +50,11 @@ public class Coordinates {
 
         Coordinates other = (Coordinates) obj;
         return Objects.equals(getX(), other.getX()) && Objects.equals(getY(), other.getY());
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(x, y);
     }
 
     /**

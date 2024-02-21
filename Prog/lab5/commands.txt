@@ -1,1 +1,19 @@
-insert g
+clear
+insert 1
+d
+d
+d
+
+1.1
+
+
+1.2
+100
+vip
+VIP
+d
+2020-01-02 15:20:12 Europe/Something
+2020-01-02 15:20:12 Europe/Moscow
+1
+desc1
+show

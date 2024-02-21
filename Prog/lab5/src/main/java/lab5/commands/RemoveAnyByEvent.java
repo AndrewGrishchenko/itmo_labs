@@ -1,11 +1,7 @@
 package lab5.commands;
 
-import java.time.format.DateTimeParseException;
-import java.time.zone.ZoneRulesException;
-
 import lab5.adapters.ConsoleAdapter;
 import lab5.exceptions.InvalidDataException;
-import lab5.exceptions.TooManyArgumentsException;
 import lab5.managers.CollectionManager;
 import lab5.models.Event;
 import lab5.models.ExitCode;
@@ -55,16 +51,6 @@ public class RemoveAnyByEvent extends Command {
             return ExitCode.OK;
         } catch (InvalidDataException e) {
             ConsoleAdapter.printErr(e.getMessage());
-        } catch (TooManyArgumentsException e) {
-            ConsoleAdapter.printErr(e.getMessage());
-        } catch (NumberFormatException e) {
-            ConsoleAdapter.printErr("данные должны являться числом!");
-        } catch (IllegalArgumentException e) {
-            ConsoleAdapter.printErr("Введенные данные неверны!");
-        } catch (DateTimeParseException e) {
-            ConsoleAdapter.printErr("ошибка формата даты!");
-        } catch (ZoneRulesException e) {
-            ConsoleAdapter.printErr("ошибка формата зоны!");
         }
 
         return ExitCode.ERROR;
