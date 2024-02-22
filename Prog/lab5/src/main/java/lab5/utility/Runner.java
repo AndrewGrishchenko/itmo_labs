@@ -32,9 +32,11 @@ public class Runner {
         String[] userInput;
 
         do {
-            ConsoleAdapter.prompt();
-            userInput = ScannerAdapter.getUserInput();
+            userInput = ScannerAdapter.getCommand();
             if (userInput == null) {
+                ConsoleAdapter.println("exit");
+                commandStatus = launchCommand(new String[] {"exit"});
+            } else if (userInput.length == 1 && userInput[0] == "") {
                 ConsoleAdapter.println("exit");
                 commandStatus = launchCommand(new String[] {"exit"});
             } else {

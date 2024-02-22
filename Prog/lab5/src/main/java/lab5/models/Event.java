@@ -60,6 +60,7 @@ public class Event implements Comparable<Event> {
         if (id == null || id <= 0) return false;
         if (name == null || name.isEmpty()) return false;
         if (date == null) return false;
+        if (ticketsCount == null) return true;
         if (ticketsCount <= 0) return false;
         return true;
     }
@@ -99,7 +100,7 @@ public class Event implements Comparable<Event> {
     public void fillData() {
         this.setName(ScannerAdapter.getString("Введите name (String): "));
         this.setDate(ScannerAdapter.getZonedDateTime("Введите date (формат: 2020-01-23 15:30:55 Europe/Moscow): "));
-        this.setTicketsCount(ScannerAdapter.getLong("Введите ticketsCount (int): "));
+        this.setTicketsCount(ScannerAdapter.getLong("Введите ticketsCount (Long): "));
         this.setDescription(ScannerAdapter.getString("Введите description (String): "));
     }
 

@@ -82,6 +82,17 @@ public class ScannerAdapter {
     }
 
     /**
+     * Возвращает следующую считываемую команду
+     * @return следующая считываемая команда
+     */
+    public static String[] getCommand() {
+        ConsoleAdapter.prompt();
+        String[] userInput = getUserInput();
+        if (userInput == null) return new String[]  {""};
+        return userInput;
+    }
+
+    /**
      * Возвращает следующую считываемую строку
      * @param message сообщение для запроса
      * @return следующая считываемая строка

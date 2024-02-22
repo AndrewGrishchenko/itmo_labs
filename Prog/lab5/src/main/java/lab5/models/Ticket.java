@@ -174,7 +174,7 @@ public class Ticket implements Comparable<Ticket> {
         Event event = this.getEvent() == null ? new Event() : this.getEvent();
         event.setName(ScannerAdapter.getString("Введите event.name (String): "));
         event.setDate(ScannerAdapter.getZonedDateTime("Введите event.date (формат: 2020-01-23 15:30:55 Europe/Moscow): "));
-        event.setTicketsCount(ScannerAdapter.getLong("Введите event.ticketsCount (int): "));
+        event.setTicketsCount(ScannerAdapter.getLong("Введите event.ticketsCount (Long): "));
         event.setDescription(ScannerAdapter.getString("Введите description (String): "));
         this.setEvent(event);
     }
