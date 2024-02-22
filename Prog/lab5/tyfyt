@@ -1,6 +1,6 @@
 <Tickets>
   <ticket>
-    <name>ticket1</name>
+    <name>d</name>
     <coordinates>
       <x>1.1</x>
       <y>1.2</y>
@@ -8,10 +8,10 @@
     <price>100</price>
     <type>VIP</type>
     <event>
-      <name>event1</name>
-      <date>2020-01-01 22:12:12 Europe/Moscow</date>
+      <name>d</name>
+      <date>2020-01-01 12:12:12 Europe/Moscow</date>
       <ticketsCount>1</ticketsCount>
-      <description>desc1</description>
+      <description>d</description>
     </event>
   </ticket>
 </Tickets>

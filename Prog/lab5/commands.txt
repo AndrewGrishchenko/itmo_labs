@@ -1,19 +1,16 @@
-clear
-insert 1
-d
-d
-d
-
+update 1
+dd
 1.1
-
-
 1.2
 100
-vip
 VIP
-d
-2020-01-02 15:20:12 Europe/Something
-2020-01-02 15:20:12 Europe/Moscow
-1
-desc1
-show
+ddd
+2020-01-01 22:12:12 Europe/Moscow
+10
+dew
+remove_any_by_event
+event3
+2020-01-23 15:30:55 Europe/London
+3
+desc2
+execute_script insert1.txt

@@ -11,4 +11,3 @@ event1
 desc1
 show
 save
-exit

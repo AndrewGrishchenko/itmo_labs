@@ -67,5 +67,6 @@ public class Main {
         new Runner(collectionManager, commandManager).run();
     
         //TODO: make ERROR and CRITICAL codes. e.g. when insert in script has not valid data
+        //TODO: empty collection message
     }
 }

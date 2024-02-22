@@ -2,6 +2,7 @@ package lab5.managers;
 
 import java.util.ArrayList;
 
+import lab5.adapters.ConsoleAdapter;
 import lab5.commands.Command;
 import lab5.models.ExitCode;
 
@@ -49,6 +50,11 @@ public class CommandManager {
      * @see ExitCode
      */
     public ExitCode invokeCommand(String[] args) {
+        Command command = getCommand(args[0]);
+        if (command == null) {
+            ConsoleAdapter.printErr("команда не найдена!");
+            return ExitCode.ERROR;
+        }
         return getCommand(args[0]).run(args);
     }
 }
