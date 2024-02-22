@@ -4,6 +4,8 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.util.Scanner;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+
 import lab5.adapters.ConsoleAdapter;
 import lab5.adapters.ScannerAdapter;
 import lab5.commands.*;
@@ -35,6 +37,8 @@ public class Main {
             collectionManager.dumpData(fileName);
         } catch (FileNotFoundException e) {
             ConsoleAdapter.printErr("файл не найден!");
+        } catch (JsonProcessingException e) {
+            ConsoleAdapter.printErr("ошибка парсинга xml!");
         } catch (IOException e) {
             ConsoleAdapter.printErr("ошибка ввода/вывода!");
         } catch (InvalidDataException e) {
