@@ -263,30 +263,6 @@ public class CollectionManager {
         return events;
     }
 
-    // /**
-    //  * Проверяет валидность всех элементов коллекции
-    //  * @throws InvalidDataException возникает при наличии невалидных данных
-    //  */
-    // private void validateAll() throws InvalidDataException {
-    //     for (Ticket ticket : collection.values()) { 
-    //         if (!ticket.validate()) {
-    //             try {
-    //                 removeTicketById(ticket.getId());
-    //             } catch (Exception e) {}
-                
-    //             if (!ticket.getCoordinates().validate()) {
-    //                 throw new InvalidDataException("Тикет с id=" + String.valueOf(ticket.getId()) + " имеет невалидные координаты!"); 
-    //             }
-    //             else if (!ticket.getEvent().validate()) {
-    //                 throw new InvalidDataException("Тикет с id=" + String.valueOf(ticket.getId()) + " имеет невалидный ивент!");
-    //             }
-    //             else {
-    //                 throw new InvalidDataException("Тикет с id=" + String.valueOf(ticket.getId()) + " имеет невалидные данные!");
-    //             }
-    //         }
-    //     }
-    // }
-
     /**
      * Сортирует коллекцию
      */
