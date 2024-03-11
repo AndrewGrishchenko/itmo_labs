@@ -1,7 +1,6 @@
 package lab5.commands;
 
 import lab5.adapters.ConsoleAdapter;
-import lab5.exceptions.InvalidDataException;
 import lab5.managers.CollectionManager;
 import lab5.models.Event;
 import lab5.models.ExitCode;
@@ -34,25 +33,15 @@ public class RemoveAnyByEvent extends Command {
             return ExitCode.ERROR;
         }
 
-        try {
-            Event event = new Event();
-            event.fillData();
-            
-            if (!event.validate()) {
-                throw new InvalidDataException("Ивент имеет невалидные данные!");
-            }
-            
-            if (collectionManager.removeOneByEvent(event)) {
-                ConsoleAdapter.println("Тикет с данным ивентом был удален!");
-            }
-            else {
-                ConsoleAdapter.println("Данный ивент нигде не используется; ни один тикет не удален");
-            }
-            return ExitCode.OK;
-        } catch (InvalidDataException e) {
-            ConsoleAdapter.printErr(e.getMessage());
+        Event event = new Event();
+        event.fillData();
+        
+        if (collectionManager.removeOneByEvent(event)) {
+            ConsoleAdapter.println("Тикет с данным ивентом был удален!");
         }
-
-        return ExitCode.ERROR;
+        else {
+            ConsoleAdapter.println("Данный ивент нигде не используется; ни один тикет не удален");
+        }
+        return ExitCode.OK;
     }
 }

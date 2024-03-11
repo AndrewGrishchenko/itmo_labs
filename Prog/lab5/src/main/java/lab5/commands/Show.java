@@ -37,6 +37,12 @@ public class Show extends Command {
         
         String message = "";
         ArrayList<Ticket> tickets = collectionManager.toArray();
+        
+        if (tickets.size() == 0) {
+            ConsoleAdapter.println("Коллекция пуста!");
+            return ExitCode.OK;
+        }
+
         for (Ticket ticket : tickets) {
             message += ticket.toString();
         }

@@ -38,7 +38,7 @@ public class Main {
         } catch (FileNotFoundException e) {
             ConsoleAdapter.printErr("файл не найден!");
         } catch (JsonProcessingException e) {
-            ConsoleAdapter.printErr("ошибка парсинга xml!");
+            ConsoleAdapter.printErr("ошибка парсинга xml! Проверьте валидность данных");
         } catch (IOException e) {
             ConsoleAdapter.printErr("ошибка ввода/вывода!");
         } catch (InvalidDataException e) {
@@ -65,8 +65,5 @@ public class Main {
         commandManager.addCommand(new Help(commandManager));
         
         new Runner(collectionManager, commandManager).run();
-    
-        //TODO: make ERROR and CRITICAL codes. e.g. when insert in script has not valid data
-        //TODO: empty collection message
     }
 }

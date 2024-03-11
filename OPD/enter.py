@@ -1,0 +1,40 @@
+from pyKey import press, sendSequence
+from time import sleep
+
+def write(key):
+    sendSequence(key)
+    press("F5")
+    sleep(0.05)
+
+sleep(1)
+
+sendSequence("02FC")
+press("F4")
+
+write("0313")
+write("A000")
+write("E000")
+write("0200")
+write("AF80")
+write("0740")
+write("0680")
+write("EEFB")
+write("AF04")
+write("EEF8")
+write("AEF5")
+write("EEF5")
+write("AAF4")
+write("0480")
+write("F401")
+write("CE04")
+write("0400")
+write("7EF1")
+write("F901")
+write("EEEF")
+write("82FE")
+write("CEF6")
+write("0100")
+write("1100")
+write("B306")
+write("0740")
+write("0D01")

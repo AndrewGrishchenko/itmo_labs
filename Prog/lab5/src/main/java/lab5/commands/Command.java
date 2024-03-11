@@ -2,7 +2,7 @@ package lab5.commands;
 
 import java.util.Objects;
 
-import lab5.utility.interfaces.Executable;
+import lab5.interfaces.Executable;
 
 /**
  * Абстракный класс команд

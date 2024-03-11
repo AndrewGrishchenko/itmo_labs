@@ -7,7 +7,9 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import lab5.adapters.ConsoleAdapter;
 import lab5.adapters.ScannerAdapter;
+import lab5.exceptions.InvalidDataException;
 
 /**
  * Класс Ticket
@@ -15,6 +17,8 @@ import lab5.adapters.ScannerAdapter;
 public class Ticket implements Comparable<Ticket> {
     private static List<Integer> usedId = new ArrayList<>();
     private static int lastId = 0;
+
+    private int filledData = 1;
 
     @JsonIgnore
     private int id; //Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
@@ -106,23 +110,6 @@ public class Ticket implements Comparable<Ticket> {
         return false;
     }
 
-    /**
-     * Проверяет валидность данных
-     * @return возвращает true если все данные валидны, false в противном случае
-     */
-    public boolean validate()  {
-        if (id <= 0) return false;
-        if (name == null || name.isEmpty()) return false;
-        if (coordinates == null) return false;
-        if (creationDate == null) return false;
-        if (price <= 0) return false;
-        if (type == null) return false;
-        if (event == null) return false;
-        if (!coordinates.validate()) return false;
-        if (!event.validate()) return false;
-        return true;
-    }
-
     @Override
     public String toString() {
         String s = "Ticket{\n  id='" + String.valueOf(id) + "'\n  name='" + name + "'\n  coordinates={\n    x='" + String.valueOf(coordinates.getX())
@@ -161,22 +148,37 @@ public class Ticket implements Comparable<Ticket> {
      * Заполняет данные объекта из консоли или скрипта
      */
     public void fillData() {
-        this.setName(ScannerAdapter.getString("Введите name (String): "));
-
         Coordinates coordinates = this.getCoordinates() == null ? new Coordinates() : this.getCoordinates();
-        coordinates.setX(ScannerAdapter.getPrimitiveDouble("Введите coordinates.x (double): "));
-        coordinates.setY(ScannerAdapter.getDouble("Введите coordinates.y (Double): "));
-        this.setCoordinates(coordinates);
-
-        this.setPrice(ScannerAdapter.getPrimitiveInt("Введите price (int): "));
-        this.setType(ScannerAdapter.getTicketType("Введите type (VIP, USUAL, BUDGETARY, CHEAP): "));
-
         Event event = this.getEvent() == null ? new Event() : this.getEvent();
-        event.setName(ScannerAdapter.getString("Введите event.name (String): "));
-        event.setDate(ScannerAdapter.getZonedDateTime("Введите event.date (формат: 2020-01-23 15:30:55 Europe/Moscow): "));
-        event.setTicketsCount(ScannerAdapter.getLong("Введите event.ticketsCount (Long): "));
-        event.setDescription(ScannerAdapter.getString("Введите description (String): "));
-        this.setEvent(event);
+        while (filledData != 10) {
+            try {
+                switch (filledData) {
+                    case 1: this.setName(ScannerAdapter.getString("Введите name (String): "));
+                            break;
+                    case 2: coordinates.setX(ScannerAdapter.getPrimitiveDouble("Введите coordinates.x (double): "));
+                            break;
+                    case 3: coordinates.setY(ScannerAdapter.getDouble("Введите coordinates.y (Double): "));
+                            this.setCoordinates(coordinates);
+                            break;
+                    case 4: this.setPrice(ScannerAdapter.getPrimitiveInt("Введите price (int): "));
+                            break;
+                    case 5: this.setType(ScannerAdapter.getTicketType("Введите type (VIP, USUAL, BUDGETARY, CHEAP): "));
+                            break;
+                    case 6: event.setName(ScannerAdapter.getString("Введите event.name (String): "));
+                            break;
+                    case 7: event.setDate(ScannerAdapter.getZonedDateTime("Введите event.date (формат: 2020-01-23 15:30:55 Europe/Moscow): "));
+                            break;
+                    case 8: event.setTicketsCount(ScannerAdapter.getLong("Введите event.ticketsCount (Long): "));
+                            break;
+                    case 9: event.setDescription(ScannerAdapter.getString("Введите description (String): "));
+                            this.setEvent(event);
+                            break;
+                }
+                filledData++;
+            } catch (InvalidDataException e) {
+                ConsoleAdapter.printErr(e.getMessage());
+            }
+        }
     }
 
     /**
@@ -213,6 +215,7 @@ public class Ticket implements Comparable<Ticket> {
      * @param name значение name
      */
     public void setName(String name) {
+        if (name == null || name.isEmpty()) throw new InvalidDataException("Ticket.name");
         this.name = name;
     }
 
@@ -231,6 +234,7 @@ public class Ticket implements Comparable<Ticket> {
      * @see Coordinates
      */
     public void setCoordinates(Coordinates coordinates) {
+        if (coordinates == null) throw new InvalidDataException("Ticket.coordinates");
         this.coordinates = coordinates;
     }
 
@@ -255,6 +259,7 @@ public class Ticket implements Comparable<Ticket> {
      * @param price значение price
      */
     public void setPrice(int price) {
+        if (price <= 0) throw new InvalidDataException("Ticket.price");
         this.price = price;
     }
 
@@ -273,6 +278,7 @@ public class Ticket implements Comparable<Ticket> {
      * @see TicketType
      */
     public void setType(TicketType type) {
+        if (type == null) throw new InvalidDataException("Ticket.type");
         this.type = type;
     }
 
@@ -281,7 +287,9 @@ public class Ticket implements Comparable<Ticket> {
      * @param type значение type в строковом представлении
      */
     public void setType(String type) {
-        this.type = TicketType.valueOf(type);
+        TicketType ticketType = TicketType.valueOf(type);
+        if (ticketType == null) throw new InvalidDataException("Ticket.type");
+        this.type = ticketType;
     }
 
     /**
@@ -299,6 +307,7 @@ public class Ticket implements Comparable<Ticket> {
      * @see Event
      */
     public void setEvent(Event event) {
+        if (event == null) throw new InvalidDataException("Ticket.event");
         event.setId(id);
         this.event = event;
     }

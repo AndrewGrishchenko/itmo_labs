@@ -3,7 +3,6 @@ package lab5.commands;
 import java.util.List;
 
 import lab5.adapters.ConsoleAdapter;
-import lab5.exceptions.InvalidDataException;
 import lab5.managers.CollectionManager;
 import lab5.models.Event;
 import lab5.models.Ticket;
@@ -37,25 +36,15 @@ public class FilterGreaterThanEvent extends Command {
             return ExitCode.ERROR;
         }
 
-        try {
-            Event event = new Event();
-            event.fillData();
+        Event event = new Event();
+        event.fillData();
 
-            if (!event.validate()) {
-                throw new InvalidDataException("Ивент имеет невалидные данные!");
-            }
-
-            List<Ticket> tickets = collectionManager.filterGreaterByEvent(event);
-            String message = "";
-            for (Ticket ticket : tickets) {
-                message += ticket.toString();
-            }
-            ConsoleAdapter.println(message);
-            return ExitCode.OK;
-        } catch (InvalidDataException e) {
-            ConsoleAdapter.printErr(e.getMessage());
+        List<Ticket> tickets = collectionManager.filterGreaterByEvent(event);
+        String message = "";
+        for (Ticket ticket : tickets) {
+            message += ticket.toString();
         }
-
-        return ExitCode.ERROR;
+        ConsoleAdapter.println(message);
+        return ExitCode.OK;
     }
 }

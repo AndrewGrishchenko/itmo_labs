@@ -2,6 +2,8 @@ package lab5.models;
 
 import java.util.Objects;
 
+import lab5.exceptions.InvalidDataException;
+
 /**
  * Класс Coordinates
  */
@@ -24,17 +26,6 @@ public class Coordinates {
     public Coordinates(double x, Double y) {
         this.x = x;
         this.y = y;
-    }
-
-    /**
-     * Проверяет валидность данных
-     * @return возвращает true если все данные валидны, false в противном случае
-     */
-    public boolean validate() {
-        if (x > 87) return false;
-        if (y == null) return false;
-        if (y <= -194) return false;
-        return true;
     }
 
     @Override
@@ -70,6 +61,7 @@ public class Coordinates {
      * @param x значение x
      */
     public void setX(double x) {
+        if (x > 87) throw new InvalidDataException("Coordinates.x");
         this.x = x;
     }
 
@@ -86,6 +78,7 @@ public class Coordinates {
      * @param y значение y
      */
     public void setY(Double y) {
+        if (y == null || y <= -194) throw new InvalidDataException("Coordinates.y");
         this.y = y;
     }
 }

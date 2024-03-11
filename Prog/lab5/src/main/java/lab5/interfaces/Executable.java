@@ -1,4 +1,4 @@
-package lab5.utility.interfaces;
+package lab5.interfaces;
 
 import lab5.models.ExitCode;
 

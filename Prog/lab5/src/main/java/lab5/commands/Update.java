@@ -2,7 +2,6 @@ package lab5.commands;
 
 import lab5.adapters.ConsoleAdapter;
 import lab5.exceptions.IdNotFoundException;
-import lab5.exceptions.InvalidDataException;
 import lab5.managers.CollectionManager;
 import lab5.models.Ticket;
 import lab5.models.ExitCode;
@@ -37,21 +36,15 @@ public class Update extends Command {
 
         try {
             int id = Integer.parseInt(args[1]);
-            Ticket ticket = collectionManager.getTicketById(id);
-            Ticket oldTicket = new Ticket(ticket);
+            // Ticket oldTicket = collectionManager.getTicketById(id);
+            Ticket newTicket = new Ticket(id);
 
-            ticket.fillData();
+            newTicket.fillData();
 
-            if (!ticket.validate()) {
-                ticket.restoreData(oldTicket);
-                throw new InvalidDataException("Данные не прошли валидацию; тикет не был обновлен");
-            }
-            collectionManager.changeTicketById(id, ticket);
+            collectionManager.changeTicketById(id, newTicket);
             ConsoleAdapter.println("Тикет обновлен!");
 
             return ExitCode.OK;
-        } catch (InvalidDataException e) {
-            ConsoleAdapter.printErr(e.getMessage());
         } catch (IdNotFoundException e) {
             ConsoleAdapter.printErr(e.getMessage());
         } catch (NumberFormatException e) {

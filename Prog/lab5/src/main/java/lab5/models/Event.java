@@ -9,12 +9,16 @@ import java.util.Objects;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import lab5.adapters.ConsoleAdapter;
 import lab5.adapters.ScannerAdapter;
+import lab5.exceptions.InvalidDataException;
 
 /**
  * Класс Event
  */
 public class Event implements Comparable<Event> {
+    private int filledData = 1;
+    
     @JsonIgnore
     private Integer id; //Поле не может быть null, Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
     private String name; //Поле не может быть null, Строка не может быть пустой
@@ -52,19 +56,6 @@ public class Event implements Comparable<Event> {
         this.description = description;
     }
 
-    /**
-     * Проверяет валидность данных
-     * @return возвращает true если все данные валидны, false в противном случае
-     */
-    public boolean validate() {
-        if (id == null || id <= 0) return false;
-        if (name == null || name.isEmpty()) return false;
-        if (date == null) return false;
-        if (ticketsCount == null) return true;
-        if (ticketsCount <= 0) return false;
-        return true;
-    }
-
     @Override
     public int compareTo(Event other) {
         return (int) (this.ticketsCount - other.getTicketsCount());
@@ -98,10 +89,23 @@ public class Event implements Comparable<Event> {
      * Заполняет данные объекта из консоли или скрипта
      */
     public void fillData() {
-        this.setName(ScannerAdapter.getString("Введите name (String): "));
-        this.setDate(ScannerAdapter.getZonedDateTime("Введите date (формат: 2020-01-23 15:30:55 Europe/Moscow): "));
-        this.setTicketsCount(ScannerAdapter.getLong("Введите ticketsCount (Long): "));
-        this.setDescription(ScannerAdapter.getString("Введите description (String): "));
+        while (filledData != 5) {
+            try {
+                switch (filledData) {
+                    case 1: this.setName(ScannerAdapter.getString("Введите name (String): "));
+                            break;
+                    case 2: this.setDate(ScannerAdapter.getZonedDateTime("Введите date (формат: 2020-01-23 15:30:55 Europe/Moscow): "));
+                            break;
+                    case 3: this.setTicketsCount(ScannerAdapter.getLong("Введите ticketsCount (Long): "));
+                            break;
+                    case 4: this.setDescription(ScannerAdapter.getString("Введите description (String): "));
+                            break;
+                }
+                filledData++;
+            } catch (InvalidDataException e) {
+                ConsoleAdapter.printErr(e.getMessage());
+            }
+        } 
     }
 
     /**
@@ -133,6 +137,7 @@ public class Event implements Comparable<Event> {
      * @param name значение name
      */
     public void setName(String name) {
+        if (name == null || name.isEmpty()) throw new InvalidDataException("Event.name");
         this.name = name;
     }
 
@@ -150,10 +155,7 @@ public class Event implements Comparable<Event> {
      * @throws DateTimeParseException возникает при ошибке парсинга даты
      */
     public void setDate(String date) throws DateTimeParseException {
-        if (date == null) {
-            this.date = null;
-            return;
-        }
+        if (date == null) throw new InvalidDataException("Event.date");
         String[] parts = date.split(" ");
         if (parts.length != 3) {
             throw new DateTimeParseException("", date, 0);
@@ -169,6 +171,7 @@ public class Event implements Comparable<Event> {
      * @param zdt значение date
      */
     public void setDate(ZonedDateTime zdt) {
+        if (zdt == null) throw new InvalidDataException("");
         this.date = zdt;
     }
 
@@ -185,6 +188,7 @@ public class Event implements Comparable<Event> {
      * @param ticketsCount значение ticketsCount
      */
     public void setTicketsCount(Long ticketsCount) {
+        if (ticketsCount <= 0) throw new InvalidDataException("Event.ticketsCount");
         this.ticketsCount = ticketsCount;
     }
 

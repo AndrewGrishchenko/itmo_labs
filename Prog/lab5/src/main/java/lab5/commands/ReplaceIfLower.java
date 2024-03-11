@@ -2,7 +2,6 @@ package lab5.commands;
 
 import lab5.adapters.ConsoleAdapter;
 import lab5.exceptions.IdNotFoundException;
-import lab5.exceptions.InvalidDataException;
 import lab5.managers.CollectionManager;
 import lab5.models.Ticket;
 import lab5.models.ExitCode;
@@ -41,10 +40,6 @@ public class ReplaceIfLower extends Command {
             Ticket newTicket = new Ticket();
             newTicket.fillData();
 
-            if (!newTicket.validate()) {
-                throw new InvalidDataException("Тикет имеет невалидные данные!");
-            }
-
             if (oldTicket.compareTo(newTicket) > 0) {
                 collectionManager.changeTicketById(oldTicket.getId(), newTicket);
                 ConsoleAdapter.println("Тикет заменен!");
@@ -54,8 +49,6 @@ public class ReplaceIfLower extends Command {
             }
 
             return ExitCode.OK;
-        } catch (InvalidDataException e) {
-            ConsoleAdapter.printErr(e.getMessage());
         } catch (IdNotFoundException e) {
             ConsoleAdapter.printErr(e.getMessage());
         } catch (NumberFormatException e) {

@@ -2,7 +2,6 @@ package lab5.commands;
 
 import lab5.adapters.ConsoleAdapter;
 import lab5.exceptions.IdNotUniqueException;
-import lab5.exceptions.InvalidDataException;
 import lab5.managers.CollectionManager;
 import lab5.models.Ticket;
 import lab5.models.ExitCode;
@@ -42,16 +41,11 @@ public class Insert extends Command {
             Ticket ticket = new Ticket(id);
             ticket.fillData();
 
-            if (!ticket.validate()) {
-                throw new InvalidDataException("Тикет имеет невалидные данные!");
-            }
             ConsoleAdapter.println("Тикет был создан!");
             collectionManager.addTicket(ticket);
 
             return ExitCode.OK;
         } catch (IdNotUniqueException e) {
-            ConsoleAdapter.printErr(e.getMessage());
-        } catch (InvalidDataException e) {
             ConsoleAdapter.printErr(e.getMessage());
         } catch (NumberFormatException e) {
             ConsoleAdapter.printErr("данные должны являться числом!");

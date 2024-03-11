@@ -50,6 +50,14 @@ public class ExecuteScript extends Command {
     }
 
     /**
+     * Возвращает название текущего запущенного скрипта
+     * @return название текущего запущенного скрипта
+     */
+    public static String getRunningScript() {
+        return runningScripts.get(runningScripts.size() - 1);
+    }
+
+    /**
      * Удаляет последний запущенный скрипт из списка
      */
     public static void removeLastRunningScript() {
@@ -83,7 +91,7 @@ public class ExecuteScript extends Command {
 
                 if (userInput[0].equals("execute_script")) {
                     if (ExecuteScript.containsScript(userInput[1])) {
-                        ConsoleAdapter.printErr("запрет рекурсии!");
+                        ConsoleAdapter.printErr("Запрет рекурсии! Выполнение скрипта " + ExecuteScript.getRunningScript() + " остановлено!");
                         ScannerAdapter.setInteractiveMode();
                         ExecuteScript.removeLastRunningScript();
                         return ExitCode.ERROR;
@@ -94,15 +102,15 @@ public class ExecuteScript extends Command {
                 if (exitCode == ExitCode.ERROR) {
                     throw new ScriptProcessingException(userInput[0]);
                 } else if (exitCode == ExitCode.EXIT) {
+                    ConsoleAdapter.println("Выполнение скрипта " + ExecuteScript.getRunningScript() + " завершено!");
                     ExecuteScript.removeLastRunningScript();
-                    ConsoleAdapter.println("Выполнение скрипта завершено!");
                     return exitCode;
                 }
             }
 
+            ConsoleAdapter.println("Выполнение скрипта " + ExecuteScript.getRunningScript() + " завершено!");
             ExecuteScript.removeLastRunningScript();
             if (ExecuteScript.runningScripts.size() == 0) ScannerAdapter.setInteractiveMode();
-            ConsoleAdapter.println("Выполнение скрипта завершено!");
             return ExitCode.OK;
         } catch (FileNotFoundException e) {
             ConsoleAdapter.printErr("файл не найден!");
@@ -113,7 +121,7 @@ public class ExecuteScript extends Command {
         }
 
         ScannerAdapter.setInteractiveMode();
-        ConsoleAdapter.println("Выполнение скрипта остановлено!");
+        ConsoleAdapter.println("Выполнение скрипта " + ExecuteScript.getRunningScript() + " остановлено!");
         return ExitCode.ERROR;
     }
 }
