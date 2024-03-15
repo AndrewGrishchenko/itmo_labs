@@ -11,7 +11,7 @@
 /home/andrew/itmo_labs/Prog/lab5/src/main/java/lab5/exceptions/ScriptProcessingException.java
 /home/andrew/itmo_labs/Prog/lab5/src/main/java/lab5/adapters/ScannerAdapter.java
 /home/andrew/itmo_labs/Prog/lab5/src/main/java/lab5/commands/Clear.java
-/home/andrew/itmo_labs/Prog/lab5/src/main/java/lab5/utility/interfaces/Executable.java
+/home/andrew/itmo_labs/Prog/lab5/src/main/java/lab5/interfaces/Executable.java
 /home/andrew/itmo_labs/Prog/lab5/src/main/java/lab5/commands/Insert.java
 /home/andrew/itmo_labs/Prog/lab5/src/main/java/lab5/commands/Command.java
 /home/andrew/itmo_labs/Prog/lab5/src/main/java/lab5/exceptions/TooManyArgumentsException.java

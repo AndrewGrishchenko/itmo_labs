@@ -12,7 +12,6 @@ lab5/models/Ticket.class
 lab5/utility/TicketComparator.class
 lab5/commands/RemoveAnyByEvent.class
 lab5/commands/Exit.class
-lab5/utility/interfaces/Executable.class
 lab5/commands/ExecuteScript.class
 lab5/models/ExitCode.class
 lab5/commands/Command.class
@@ -32,6 +31,7 @@ lab5/commands/RemoveLowerKey.class
 lab5/commands/Info.class
 lab5/Main$1.class
 lab5/Main.class
+lab5/interfaces/Executable.class
 lab5/models/Coordinates.class
 lab5/models/TicketType.class
 lab5/commands/Insert.class
