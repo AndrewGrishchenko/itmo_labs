@@ -18,13 +18,15 @@ public class TCPServer implements Runnable {
     private ObjectInputStream in;
     private ObjectOutputStream out;
 
+    private CollectionManager collectionManager;
     private CommandManager commandManager;
 
     private final int port;
 
-    public TCPServer (int port, CommandManager commandManager) {
+    public TCPServer (int port, CollectionManager collectionManager, CommandManager commandManager) {
         this.port = port;
         this.commandManager = commandManager;
+        this.collectionManager = collectionManager;
     }
 
     public void run () {
@@ -97,7 +99,8 @@ public class TCPServer implements Runnable {
                     in.close();
                     out.close();
                 } catch (EOFException | SocketException e) {
-                    System.out.println("disconnected");
+                    System.out.println("disconnected. saving...");
+                    collectionManager.saveData();
                 }
             }
         } catch (IOException | ClassNotFoundException e) {

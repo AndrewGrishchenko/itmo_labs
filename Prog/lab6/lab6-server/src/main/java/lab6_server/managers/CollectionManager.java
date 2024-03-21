@@ -24,6 +24,7 @@ import lab6_core.models.Ticket;
 import lab6_server.models.Tickets;
 import lab6_server.utility.EventComparator;
 import lab6_server.utility.TicketComparator;
+import lab6_server.models.TicketMixin;
 
 /**
  * Менеджер коллекции
@@ -34,6 +35,20 @@ public class CollectionManager {
 
     private LocalDateTime initTime;
     private LocalDateTime lastUpdateTime;
+
+    private final String fileName;
+
+    public CollectionManager (String fileName) {
+        this.fileName = fileName;
+    }
+
+    /**
+     * Возвращает имя xml файла
+     * @return имя xml файла
+     */
+    public String getFileName () {
+        return fileName;
+    }
 
     /**
      * Добавляет элемент в коллекцию
@@ -55,7 +70,7 @@ public class CollectionManager {
      * @throws IOException возникает про ошибке ввода/вывода
      * @throws InvalidDataException возникает при наличии невалидных данных
      */
-    public void dumpData(String fileName) throws FileNotFoundException, IOException, InvalidDataException {
+    public void dumpData() throws FileNotFoundException, IOException, InvalidDataException {
         initTime = LocalDateTime.now();
         lastUpdateTime = initTime;
         
@@ -100,14 +115,15 @@ public class CollectionManager {
      * @throws JsonProcessingException возникает при ошибке парсинга
      * @throws FileNotFoundException возникает при отсутствии файла
      */
-    public void saveData(String fileName) throws JsonProcessingException, FileNotFoundException {
+    public void saveData() throws JsonProcessingException, FileNotFoundException {
         PrintWriter printWriter = new PrintWriter(fileName);
         if (collection.isEmpty()) printWriter.println();
         else {
             XmlMapper xmlMapper = new XmlMapper();
             xmlMapper.enable(SerializationFeature.INDENT_OUTPUT);
+            xmlMapper.addMixIn(Ticket.class, TicketMixin.class);
 
-            Tickets tickets = toTickets();
+            Tickets tickets = toTickets();            
             String xml = xmlMapper.writeValueAsString(tickets);
 
             printWriter.println(xml);

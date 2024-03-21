@@ -50,19 +50,20 @@
                             <mainClass>lab6_client.Main</mainClass>
                         </manifest>
                     </archive>
+                    <appendAssemblyId>false</appendAssemblyId>
                 </configuration>
             </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
                 <version>3.0.2</version>
-                <configuration>
+                <!-- <configuration>
                     <archive>
                         <manifest>
                             <mainClass>lab6_client.Main</mainClass>
                         </manifest>
                     </archive>
-                </configuration>
+                </configuration> -->
             </plugin>
         </plugins>
     </build>

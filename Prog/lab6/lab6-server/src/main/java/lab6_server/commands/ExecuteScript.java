@@ -69,58 +69,58 @@ public class ExecuteScript extends Command {
      */
     @Override
     public String run() {
-        String[] args = getArgs();
-        if (args.length != 2) {
-            return getUsage();
-        }
+        // String[] args = getArgs();
+        // if (args.length != 2) {
+        //     return getUsage();
+        // }
 
-        /*try {
-            String fileName = args[1];
+        // try {
+        //     String fileName = args[1];
 
-            FileInputStream fileInputStream = new FileInputStream(fileName);
-            InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
+        //     FileInputStream fileInputStream = new FileInputStream(fileName);
+        //     InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
 
-            ScannerAdapter.setFileMode(inputStreamReader);
-            ExecuteScript.addRunningScript(fileName);
+        //     ScannerAdapter.setFileMode(inputStreamReader);
+        //     ExecuteScript.addRunningScript(fileName);
 
-            String[] userInput;
-            while (ScannerAdapter.hasNext()) {
-                userInput = ScannerAdapter.getUserInput()[0].split(" ");
+        //     String[] userInput;
+        //     while (ScannerAdapter.hasNext()) {
+        //         userInput = ScannerAdapter.getUserInput()[0].split(" ");
 
-                if (userInput[0].equals("execute_script")) {
-                    if (ExecuteScript.containsScript(userInput[1])) {
-                        ConsoleAdapter.printErr("Запрет рекурсии! Выполнение скрипта " + ExecuteScript.getRunningScript() + " остановлено!");
-                        ScannerAdapter.setInteractiveMode();
-                        ExecuteScript.removeLastRunningScript();
-                        return ExitCode.ERROR;
-                    }
-                }
+        //         if (userInput[0].equals("execute_script")) {
+        //             if (ExecuteScript.containsScript(userInput[1])) {
+        //                 ConsoleAdapter.printErr("Запрет рекурсии! Выполнение скрипта " + ExecuteScript.getRunningScript() + " остановлено!");
+        //                 ScannerAdapter.setInteractiveMode();
+        //                 ExecuteScript.removeLastRunningScript();
+        //                 return ExitCode.ERROR;
+        //             }
+        //         }
 
-                ExitCode exitCode = commandManager.invokeCommand(userInput);
-                if (exitCode == ExitCode.ERROR) {
-                    throw new ScriptProcessingException(userInput[0]);
-                } else if (exitCode == ExitCode.EXIT) {
-                    ConsoleAdapter.println("Выполнение скрипта " + ExecuteScript.getRunningScript() + " завершено!");
-                    ExecuteScript.removeLastRunningScript();
-                    return exitCode;
-                }
-            }
+        //         ExitCode exitCode = commandManager.invokeCommand(userInput);
+        //         if (exitCode == ExitCode.ERROR) {
+        //             throw new ScriptProcessingException(userInput[0]);
+        //         } else if (exitCode == ExitCode.EXIT) {
+        //             ConsoleAdapter.println("Выполнение скрипта " + ExecuteScript.getRunningScript() + " завершено!");
+        //             ExecuteScript.removeLastRunningScript();
+        //             return exitCode;
+        //         }
+        //     }
 
-            ConsoleAdapter.println("Выполнение скрипта " + ExecuteScript.getRunningScript() + " завершено!");
-            ExecuteScript.removeLastRunningScript();
-            if (ExecuteScript.runningScripts.size() == 0) ScannerAdapter.setInteractiveMode();
-            return ExitCode.OK;
-        } catch (FileNotFoundException e) {
-            ConsoleAdapter.printErr("файл не найден!");
-        } catch (ScriptProcessingException e) {
-            ConsoleAdapter.printErr(e.getMessage());
-        } catch (IncompleteScriptRuntimeException e) {
-            ConsoleAdapter.printErr(e.getMessage());
-        }
+        //     ConsoleAdapter.println("Выполнение скрипта " + ExecuteScript.getRunningScript() + " завершено!");
+        //     ExecuteScript.removeLastRunningScript();
+        //     if (ExecuteScript.runningScripts.size() == 0) ScannerAdapter.setInteractiveMode();
+        //     return ExitCode.OK;
+        // } catch (FileNotFoundException e) {
+        //     ConsoleAdapter.printErr("файл не найден!");
+        // } catch (ScriptProcessingException e) {
+        //     ConsoleAdapter.printErr(e.getMessage());
+        // } catch (IncompleteScriptRuntimeException e) {
+        //     ConsoleAdapter.printErr(e.getMessage());
+        // }
 
-        ScannerAdapter.setInteractiveMode();
-        ConsoleAdapter.println("Выполнение скрипта " + ExecuteScript.getRunningScript() + " остановлено!");
-        return ExitCode.ERROR;*/
+        // ScannerAdapter.setInteractiveMode();
+        // ConsoleAdapter.println("Выполнение скрипта " + ExecuteScript.getRunningScript() + " остановлено!");
+        // return ExitCode.ERROR;
         return "";
     }
 

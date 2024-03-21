@@ -1,2 +1,2 @@
 /home/andrew/itmo_labs/Prog/lab6/lab6-client/src/main/java/lab6_client/Main.java
-/home/andrew/itmo_labs/Prog/lab6/lab6-client/src/main/java/lab6_client/managers/NetworkManager.java
+/home/andrew/itmo_labs/Prog/lab6/lab6-client/src/main/java/lab6_client/managers/TCPClient.java

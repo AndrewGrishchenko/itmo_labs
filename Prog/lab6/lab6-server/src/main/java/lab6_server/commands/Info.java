@@ -8,7 +8,6 @@ import lab6_server.models.ExitCode;
  */
 public class Info extends Command {
     private CollectionManager collectionManager;
-    private String fileName;
 
     /**
      * Конструктор команды
@@ -16,10 +15,9 @@ public class Info extends Command {
      * @param fileName имя файла
      * @see CollectionManager
      */
-    public Info(CollectionManager collectionManager, String fileName) {
+    public Info(CollectionManager collectionManager) {
         super("info", "вывести в стандартный поток вывода информацию о коллекции (тип, дата инициализации, количество элементов и т.д.)", "'info'");
         this.collectionManager = collectionManager;
-        this.fileName = fileName;
     }
 
     /**
@@ -33,7 +31,7 @@ public class Info extends Command {
         + "\n  Дата инициализации: " + collectionManager.getInitTime()
         + "\n  Дата последнего изменения: " + collectionManager.getLastUpdateTime()
         + "\n  Количество элементов: " + collectionManager.getSize()
-        + "\n  Название xml файла: " + fileName + "\n";
+        + "\n  Название xml файла: " + collectionManager.getFileName() + "\n";
 
         return message;
     }

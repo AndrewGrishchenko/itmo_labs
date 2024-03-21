@@ -2,6 +2,9 @@ package lab6_server;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.Reader;
+import java.util.Scanner;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -21,7 +24,6 @@ import lab6_server.commands.RemoveKey;
 import lab6_server.commands.RemoveLower;
 import lab6_server.commands.RemoveLowerKey;
 import lab6_server.commands.ReplaceIfLower;
-import lab6_server.commands.Save;
 import lab6_server.commands.Show;
 import lab6_server.commands.Update;
 import lab6_server.managers.CollectionManager;
@@ -29,11 +31,10 @@ import lab6_server.managers.TCPServer;
 
 public class Main {
     public static void main(String[] args) {
-        CollectionManager collectionManager = new CollectionManager();
-        
         final String fileName = "test1.xml";
+        CollectionManager collectionManager = new CollectionManager(fileName);
         try {
-            collectionManager.dumpData(fileName);
+            collectionManager.dumpData();
         } catch (FileNotFoundException e) {
             ConsoleAdapter.printErr("файл не найден!");
         } catch (JsonProcessingException e) {
@@ -49,7 +50,6 @@ public class Main {
             addCommand(new Show(collectionManager));
             addCommand(new Clear(collectionManager));
             addCommand(new RemoveKey(collectionManager));
-            addCommand(new Save(collectionManager, fileName));
             addCommand(new Insert(collectionManager));
             addCommand(new Update(collectionManager));
             addCommand(new RemoveLower(collectionManager));
@@ -58,11 +58,40 @@ public class Main {
             addCommand(new RemoveAnyByEvent(collectionManager));
             addCommand(new FilterGreaterThanEvent(collectionManager));
             addCommand(new PrintFieldDescendingEvent(collectionManager));
-            addCommand(new Info(collectionManager, fileName));
+            addCommand(new Info(collectionManager));
         }};
         commandManager.addCommand(new ExecuteScript(commandManager));
         commandManager.addCommand(new Help(commandManager));
 
-        new TCPServer(4004, commandManager).run();
+        new Thread(() -> {
+            Reader reader = new InputStreamReader(System.in);
+            Scanner scanner = new Scanner(reader);
+            System.out.println("Type \"save\" to save or \"exit\" to exit");
+            while (true) {
+                try {
+                    if (reader.ready()) {
+                        if (scanner.hasNext()) {
+                            String line = scanner.nextLine();
+                            if (line.equals("save")) {
+                                System.out.println("saving...");
+                                collectionManager.saveData();
+                                System.out.println("saved!");
+                            } else if (line.equals("exit")) {
+                                System.out.println("saving...");
+                                collectionManager.saveData();
+                                System.out.println("saved!");
+                                System.exit(0);
+                            }
+                        }
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    scanner.close();
+                    System.exit(1);
+                }
+            }
+        }).start();
+
+        new TCPServer(4004, collectionManager, commandManager).run();
     }
 }
