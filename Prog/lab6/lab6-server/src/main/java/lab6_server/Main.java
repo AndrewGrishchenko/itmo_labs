@@ -4,7 +4,6 @@ import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.Reader;
-import java.util.Scanner;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 
@@ -63,35 +62,36 @@ public class Main {
         commandManager.addCommand(new ExecuteScript(commandManager));
         commandManager.addCommand(new Help(commandManager));
 
-        new Thread(() -> {
-            Reader reader = new InputStreamReader(System.in);
-            Scanner scanner = new Scanner(reader);
-            System.out.println("Type \"save\" to save or \"exit\" to exit");
-            while (true) {
-                try {
-                    if (reader.ready()) {
-                        if (scanner.hasNext()) {
-                            String line = scanner.nextLine();
-                            if (line.equals("save")) {
-                                System.out.println("saving...");
-                                collectionManager.saveData();
-                                System.out.println("saved!");
-                            } else if (line.equals("exit")) {
-                                System.out.println("saving...");
-                                collectionManager.saveData();
-                                System.out.println("saved!");
-                                System.exit(0);
-                            }
-                        }
-                    }
-                } catch (IOException e) {
-                    e.printStackTrace();
-                    scanner.close();
-                    System.exit(1);
-                }
-            }
-        }).start();
+        // new Thread(() -> {
+        //     Reader reader = new InputStreamReader(System.in);
+        //     Scanner scanner = new Scanner(reader);
+        //     System.out.println("Type \"save\" to save or \"exit\" to exit");
+        //     while (true) {
+        //         try {
+        //             if (reader.ready()) {
+        //                 if (scanner.hasNext()) {
+        //                     String line = scanner.nextLine();
+        //                     if (line.equals("save")) {
+        //                         System.out.println("saving...");
+        //                         collectionManager.saveData();
+        //                         System.out.println("saved!");
+        //                     } else if (line.equals("exit")) {
+        //                         System.out.println("saving...");
+        //                         collectionManager.saveData();
+        //                         System.out.println("saved!");
+        //                         System.exit(0);
+        //                     }
+        //                 }
+        //             }
+        //         } catch (IOException e) {
+        //             e.printStackTrace();
+        //             scanner.close();
+        //             System.exit(1);
+        //         }
+        //     }
+        // }).start();
+        Reader reader = new InputStreamReader(System.in);
 
-        new TCPServer(4004, collectionManager, commandManager).run();
+        new TCPServer(4004, collectionManager, commandManager, reader).run();
     }
 }
