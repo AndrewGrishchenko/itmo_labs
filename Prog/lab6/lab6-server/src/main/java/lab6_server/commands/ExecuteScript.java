@@ -150,7 +150,14 @@ public class ExecuteScript extends Command {
     public void handleScript (Script script) {
         addRunningScript(script.getFileName());
         Arrays.stream(script.getContent()).forEach(line -> handleInput(line));
-        response += "Выполнение скрипта " + script.getFileName() + " завершено!\n";
+        
+        if (isFilling) {
+            isFilling = false;
+            response += "Неполный скрипт. Скрипт " + script.getFileName() + " остановлен!\n";
+        } else {
+            response += "Выполнение скрипта " + script.getFileName() + " завершено!\n";
+        }
+        
         removeLastRunningScript();
     }
 
@@ -160,86 +167,12 @@ public class ExecuteScript extends Command {
      * @see ExitCode
      */
     @Override
-    public String run() {
-        // System.out.println("FROM EXECUTE GOT " + getArgs()[1]);
-        // System.out.println(((String) getObj()));
-        
-        // String fileName = getArgs()[1];
-        // String[] commands = ((String) getObj()).split("\n");
-        // String outMessage = "";
-
-        // for (String command : commands) {
-        //     outMessage += "(" + fileName + ")> " + command + "\n";
-        // }
-
+    public String invoke() {
         scripts = (Scripts) getObj();
-        // Arrays.stream(scripts.getScripts()..getContent()).forEach(line -> handleInput(line));
         
-        // scripts.getScripts().stream().forEach(script -> handleScript(script));
-        // Arrays.stream(scripts.getPrimaryScript().getContent()).forEach(line -> handleInput(line));
         handleScript(scripts.getPrimaryScript());
-
-        // Arrays.stream(((String) getObj()).split("\n")).forEach(line -> handleInput(line));
-
+        
         return response;
-
-        // try {
-        //     addRunningScript(fileName);
-        // }
-
-        // String[] args = getArgs();
-        // if (args.length != 2) {
-        //     return getUsage();
-        // }
-
-        // try {
-        //     String fileName = args[1];
-
-        //     FileInputStream fileInputStream = new FileInputStream(fileName);
-        //     InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
-
-        //     ScannerAdapter.setFileMode(inputStreamReader);
-        //     ExecuteScript.addRunningScript(fileName);
-
-        //     String[] userInput;
-        //     while (ScannerAdapter.hasNext()) {
-        //         userInput = ScannerAdapter.getUserInput()[0].split(" ");
-
-        //         if (userInput[0].equals("execute_script")) {
-        //             if (ExecuteScript.containsScript(userInput[1])) {
-        //                 ConsoleAdapter.printErr("Запрет рекурсии! Выполнение скрипта " + ExecuteScript.getRunningScript() + " остановлено!");
-        //                 ScannerAdapter.setInteractiveMode();
-        //                 ExecuteScript.removeLastRunningScript();
-        //                 return ExitCode.ERROR;
-        //             }
-        //         }
-
-        //         ExitCode exitCode = commandManager.invokeCommand(userInput);
-        //         if (exitCode == ExitCode.ERROR) {
-        //             throw new ScriptProcessingException(userInput[0]);
-        //         } else if (exitCode == ExitCode.EXIT) {
-        //             ConsoleAdapter.println("Выполнение скрипта " + ExecuteScript.getRunningScript() + " завершено!");
-        //             ExecuteScript.removeLastRunningScript();
-        //             return exitCode;
-        //         }
-        //     }
-
-        //     ConsoleAdapter.println("Выполнение скрипта " + ExecuteScript.getRunningScript() + " завершено!");
-        //     ExecuteScript.removeLastRunningScript();
-        //     if (ExecuteScript.runningScripts.size() == 0) ScannerAdapter.setInteractiveMode();
-        //     return ExitCode.OK;
-        // } catch (FileNotFoundException e) {
-        //     ConsoleAdapter.printErr("файл не найден!");
-        // } catch (ScriptProcessingException e) {
-        //     ConsoleAdapter.printErr(e.getMessage());
-        // } catch (IncompleteScriptRuntimeException e) {
-        //     ConsoleAdapter.printErr(e.getMessage());
-        // }
-
-        // ScannerAdapter.setInteractiveMode();
-        // ConsoleAdapter.println("Выполнение скрипта " + ExecuteScript.getRunningScript() + " остановлено!");
-        // return ExitCode.ERROR;
-        // return "";
     }
 
     @Override

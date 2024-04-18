@@ -8,7 +8,6 @@ import java.time.format.DateTimeFormatter;
 import java.time.format.DateTimeParseException;
 import java.util.Objects;
 
-import lab6_core.adapters.ConsoleAdapter;
 import lab6_core.adapters.ScannerAdapter;
 import lab6_core.exceptions.InvalidDataException;
 
@@ -90,7 +89,7 @@ public class Event implements Serializable, Comparable<Event> {
      */
     public void fillData() {
         while (filledData != 5) {
-            try {
+            // try {
                 switch (filledData) {
                     case 1: this.setName(ScannerAdapter.getString("Введите name (String): "));
                             break;
@@ -102,9 +101,9 @@ public class Event implements Serializable, Comparable<Event> {
                             break;
                 }
                 filledData++;
-            } catch (InvalidDataException e) {
-                ConsoleAdapter.printErr(e.getMessage());
-            }
+            // } catch (InvalidDataException e) {
+                // logger.log(Level.WARNING, e.getMessage());
+            // }
         } 
     }
 

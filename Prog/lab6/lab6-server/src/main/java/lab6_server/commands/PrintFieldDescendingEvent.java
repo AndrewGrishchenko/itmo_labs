@@ -28,7 +28,7 @@ public class PrintFieldDescendingEvent extends Command {
      * @see ExitCode
      */
     @Override
-    public String run() {
+    public String invoke() {
         List<Event> events = collectionManager.sortedDescendingEvents();
         String message = "";
         for (Event event : events) {

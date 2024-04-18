@@ -25,7 +25,7 @@ public class RemoveLowerKey extends Command {
      * @see ExitCode
      */
     @Override
-    public String run() {
+    public String invoke() {
         String[] args = getArgs();
 
         try {

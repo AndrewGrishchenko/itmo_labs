@@ -1,7 +1,9 @@
 package lab6_server.commands;
 
 import java.util.Objects;
+import java.util.logging.Level;
 
+import lab6_server.Main;
 import lab6_server.interfaces.Runnable;
 import lab6_server.interfaces.Validatable;
 
@@ -60,6 +62,7 @@ public abstract class Command implements Runnable, Validatable {
         this.obj = obj;
     }
 
+    @Override
     public boolean equals (Object obj) {
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
@@ -72,5 +75,11 @@ public abstract class Command implements Runnable, Validatable {
     @Override
     public String toString () {
         return usage + ": " + description;
+    }
+
+    @Override
+    public String run () {
+        Main.logger.log(Level.INFO, "Running \"" + name + "\" command");
+        return invoke();
     }
 }

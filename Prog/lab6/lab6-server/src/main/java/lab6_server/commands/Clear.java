@@ -25,7 +25,7 @@ public class Clear extends Command {
      * @see ExitCode
      */
     @Override
-    public String run() {
+    public String invoke() {
         collectionManager.clearCollection();
         return"Коллекция очищена!";
     }

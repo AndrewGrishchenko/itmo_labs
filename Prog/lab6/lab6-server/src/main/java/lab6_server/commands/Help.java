@@ -26,7 +26,7 @@ public class Help extends Command {
      * @see ExitCode
      */
     @Override
-    public String run() {
+    public String invoke() {
         String message = "";
         ArrayList<Command> commands = commandManager.getCommands();
         for (int i = 0; i < commands.size(); i++) {

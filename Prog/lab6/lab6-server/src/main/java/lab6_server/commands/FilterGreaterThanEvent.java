@@ -29,7 +29,7 @@ public class FilterGreaterThanEvent extends Command {
      * @see ExitCode
      */
     @Override
-    public String run() {
+    public String invoke() {
         Event event = (Event) getObj();
 
         List<Ticket> tickets = collectionManager.filterGreaterByEvent(event);

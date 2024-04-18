@@ -6,7 +6,6 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 
-import lab6_core.adapters.ConsoleAdapter;
 import lab6_core.adapters.ScannerAdapter;
 import lab6_core.exceptions.InvalidDataException;
 
@@ -150,7 +149,7 @@ public class Ticket implements Serializable, Comparable<Ticket> {
         Coordinates coordinates = this.getCoordinates() == null ? new Coordinates() : this.getCoordinates();
         Event event = this.getEvent() == null ? new Event() : this.getEvent();
         while (filledData != 10) {
-            try {
+            // try {
                 switch (filledData) {
                     case 1: this.setName(ScannerAdapter.getString("Введите name (String): "));
                             break;
@@ -174,11 +173,9 @@ public class Ticket implements Serializable, Comparable<Ticket> {
                             break;
                 }
                 filledData++;
-            } catch (InvalidDataException e) {
-                ConsoleAdapter.printErr(e.getMessage());
-            } finally {
-                ScannerAdapter.done = true;
-            }
+            // } catch (InvalidDataException e) {
+                // ConsoleAdapter.printErr(e.getMessage());
+            // }
         }
     }
 

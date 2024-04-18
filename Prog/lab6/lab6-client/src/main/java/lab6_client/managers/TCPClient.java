@@ -9,9 +9,12 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.util.Scanner;
+import java.util.logging.Level;
 
+import lab6_client.Main;
 import lab6_core.adapters.ConsoleAdapter;
 import lab6_core.adapters.ScannerAdapter;
+import lab6_core.exceptions.InvalidDataException;
 import lab6_core.models.Event;
 import lab6_core.models.Message;
 import lab6_core.models.Script;
@@ -30,6 +33,8 @@ public class TCPClient implements Runnable {
     private Scanner scanner;
 
     private String header;
+
+    private Object model;
 
     public TCPClient (String host, int port, Reader reader) {
         this.host = host;
@@ -67,7 +72,7 @@ public class TCPClient implements Runnable {
             
             clientSocket = new Socket(host, port);
             
-            System.out.println("client started");
+            Main.logger.log(Level.INFO, "Connected to " + host + ":" + port);
             
             in = new ObjectInputStream(clientSocket.getInputStream());
             out = new ObjectOutputStream(clientSocket.getOutputStream());
@@ -81,14 +86,26 @@ public class TCPClient implements Runnable {
             while (true) {
                 switch (header) {
                     case "ticket":
-                        Ticket ticket = new Ticket();
-                        ticket.fillData();
-                        msg = new Message("ticket", ticket);
+                        if (model == null) model = new Ticket();
+                        try {
+                            ((Ticket) model).fillData();
+                        } catch (InvalidDataException e) {
+                            Main.logger.log(Level.SEVERE, e.getMessage());
+                            continue;
+                        }
+                        
+                        msg = new Message("ticket", model);
                         break;
                     case "event":
-                        Event event = new Event();
-                        event.fillData();
-                        msg = new Message("event", event);
+                        if (model == null) model = new Event();
+                        try {
+                            ((Event) model).fillData();
+                        } catch (InvalidDataException e) {
+                            Main.logger.log(Level.SEVERE, e.getMessage());
+                            continue;
+                        }
+                        
+                        msg = new Message("event", model);
                         break;
                     case "script":
                         try {
@@ -96,7 +113,7 @@ public class TCPClient implements Runnable {
                             scripts.setPrimaryScript(fileName);
                             msg = new Message("script", fileName, scripts);
                         } catch (IOException e) {
-                            ConsoleAdapter.printErr("Файл " + e.getMessage() + " не найден!");
+                            Main.logger.log(Level.SEVERE, "Файл " + e.getMessage() + " не найден!");
                             header = "";
                             continue;
                         }
@@ -142,7 +159,7 @@ public class TCPClient implements Runnable {
         } catch (IOException | InterruptedException | ClassNotFoundException e) {
             e.printStackTrace();
         } finally {
-            System.out.println("server closed connection");
+            Main.logger.log(Level.INFO, "Server closed connection");
         }
     }
 }

@@ -8,9 +8,14 @@ import java.io.Reader;
 import java.net.ServerSocket;
 import java.net.Socket;
 import java.net.SocketException;
+import java.nio.channels.SelectionKey;
+import java.nio.channels.Selector;
+import java.nio.channels.ServerSocketChannel;
 import java.util.Scanner;
+import java.util.logging.Level;
 
 import lab6_core.models.Message;
+import lab6_server.Main;
 import lab6_server.commands.Command;
 import lab6_server.commands.CommandManager;
 
@@ -26,6 +31,7 @@ public class TCPServer implements Runnable {
     private Reader reader;
     private Scanner scanner;
     private boolean isRunning = true;
+    private boolean connected = false;
 
     private final int port;
 
@@ -36,17 +42,35 @@ public class TCPServer implements Runnable {
         this.reader = reader;
     }
 
+    public void acceptData () {
+
+    }
+
+    public void readData () {
+
+    }
+
+    public void writeData() {
+
+    }
+
     public void run () {
         try {
+            // Selector selector = Selector.open();
+            // ServerSocketChannel server = ServerSocketChannel.open();
+            // server.configureBlocking(false);
+            // server.register(selector, SelectionKey.OP_ACCEPT);
+
             server = new ServerSocket(port);
-            System.out.println("server started");
+            Main.logger.log(Level.INFO, "Server started");
             
             scanner = new Scanner(reader);
 
             while (isRunning) {
                 try {
                     clientSocket = server.accept();
-                    System.out.println("new connection");
+                    connected = true;
+                    Main.logger.log(Level.INFO, "New connection");
                     //Further: connection manager extends Thread
                     out = new ObjectOutputStream(clientSocket.getOutputStream());
                     in = new ObjectInputStream(clientSocket.getInputStream());
@@ -58,12 +82,14 @@ public class TCPServer implements Runnable {
                     Command command;
                     String[] commandArgs = new String[]{};
 
-                    while (isRunning) {
+                    while (connected) {
                         if (clientSocket.getInputStream().available() > 0) {
                             Object obj = in.readObject();
                             if (obj == null) break;
                             msg = (Message) obj;
                             header = msg.getHeader();
+
+                            Main.logger.log(Level.INFO, "Received message with header \"" + header + "\"");
                             
                             switch (header) {
                                 case "ticket":
@@ -110,14 +136,15 @@ public class TCPServer implements Runnable {
                         } else if (reader.ready() && scanner.hasNext()) {
                             String line = scanner.nextLine();
                             if (line.equals("save")) {
-                                System.out.println("saving...");
+                                Main.logger.log(Level.INFO, "Saving...");
                                 collectionManager.saveData();
-                                System.out.println("saved!");
+                                Main.logger.log(Level.INFO, "Saved!");
                             } else if (line.equals("exit")) {
-                                System.out.println("saving...");
+                                Main.logger.log(Level.INFO, "Saving...");
                                 collectionManager.saveData();
-                                System.out.println("saved!");
+                                Main.logger.log(Level.INFO, "Saved!");
                                 isRunning = false;
+                                connected = false;
                             }
                         }
                     }
@@ -129,12 +156,12 @@ public class TCPServer implements Runnable {
                         
                 } catch (EOFException | SocketException e) {
                     e.printStackTrace();
-                    System.out.println("disconnected. saving...");
+                    Main.logger.log(Level.INFO, "Saving...");
                     collectionManager.saveData();
                 }
             }
         } catch (IOException | ClassNotFoundException e) {
-            e.printStackTrace();
+            Main.logger.log(Level.SEVERE, e.getMessage());
         }
     }
 }

@@ -1,6 +1,7 @@
 package lab6_server.commands;
 
 import lab6_server.managers.CollectionManager;
+import lab6_server.models.ExitCode;
 import lab6_core.models.Ticket;
 
 /**
@@ -25,7 +26,7 @@ public class RemoveLower extends Command {
      * @see ExitCode
      */
     @Override
-    public String run() {
+    public String invoke() {
         Ticket ticket = (Ticket) getObj();
 
         collectionManager.removeLowerThanTicket(ticket);

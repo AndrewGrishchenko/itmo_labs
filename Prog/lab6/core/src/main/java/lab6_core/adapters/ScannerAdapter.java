@@ -20,6 +20,11 @@ public class ScannerAdapter {
     private static ScanMode currentMode = ScanMode.INTERACTIVE;
     private static HashMap<ScanMode, Scanner> scanners = new HashMap<ScanMode, Scanner>();
 
+    static {
+        scanners.put(ScanMode.INTERACTIVE, null);
+        scanners.put(ScanMode.FILE, null);
+    }
+
     private static String[] line;
     public static boolean done = false;
 

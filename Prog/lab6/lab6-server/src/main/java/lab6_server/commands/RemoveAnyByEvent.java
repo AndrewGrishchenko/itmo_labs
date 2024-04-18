@@ -26,7 +26,7 @@ public class RemoveAnyByEvent extends Command {
      * @see ExitCode
      */
     @Override
-    public String run() {
+    public String invoke() {
         Event event = (Event) getObj();
         
         if (collectionManager.removeOneByEvent(event)) {
