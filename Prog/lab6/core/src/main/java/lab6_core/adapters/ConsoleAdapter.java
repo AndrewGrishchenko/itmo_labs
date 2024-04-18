@@ -9,6 +9,7 @@ public class ConsoleAdapter {
      * @param obj объект для печати
      */
     public static void print(Object obj) {
+        if (obj == null) return;
         System.out.print(obj);
     }
 
@@ -17,6 +18,7 @@ public class ConsoleAdapter {
      * @param obj объект для печати
      */
     public static void println(Object obj) {
+        if (obj == null) return;
         System.out.println(obj);
     }
 

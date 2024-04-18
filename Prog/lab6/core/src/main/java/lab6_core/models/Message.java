@@ -8,10 +8,17 @@ public class Message implements Serializable {
     private String header;
     private String[] command;
     private String response;
+    private String fileName;
     private Object obj;
 
     public Message (String header) {
         this.header = header;
+    }
+
+    public Message (String header, String fileName, Object obj) {
+        this.header = header;
+        this.fileName = fileName;
+        this.obj = obj;
     }
 
     public Message (String header, String[] command) {
@@ -43,5 +50,9 @@ public class Message implements Serializable {
 
     public String getResponse () {
         return response;
+    }
+
+    public String getFileName () {
+        return fileName;
     }
 }

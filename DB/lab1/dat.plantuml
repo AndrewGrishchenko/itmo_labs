@@ -1,0 +1,81 @@
+@startuml inf
+' skinparam MinClassWidth 200
+' scale 800 width
+skinparam Nodesep 80
+' skinparam Ranksep 40
+' skinparam Linetype ortho
+
+' характеристические
+
+entity actions {
+    *id: INT
+    --
+    name: TEXT
+}
+
+entity people {
+    *id: INT
+    --
+    ship_id: INT
+    name: TEXT
+    items_id: INT
+    location_id: INT
+    action_id: INT
+}
+
+entity locations {
+    *id: INT
+    --
+    ship_id: INT
+    name: TEXT
+    area: BOX
+}
+
+entity items {
+    *id: INT
+    --
+    name: TEXT
+    count: INT
+}
+
+entity ships {
+    *id: INT
+    --
+    name: TEXT
+    area: BOX
+}
+
+entity fire_sirens {
+    *id: INT
+    --
+    ship_id: INT
+    caused_by_id: INT
+    alarming: BOOLEAN
+}
+
+entity smoke_detectors {
+    *id: INT
+    --
+    location_id: INT
+    triggered: BOOLEAN
+    reason: TEXT
+}
+
+entity people_items {
+    *people_id: INT
+    --
+    item_id: INT
+}
+
+
+fire_sirens::ship_id ||--|| ships::id
+fire_sirens::caused_by_id |o--|| smoke_detectors::id
+smoke_detectors::location_id ||--o{ locations::id
+locations::ship_id ||--o{ ships::id
+people_items::item_id }o--o{ items::id
+people_items::people_id }o--o{ people::id
+people::location_id ||--o{ locations::id
+people::ship_id ||--o{ ships::id
+people::action_id ||---o{ actions::id
+
+@enduml

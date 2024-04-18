@@ -1,0 +1,28 @@
+ORG 0x2FC
+arr_first_elem: WORD 0x0313
+arr_current_elem: WORD 0xA000
+arr_length: WORD 0xE000
+result: WORD 0x0200
+
+START:
+    LD 80
+    DEC
+    SWAB
+    ST result
+    LD 4
+    ST arr_length
+    LD arr_first_elem
+    ST arr_current_elem
+    repeat: LD (arr_current_elem)+
+    ROR
+    BCS c_is_1
+    JUMP repeat
+    ROL
+    c_is_1: CMP
+    BGE nv_is_1
+    ST 2FF
+    LOOP $arr_length
+    JUMP repeat
+    HLT
+
+arr: WORD 0x1100, 0xB306, 0x0740, 0x0D01

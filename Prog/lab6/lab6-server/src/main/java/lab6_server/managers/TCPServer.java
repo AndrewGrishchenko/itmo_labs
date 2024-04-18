@@ -76,6 +76,11 @@ public class TCPServer implements Runnable {
                                     command.setObj(msg.getObj());
                                     response = new Message("response", command.run());
                                     break;
+                                case "script":
+                                    command = commandManager.getCommand(commandArgs[0]);
+                                    command.setObj(msg.getObj());
+                                    response = new Message("response", command.run());
+                                    break;
                                 default:
                                     String[] userInput = msg.getCommand();
                                     commandArgs = userInput;

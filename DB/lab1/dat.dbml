@@ -1,0 +1,60 @@
+Project dat {
+    database_type: 'PostgreSQL'
+}
+
+Table ships {
+    id serial [pk]
+    name text [not null]
+    area box [not null]
+}
+
+Table locations {
+    id serial [pk]
+    ship_id int [REF: < ships.id]
+    area box [not null]
+}
+
+Table actions {
+    id serial [pk]
+    name text [unique, not null]
+}
+
+Table items {
+    id serial [pk]
+    name text [unique, not null]
+}
+
+Table states {
+    id serial [pk]
+    current_state text [unique, not null]
+}
+
+Table people {
+    id serial [pk]
+    ship_id int [REF: < ships.id]
+    name text [not null]
+    location_id int [not null, REF: < locations.id]
+    action_id int [not null, REF: < actions.id]
+}
+
+Table people_items {
+    people_id int [pk, REF: <> people.id]
+    item_id int [not null, REF: <> items.id]
+}
+
+Table smoke_detectors {
+    id serial [pk]
+    location_id int [not null, REF: < locations.id]
+}
+
+Table smoke_detectors_states {
+    smoke_detector_id int [pk, REF: <> smoke_detectors.id]
+    state_id int [not null, REF: <> states.id]
+}
+
+Table fire_sirens {
+    id serial [pk]
+    ship_id int [not null, REF: < ships.id]
+    caused_by_id int [REF: < smoke_detectors.id]
+    alarming boolean [not null]
+}

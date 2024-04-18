@@ -5,11 +5,17 @@ import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Reader;
 import java.net.Socket;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.Scanner;
 
 import lab6_core.adapters.ConsoleAdapter;
+import lab6_core.adapters.ScannerAdapter;
 import lab6_core.models.Event;
 import lab6_core.models.Message;
+import lab6_core.models.Script;
+import lab6_core.models.Scripts;
 import lab6_core.models.Ticket;
 
 public class TCPClient implements Runnable {
@@ -23,6 +29,8 @@ public class TCPClient implements Runnable {
     private final Reader reader;
     private Scanner scanner;
 
+    private String header;
+
     public TCPClient (String host, int port, Reader reader) {
         this.host = host;
         this.port = port;
@@ -33,6 +41,24 @@ public class TCPClient implements Runnable {
         String[] line = scanner.nextLine().trim().split(" ");
         if (line.length == 1 && line[0].equals("")) return null;
         return line;
+    }
+    
+    public Scripts inspectScript (String fileName) throws IOException {
+        Scripts scripts = new Scripts();
+
+        String[] commands = new String(Files.readAllBytes(Paths.get(fileName)), StandardCharsets.UTF_8).split("\n");
+        scripts.addScript(new Script(fileName, commands));
+
+        String[] line;
+
+        for (String command : commands) {
+            line = command.split(" ");
+            if (line[0].equals("execute_script")) {
+                if (!scripts.containsScript(line[1])) scripts.merge(inspectScript(line[1]));
+            }
+        }
+        
+        return scripts;
     }
 
     public void run () {
@@ -47,8 +73,10 @@ public class TCPClient implements Runnable {
             out = new ObjectOutputStream(clientSocket.getOutputStream());
             Message msg;
             scanner = new Scanner(reader);
+            ScannerAdapter.setInteractiveScanner(scanner);
 
-            String header = "";
+            String fileName = "";
+            header = "";
 
             while (true) {
                 switch (header) {
@@ -62,6 +90,17 @@ public class TCPClient implements Runnable {
                         event.fillData();
                         msg = new Message("event", event);
                         break;
+                    case "script":
+                        try {
+                            Scripts scripts = inspectScript(fileName);
+                            scripts.setPrimaryScript(fileName);
+                            msg = new Message("script", fileName, scripts);
+                        } catch (IOException e) {
+                            ConsoleAdapter.printErr("Файл " + e.getMessage() + " не найден!");
+                            header = "";
+                            continue;
+                        }
+                        break;
                     default:
                         ConsoleAdapter.prompt();
                         String[] userInput = new String[]{};
@@ -71,13 +110,17 @@ public class TCPClient implements Runnable {
                                 break;
                             } else if (clientSocket.getInputStream().available() > 0) {
                                 if (((Message) in.readObject()).getHeader().equals("shutdown")) {
-                                    System.out.println("server closed connection");
                                     return;
                                 }
                             }
                         }
 
                         if (userInput == null) continue;
+
+                        if (userInput[0].equals("execute_script") && userInput.length == 2) {
+                            fileName = userInput[1];
+                            
+                        }
 
                         msg = new Message("command", userInput);
                         break;
@@ -88,6 +131,7 @@ public class TCPClient implements Runnable {
 
                 Message response = (Message) in.readObject();
                 header = response.getHeader();
+                
                 if (header.equals("response")) {
                     System.out.println(response.getResponse());
                 } else if (header.equals("exit")) {
@@ -96,7 +140,7 @@ public class TCPClient implements Runnable {
                 }
             }
         } catch (IOException | InterruptedException | ClassNotFoundException e) {
-            
+            e.printStackTrace();
         } finally {
             System.out.println("server closed connection");
         }

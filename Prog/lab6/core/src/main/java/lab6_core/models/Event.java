@@ -108,6 +108,32 @@ public class Event implements Serializable, Comparable<Event> {
         } 
     }
 
+    public ValueChecker fillPartly (String[] line) {
+        String msg = "";
+
+        try {
+            switch (filledData) {
+                case 1: msg = "Введите name (String): ";
+                        this.setName(ScannerAdapter.getString(null));
+                        break;
+                case 2: msg = "Введите date (формат: 2020-01-23 15:30:55 Europe/Moscow): ";
+                        this.setDate(ScannerAdapter.getZonedDateTime(null));
+                        break;
+                case 3: msg = "Введите ticketsCount (Long): ";
+                        this.setTicketsCount(ScannerAdapter.getLong(null));
+                        break;
+                case 4: msg = "Введите description (String): ";
+                        this.setDescription(ScannerAdapter.getString(null));
+                        break;
+            }
+            filledData++;
+
+            return filledData == 5 ? new ValueChecker(true, msg) : new ValueChecker(false, msg);
+        } catch (InvalidDataException e) {
+            return new ValueChecker(false, msg, e.getMessage());
+        }
+    }
+
     /**
      * Возвращает значение id
      * @return значение id

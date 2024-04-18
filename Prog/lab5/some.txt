@@ -1,0 +1,4 @@
+clear
+insert 1
+d
+d

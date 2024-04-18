@@ -5,8 +5,11 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeParseException;
 import java.time.zone.ZoneRulesException;
+import java.util.HashMap;
 import java.util.Scanner;
 
+import lab6_core.exceptions.IncompleteScriptRuntimeException;
+import lab6_core.exceptions.InvalidDataException;
 import lab6_core.exceptions.TooManyArgumentsException;
 import lab6_core.models.TicketType;
 
@@ -14,14 +17,23 @@ import lab6_core.models.TicketType;
  * Адаптер для считывания данных
  */
 public class ScannerAdapter {
-    private static Scanner scanner;
+    private static ScanMode currentMode = ScanMode.INTERACTIVE;
+    private static HashMap<ScanMode, Scanner> scanners = new HashMap<ScanMode, Scanner>();
+
+    private static String[] line;
+    public static boolean done = false;
+
+    // static {
+    //     scanners.put(ScanMode.INTERACTIVE, null);
+    //     scanners.put(ScanMode.FILE, null);
+    // }
 
     /**
      * Возвращает текущий используемый сканер
      * @return текущий используемый сканер
      */
     public static Scanner getScanner() {
-        return scanner;
+        return scanners.get(currentMode);
     }
 
     /**
@@ -29,8 +41,29 @@ public class ScannerAdapter {
      * @param scanner сканер
      * @see ScanMode
      */
-    public static void setScanner(Scanner scanner) {
-        ScannerAdapter.scanner = scanner;
+    public static void addScanner(ScanMode mode, Scanner scanner) {
+        scanners.put(mode, scanner);
+    }
+
+    public static void setInteractiveScanner (Scanner scanner) {
+        scanners.replace(ScanMode.INTERACTIVE, scanner);
+    }
+
+    public static void setInteractiveMode () {
+        currentMode = ScanMode.INTERACTIVE;
+    }
+
+    public static void setFileMode (Scanner scanner) {
+        currentMode = ScanMode.FILE;
+        scanners.replace(ScanMode.FILE, scanner);
+    }
+
+    public static void setFillMode () {
+        currentMode = ScanMode.FILL;
+    }
+
+    public static void fill (String[] line) {
+        ScannerAdapter.line = line;
     }
 
     /**
@@ -38,7 +71,11 @@ public class ScannerAdapter {
      * @return существует ли следующий токен для считывания сканером
      */
     public static boolean hasNext() {
-        return getScanner().hasNext();
+        if (currentMode == ScanMode.FILL) {
+            return line != null;
+        } else {
+            return getScanner().hasNext();
+        }
     }
 
     /**
@@ -46,13 +83,25 @@ public class ScannerAdapter {
      * @return следующий считываемый массив строк 
      */
     public static String[] getUserInput() {
-        if (getScanner().hasNextLine()) {
-            String[] line = getScanner().nextLine().trim().split(" ");
-            if (line.length == 1 && line[0].equals("")) return null;
+        if (currentMode == ScanMode.INTERACTIVE) {
+            if (getScanner().hasNextLine()) {
+                String[] line = getScanner().nextLine().trim().split(" ");
+                if (line.length == 1 && line[0].equals("")) return null;
+                return line;
+            }
+            else {
+                return null;
+            }
+        } else if (currentMode == ScanMode.FILE) {
+            if (hasNext()) {
+                String line = getScanner().nextLine();
+                if (line.equals("")) return null;
+                return new String[] { line };
+            } else {
+                throw new IncompleteScriptRuntimeException();
+            }
+        } else {
             return line;
-        }
-        else {
-            return null;
         }
     }
 
@@ -90,12 +139,12 @@ public class ScannerAdapter {
                 ConsoleAdapter.print(message);
                 String[] userInput = getUserInput();
                 if (userInput == null) return null;
-                if (userInput.length != 1) throw new TooManyArgumentsException("слишком много аргументов!");
+                if (userInput.length != 1) throw new TooManyArgumentsException("Слишком много аргументов!");
                 return Double.parseDouble(userInput[0]);
             } catch (TooManyArgumentsException e) {
-                ConsoleAdapter.printErr(e.getMessage());
+                throw new InvalidDataException(e.getMessage());
             } catch (NumberFormatException e) {
-                ConsoleAdapter.printErr("данные должны являться числом!");
+                throw new InvalidDataException("Данные должны являться числом!");
             }
         }
     }
@@ -114,9 +163,9 @@ public class ScannerAdapter {
                 if (userInput.length != 1) throw new TooManyArgumentsException("слишком много аргументов!");
                 return (double) Double.parseDouble(userInput[0]);
             } catch (TooManyArgumentsException | NullPointerException e) {
-                ConsoleAdapter.printErr(e.getMessage());
+                throw new InvalidDataException(e.getMessage());
             } catch (NumberFormatException e) {
-                ConsoleAdapter.printErr("данные должны являться числом!");
+                throw new InvalidDataException("Данные должны являться числом!");
             }
         }
     }
@@ -135,9 +184,9 @@ public class ScannerAdapter {
                 if (userInput.length != 1) throw new TooManyArgumentsException("слишком много аргументов!");
                 return Integer.parseInt(userInput[0]);
             } catch (TooManyArgumentsException | NullPointerException e) {
-                ConsoleAdapter.printErr(e.getMessage());
+                throw new InvalidDataException(e.getMessage());
             } catch (NumberFormatException e) {
-                ConsoleAdapter.printErr("данные должны являться числом!");
+                throw new InvalidDataException("Данные должны являться числом!");
             }
         }
     }
@@ -156,9 +205,9 @@ public class ScannerAdapter {
                 if (userInput.length != 1) throw new TooManyArgumentsException("слишком много аргументов!");
                 return Long.parseLong(userInput[0]);
             } catch (TooManyArgumentsException e) {
-                ConsoleAdapter.printErr(e.getMessage());
+                throw new InvalidDataException(e.getMessage());
             } catch (NumberFormatException e) {
-                ConsoleAdapter.printErr("данные должны являться числом!");
+                throw new InvalidDataException("Данные должны являться числом!");
             }
         }
     }
@@ -179,9 +228,9 @@ public class ScannerAdapter {
                 LocalDateTime ldt = LocalDateTime.parse(parts[0] + "T" + parts[1]);
                 return ldt.atZone(ZoneId.of(parts[2]));
             } catch (IllegalArgumentException | DateTimeParseException e) {
-                ConsoleAdapter.printErr("ошибка формата даты!");
+                throw new InvalidDataException("Ошибка формата даты!");
             } catch (ZoneRulesException e) {
-                ConsoleAdapter.printErr("ошибка зоны даты!");
+                throw new InvalidDataException("Ошибка зоны даты!");
             } 
         }
     }
@@ -198,7 +247,7 @@ public class ScannerAdapter {
                 if (userInput == null) return null;
                 return TicketType.valueOf(userInput);
             } catch (IllegalArgumentException e) {
-                ConsoleAdapter.printErr("введенные данные не являются элементом перечисления!");
+                throw new InvalidDataException("Введенные данные не являются элементом перечисления!");
             }
         }
     }

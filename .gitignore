@@ -3,3 +3,6 @@
 .vscode
 *.class
 **/target/*
+Prog/lab5/count.py
+Prog/lab6/count.py
+Prog/lab6/*.txt

@@ -176,7 +176,57 @@ public class Ticket implements Serializable, Comparable<Ticket> {
                 filledData++;
             } catch (InvalidDataException e) {
                 ConsoleAdapter.printErr(e.getMessage());
+            } finally {
+                ScannerAdapter.done = true;
             }
+        }
+    }
+
+    public ValueChecker fillPartly (String[] line) {
+        ScannerAdapter.setFillMode();
+        ScannerAdapter.fill(line);
+        String msg = "";
+
+        try {
+            Coordinates coordinates = this.getCoordinates() == null ? new Coordinates() : this.getCoordinates();
+            Event event = this.getEvent() == null ? new Event() : this.getEvent();
+
+            switch (filledData) {
+                case 1: msg = "Введите name (String): ";
+                        this.setName(ScannerAdapter.getString(null));
+                        break;
+                case 2: msg = "Введите coordinates.x (double): ";
+                        coordinates.setX(ScannerAdapter.getPrimitiveDouble(null));
+                        break;
+                case 3: msg = "Введите coordinates.y (Double): ";
+                        coordinates.setY(ScannerAdapter.getDouble(null));
+                        this.setCoordinates(coordinates);
+                        break;
+                case 4: msg = "Введите price (int): ";
+                        this.setPrice(ScannerAdapter.getPrimitiveInt(null));
+                        break;
+                case 5: msg = "Введите type (VIP, USUAL, BUDGETARY, CHEAP): ";
+                        this.setType(ScannerAdapter.getTicketType(null));
+                        break;
+                case 6: msg = "Введите event.name (String): ";
+                        event.setName(ScannerAdapter.getString(null));
+                        break;
+                case 7: msg = "Введите event.date (формат: 2020-01-23 15:30:55 Europe/Moscow): ";
+                        event.setDate(ScannerAdapter.getZonedDateTime(null));
+                        break;
+                case 8: msg = "Введите event.ticketsCount (Long): ";
+                        event.setTicketsCount(ScannerAdapter.getLong(null));
+                        break;
+                case 9: msg = "Введите description (String): ";
+                        event.setDescription(ScannerAdapter.getString(null));
+                        this.setEvent(event);
+                        break;
+            }
+            filledData++;
+
+            return filledData == 10 ? new ValueChecker(true, msg) : new ValueChecker(false, msg);
+        } catch (InvalidDataException e) {
+            return new ValueChecker(false, msg, e.getMessage());
         }
     }
 
