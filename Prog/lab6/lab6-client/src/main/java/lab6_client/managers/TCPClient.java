@@ -110,8 +110,6 @@ public class TCPClient implements Runnable {
 
     public void run () {
         try {
-            Thread.sleep(1000);
-            
             // clientSocket = new Socket(host, port);
             try {
                 clientSocket = SocketChannel.open(new InetSocketAddress(host, port));
@@ -293,7 +291,7 @@ public class TCPClient implements Runnable {
                     break;
                 }
             }*/
-        } catch (IOException | InterruptedException | BufferUnderflowException e) { //| ClassNotFoundException e) {
+        } catch (IOException | BufferUnderflowException e) { //| ClassNotFoundException e) {
             
         } finally {
             Main.logger.log(Level.INFO, "Connection closed");
