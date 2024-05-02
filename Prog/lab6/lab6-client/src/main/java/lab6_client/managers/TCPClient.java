@@ -8,7 +8,7 @@ import java.io.ObjectOutputStream;
 import java.io.Reader;
 import java.io.StreamCorruptedException;
 import java.net.InetSocketAddress;
-import java.net.Socket;
+import java.nio.BufferUnderflowException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SocketChannel;
 import java.nio.charset.StandardCharsets;
@@ -29,8 +29,6 @@ import lab6_core.models.Ticket;
 
 public class TCPClient implements Runnable {
     private SocketChannel clientSocket;
-    private ObjectInputStream in;
-    private ObjectOutputStream out;
 
     private final String host;
     private final int port;
@@ -89,8 +87,11 @@ public class TCPClient implements Runnable {
             
             responseMessage = (Message) ois.readObject();
         } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        };
+            
+        } catch (StreamCorruptedException e) {
+            Main.logger.log(Level.WARNING, "Stream corrupted. Trying again..");
+            return null;
+        }
 
         return responseMessage;
     }
@@ -112,7 +113,12 @@ public class TCPClient implements Runnable {
             Thread.sleep(1000);
             
             // clientSocket = new Socket(host, port);
-            clientSocket = SocketChannel.open(new InetSocketAddress(host, port));
+            try {
+                clientSocket = SocketChannel.open(new InetSocketAddress(host, port));
+            } catch (IOException e) {
+                Main.logger.log(Level.INFO, "Server is unavailable. Try again later");
+                return;
+            }
 
             Main.logger.log(Level.INFO, "Connected to " + host + ":" + port);
             
@@ -184,11 +190,14 @@ public class TCPClient implements Runnable {
                         msg = new Message("command", userInput);
                         break;
                 }
-                
-                write(msg);
 
+                Message response = null;
+                while (true) {
+                    write(msg);
+                    response = read();
+                    if (response != null) break;
+                }
 
-                Message response = read();
                 header = response.getHeader();
                 
                 if (header.equals("response")) {
@@ -284,10 +293,10 @@ public class TCPClient implements Runnable {
                     break;
                 }
             }*/
-        } catch (IOException | InterruptedException e) { //| ClassNotFoundException e) {
-            e.printStackTrace();
+        } catch (IOException | InterruptedException | BufferUnderflowException e) { //| ClassNotFoundException e) {
+            
         } finally {
-            Main.logger.log(Level.INFO, "Server closed connection");
+            Main.logger.log(Level.INFO, "Connection closed");
         }
     }
 }

@@ -31,6 +31,12 @@ Table people {
     action_id int [not null, REF: < actions.id]
 }
 
+Table people_items {
+    id serial [pk]
+    people_id int [not null, REF: < people.id]
+    item text [not null]
+}
+
 Table smoke_detectors {
     id serial [pk]
     state_id int [REF: <> states.id]
@@ -39,6 +45,11 @@ Table smoke_detectors {
 Table fire_sirens {
     id serial [pk]
     ship_id int [not null, REF: > ships.id]
-    caused_by_id int [REF: < smoke_detectors.id]
-    alarming boolean [not null]
+}
+
+Table fire_sirens_alarms {
+    id serial [pk]
+    fire_siren_id int [not null, REF: < fire_sirens.id]
+    caused_by_id int [not null, REF: < smoke_detectors.id]
+    alarm_ts timestamp [not null]
 }

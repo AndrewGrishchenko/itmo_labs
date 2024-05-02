@@ -2,16 +2,12 @@ package lab6_server.managers;
 
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
-import java.io.EOFException;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Reader;
 import java.io.StreamCorruptedException;
 import java.net.InetSocketAddress;
-import java.net.ServerSocket;
-import java.net.Socket;
-import java.net.SocketException;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
@@ -27,23 +23,20 @@ import lab6_server.commands.Command;
 import lab6_server.commands.CommandManager;
 
 public class TCPServer implements Runnable {
-    private Socket clientSocket;
-    private ServerSocket server;
-    private ObjectInputStream in;
-    private ObjectOutputStream out;
+    // private Socket clientSocket;
+    // private ServerSocket server;
+    // private ObjectInputStream in;
+    // private ObjectOutputStream out;
 
     private CollectionManager collectionManager;
     private CommandManager commandManager;
     
     private Reader reader;
     private Scanner scanner;
-    private boolean isRunning = true;
-    private boolean connected = false;
 
     private SelectionKey key;
 
     private final int port;
-    private Message clientMessage;
 
     private String header = "";
     private Command command;
@@ -165,7 +158,22 @@ public class TCPServer implements Runnable {
             server.configureBlocking(false);
             server.register(selector, SelectionKey.OP_ACCEPT);
 
+            scanner = new Scanner(reader);
             while (true) {
+                if (reader.ready() && scanner.hasNext()) {
+                    String line = scanner.nextLine();
+                    if (line.equals("save")) {
+                        Main.logger.log(Level.INFO, "Saving...");
+                        collectionManager.saveData();
+                        Main.logger.log(Level.INFO, "Saved!");
+                    } else if (line.equals("exit")) {
+                        Main.logger.log(Level.INFO, "Saving...");
+                        collectionManager.saveData();
+                        Main.logger.log(Level.INFO, "Saved!");
+                        break;
+                    }   
+                }
+
                 selector.select();
                 
                 Set<SelectionKey> keys = selector.selectedKeys();
