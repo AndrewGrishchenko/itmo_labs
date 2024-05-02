@@ -62,6 +62,7 @@ public class TCPClient implements Runnable {
 
         for (String command : commands) {
             line = command.split(" ");
+            if (line.length == 1 && line[0].length() == 0) continue;
             if (line[0].equals("execute_script")) {
                 if (!scripts.containsScript(line[1])) scripts.merge(inspectScript(line[1]));
             }

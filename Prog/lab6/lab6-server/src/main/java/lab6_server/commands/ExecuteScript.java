@@ -113,7 +113,7 @@ public class ExecuteScript extends Command {
         command = commandManager.getCommand(line[0]);
 
         if (command == null) {
-            response += "Команда \"" + line[0] + "\" не найдена!";
+            response += "Команда \"" + line[0] + "\" не найдена!\n";
             return;
         }
 
@@ -149,7 +149,7 @@ public class ExecuteScript extends Command {
 
     public void handleScript (Script script) {
         addRunningScript(script.getFileName());
-        Arrays.stream(script.getContent()).forEach(line -> handleInput(line));
+        Arrays.stream(script.getContent()).filter(line -> line.length() > 0).forEach(line -> handleInput(line));
         
         if (isFilling) {
             isFilling = false;
