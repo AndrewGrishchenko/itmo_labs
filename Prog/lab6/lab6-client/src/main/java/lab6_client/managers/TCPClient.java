@@ -28,7 +28,7 @@ import lab6_core.models.Scripts;
 import lab6_core.models.Ticket;
 
 public class TCPClient implements Runnable {
-    private SocketChannel clientSocket;
+    private SocketChannel socketChannel;
 
     private final String host;
     private final int port;
@@ -36,6 +36,8 @@ public class TCPClient implements Runnable {
     private final Reader reader;
     private Scanner scanner;
 
+    private Message msg;
+    private String fileName;
     private String header;
 
     private Object model;
@@ -73,12 +75,12 @@ public class TCPClient implements Runnable {
 
     public Message read () throws IOException {
         ByteBuffer responseLengthData = ByteBuffer.allocate(32);
-        clientSocket.read(responseLengthData);
+        socketChannel.read(responseLengthData);
         responseLengthData.flip();
         int responseLength = responseLengthData.getInt();
 
         ByteBuffer responseData = ByteBuffer.allocate(responseLength);
-        clientSocket.read(responseData);
+        socketChannel.read(responseData);
         
         Message responseMessage = null;
 
@@ -103,199 +105,112 @@ public class TCPClient implements Runnable {
 
             ByteBuffer data = ByteBuffer.wrap(bos.toByteArray());
 
-            clientSocket.write(data);
+            socketChannel.write(data);
             oos.flush();
             oos.close();
         }
     }
 
     public void run () {
+        boolean isRunning = true;
+        msg = null;
+        fileName = "";
+        header = "";
+
         try {
-            // clientSocket = new Socket(host, port);
+            socketChannel = SocketChannel.open(new InetSocketAddress(host, port));
+        } catch (IOException e) {
+            Main.logger.log(Level.INFO, "Server is unavailable. Try again later");
+            return;
+        }
+
+        Main.logger.log(Level.INFO, "Connected to " + host + ":" + port);
+        
+        scanner = new Scanner(reader);
+        ScannerAdapter.setInteractiveScanner(scanner);
+
+        while (isRunning) {
             try {
-                clientSocket = SocketChannel.open(new InetSocketAddress(host, port));
-            } catch (IOException e) {
-                Main.logger.log(Level.INFO, "Server is unavailable. Try again later");
-                return;
-            }
-
-            Main.logger.log(Level.INFO, "Connected to " + host + ":" + port);
-            
-            scanner = new Scanner(reader);
-            ScannerAdapter.setInteractiveScanner(scanner);
-
-            Message msg;
-            String fileName = "";
-            header = "";
-
-            while (true) {
-                switch (header) {
-                    case "ticket":
-                        if (model == null) model = new Ticket();
-                        try {
-                            ((Ticket) model).fillData();
-                        } catch (InvalidDataException e) {
-                            Main.logger.log(Level.SEVERE, e.getMessage());
-                            continue;
-                        }
-                        
-                        msg = new Message("ticket", model);
-                        break;
-                    case "event":
-                        if (model == null) model = new Event();
-                        try {
-                            ((Event) model).fillData();
-                        } catch (InvalidDataException e) {
-                            Main.logger.log(Level.SEVERE, e.getMessage());
-                            continue;
-                        }
-                        
-                        msg = new Message("event", model);
-                        break;
-                    case "script":
-                        try {
-                            Scripts scripts = inspectScript(fileName);
-                            scripts.setPrimaryScript(fileName);
-                            msg = new Message("script", fileName, scripts);
-                        } catch (IOException e) {
-                            Main.logger.log(Level.SEVERE, "Файл " + e.getMessage() + " не найден!");
-                            header = "";
-                            continue;
-                        }
-                        break;
-                    default:
-                        ConsoleAdapter.prompt();
-                        String[] userInput = new String[]{};
-                        while (true) {
-                            if (reader.ready()) {
-                                userInput = getUserInput();
-                                break;
-                            }
-                            //TODO: idk
-                            // } else if (clientSocket.getInputStream().available() > 0) {
-                            //     if (((Message) in.readObject()).getHeader().equals("shutdown")) {
-                            //         return;
-                            //     }
-                            // }
-                        }
-
-                        if (userInput == null) continue;
-
-                        if (userInput[0].equals("execute_script") && userInput.length == 2) {
-                            fileName = userInput[1];
-                            
-                        }
-
-                        msg = new Message("command", userInput);
-                        break;
-                }
-
-                Message response = null;
                 while (true) {
-                    write(msg);
-                    response = read();
-                    if (response != null) break;
-                }
-
-                header = response.getHeader();
-                
-                if (header.equals("response")) {
-                    System.out.println(response.getResponse());
-                } else if (header.equals("exit")) {
-                    System.out.println(response.getResponse());
-                    break;
-                }
-            }
-                
-                
-            // }
-
-            /*in = new ObjectInputStream(clientSocket.getInputStream());
-            out = new ObjectOutputStream(clientSocket.getOutputStream());
-            Message msg;
-            scanner = new Scanner(reader);
-            ScannerAdapter.setInteractiveScanner(scanner);
-
-            String fileName = "";
-            header = "";
-
-            while (true) {
-                switch (header) {
-                    case "ticket":
-                        if (model == null) model = new Ticket();
-                        try {
-                            ((Ticket) model).fillData();
-                        } catch (InvalidDataException e) {
-                            Main.logger.log(Level.SEVERE, e.getMessage());
-                            continue;
-                        }
-                        
-                        msg = new Message("ticket", model);
-                        break;
-                    case "event":
-                        if (model == null) model = new Event();
-                        try {
-                            ((Event) model).fillData();
-                        } catch (InvalidDataException e) {
-                            Main.logger.log(Level.SEVERE, e.getMessage());
-                            continue;
-                        }
-                        
-                        msg = new Message("event", model);
-                        break;
-                    case "script":
-                        try {
-                            Scripts scripts = inspectScript(fileName);
-                            scripts.setPrimaryScript(fileName);
-                            msg = new Message("script", fileName, scripts);
-                        } catch (IOException e) {
-                            Main.logger.log(Level.SEVERE, "Файл " + e.getMessage() + " не найден!");
-                            header = "";
-                            continue;
-                        }
-                        break;
-                    default:
-                        ConsoleAdapter.prompt();
-                        String[] userInput = new String[]{};
-                        while (true) {
-                            if (reader.ready()) {
-                                userInput = getUserInput();
-                                break;
-                            } else if (clientSocket.getInputStream().available() > 0) {
-                                if (((Message) in.readObject()).getHeader().equals("shutdown")) {
-                                    return;
+                    switch (header) {
+                        case "ticket":
+                            if (model == null) model = new Ticket();
+                            try {
+                                ((Ticket) model).fillData();
+                            } catch (InvalidDataException e) {
+                                Main.logger.log(Level.SEVERE, e.getMessage());
+                                continue;
+                            }
+                            
+                            msg = new Message("ticket", model);
+                            break;
+                        case "event":
+                            if (model == null) model = new Event();
+                            try {
+                                ((Event) model).fillData();
+                            } catch (InvalidDataException e) {
+                                Main.logger.log(Level.SEVERE, e.getMessage());
+                                continue;
+                            }
+                            
+                            msg = new Message("event", model);
+                            break;
+                        case "script":
+                            try {
+                                Scripts scripts = inspectScript(fileName);
+                                scripts.setPrimaryScript(fileName);
+                                msg = new Message("script", fileName, scripts);
+                            } catch (IOException e) {
+                                Main.logger.log(Level.SEVERE, "Файл " + e.getMessage() + " не найден!");
+                                header = "";
+                                continue;
+                            }
+                            break;
+                        default:
+                            ConsoleAdapter.prompt();
+                            String[] userInput = new String[]{};
+                            while (true) {
+                                if (reader.ready()) {
+                                    userInput = getUserInput();
+                                    break;
                                 }
                             }
-                        }
 
-                        if (userInput == null) continue;
+                            if (userInput == null) continue;
 
-                        if (userInput[0].equals("execute_script") && userInput.length == 2) {
-                            fileName = userInput[1];
-                            
-                        }
+                            if (userInput[0].equals("execute_script") && userInput.length == 2) {
+                                fileName = userInput[1];
+                            }
 
-                        msg = new Message("command", userInput);
+                            msg = new Message("command", userInput);
+                            break;
+                    }
+
+                    Message response = null;
+                    while (true) {
+                        write(msg);
+                        response = read();
+                        if (response != null) break;
+                    }
+
+                    header = response.getHeader();
+                    
+                    if (header.equals("response")) {
+                        System.out.println(response.getResponse());
+                    } else if (header.equals("exit")) {
+                        System.out.println(response.getResponse());
                         break;
+                    }
                 }
-                
-                out.writeObject(msg);
-                out.flush();
-
-                Message response = (Message) in.readObject();
-                header = response.getHeader();
-                
-                if (header.equals("response")) {
-                    System.out.println(response.getResponse());
-                } else if (header.equals("exit")) {
-                    System.out.println(response.getResponse());
-                    break;
+            } catch (IOException | BufferUnderflowException e) {
+                try {
+                    socketChannel = SocketChannel.open(new InetSocketAddress(host, port));
+                    Main.logger.log(Level.INFO, "Reconnected to " + host + ":" + port);
+                } catch (IOException exc) {
+                    isRunning = false;
                 }
-            }*/
-        } catch (IOException | BufferUnderflowException e) { //| ClassNotFoundException e) {
-            
-        } finally {
-            Main.logger.log(Level.INFO, "Connection closed");
+            }
         }
+        Main.logger.log(Level.INFO, "Connection closed");
     }
 }
