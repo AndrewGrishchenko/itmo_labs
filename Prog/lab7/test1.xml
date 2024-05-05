@@ -1,0 +1,35 @@
+<Tickets>
+  <ticket>
+    <name>ticket1</name>
+    <coordinates>
+      <x>1.1</x>
+      <y>1.2</y>
+    </coordinates>
+    <price>100</price>
+    <type>VIP</type>
+    <event>
+      <id>1</id>
+      <name>event1</name>
+      <date>2020-01-01 22:12:12 Europe/Moscow</date>
+      <ticketsCount>1</ticketsCount>
+      <description>desc1</description>
+    </event>
+  </ticket>
+  <ticket>
+    <name>ticket2</name>
+    <coordinates>
+      <x>2.1</x>
+      <y>2.2</y>
+    </coordinates>
+    <price>200</price>
+    <type>USUAL</type>
+    <event>
+      <id>2</id>
+      <name>event2</name>
+      <date>2020-01-01 22:12:12 Europe/London</date>
+      <ticketsCount>2</ticketsCount>
+      <description>desc2</description>
+    </event>
+  </ticket>
+</Tickets>
+
