@@ -116,6 +116,7 @@ public class TCPClient implements Runnable {
         msg = null;
         fileName = "";
         header = "";
+        boolean reRun = false;
 
         try {
             socketChannel = SocketChannel.open(new InetSocketAddress(host, port));
@@ -132,58 +133,60 @@ public class TCPClient implements Runnable {
         while (isRunning) {
             try {
                 while (true) {
-                    switch (header) {
-                        case "ticket":
-                            if (model == null) model = new Ticket();
-                            try {
-                                ((Ticket) model).fillData();
-                            } catch (InvalidDataException e) {
-                                Main.logger.log(Level.SEVERE, e.getMessage());
-                                continue;
-                            }
-                            
-                            msg = new Message("ticket", model);
-                            break;
-                        case "event":
-                            if (model == null) model = new Event();
-                            try {
-                                ((Event) model).fillData();
-                            } catch (InvalidDataException e) {
-                                Main.logger.log(Level.SEVERE, e.getMessage());
-                                continue;
-                            }
-                            
-                            msg = new Message("event", model);
-                            break;
-                        case "script":
-                            try {
-                                Scripts scripts = inspectScript(fileName);
-                                scripts.setPrimaryScript(fileName);
-                                msg = new Message("script", fileName, scripts);
-                            } catch (IOException e) {
-                                Main.logger.log(Level.SEVERE, "Файл " + e.getMessage() + " не найден!");
-                                header = "";
-                                continue;
-                            }
-                            break;
-                        default:
-                            ConsoleAdapter.prompt();
-                            String[] userInput = new String[]{};
-                            while (true) {
-                                if (reader.ready()) {
-                                    userInput = getUserInput();
-                                    break;
+                    if (!reRun) {
+                        switch (header) {
+                            case "ticket":
+                                if (model == null) model = new Ticket();
+                                try {
+                                    ((Ticket) model).fillData();
+                                } catch (InvalidDataException e) {
+                                    Main.logger.log(Level.SEVERE, e.getMessage());
+                                    continue;
                                 }
-                            }
+                                
+                                msg = new Message("ticket", model);
+                                break;
+                            case "event":
+                                if (model == null) model = new Event();
+                                try {
+                                    ((Event) model).fillData();
+                                } catch (InvalidDataException e) {
+                                    Main.logger.log(Level.SEVERE, e.getMessage());
+                                    continue;
+                                }
+                                
+                                msg = new Message("event", model);
+                                break;
+                            case "script":
+                                try {
+                                    Scripts scripts = inspectScript(fileName);
+                                    scripts.setPrimaryScript(fileName);
+                                    msg = new Message("script", fileName, scripts);
+                                } catch (IOException e) {
+                                    Main.logger.log(Level.SEVERE, "Файл " + e.getMessage() + " не найден!");
+                                    header = "";
+                                    continue;
+                                }
+                                break;
+                            default:
+                                ConsoleAdapter.prompt();
+                                String[] userInput = new String[]{};
+                                while (true) {
+                                    if (reader.ready()) {
+                                        userInput = getUserInput();
+                                        break;
+                                    }
+                                }
 
-                            if (userInput == null) continue;
+                                if (userInput == null) continue;
 
-                            if (userInput[0].equals("execute_script") && userInput.length == 2) {
-                                fileName = userInput[1];
-                            }
+                                if (userInput[0].equals("execute_script") && userInput.length == 2) {
+                                    fileName = userInput[1];
+                                }
 
-                            msg = new Message("command", userInput);
-                            break;
+                                msg = new Message("command", userInput);
+                                break;
+                        }
                     }
 
                     Message response = null;
@@ -192,6 +195,8 @@ public class TCPClient implements Runnable {
                         response = read();
                         if (response != null) break;
                     }
+
+                    reRun = false;
 
                     header = response.getHeader();
                     
@@ -206,6 +211,7 @@ public class TCPClient implements Runnable {
                 try {
                     socketChannel = SocketChannel.open(new InetSocketAddress(host, port));
                     Main.logger.log(Level.INFO, "Reconnected to " + host + ":" + port);
+                    reRun = true;
                 } catch (IOException exc) {
                     isRunning = false;
                 }
