@@ -79,6 +79,8 @@ public class TCPClient implements Runnable {
         responseLengthData.flip();
         int responseLength = responseLengthData.getInt();
 
+        if (responseLength < 0) return null;
+
         ByteBuffer responseData = ByteBuffer.allocate(responseLength);
         socketChannel.read(responseData);
         
@@ -91,8 +93,8 @@ public class TCPClient implements Runnable {
             responseMessage = (Message) ois.readObject();
         } catch (ClassNotFoundException e) {
             
-        } catch (StreamCorruptedException e) {
-            Main.logger.log(Level.WARNING, "Stream corrupted. Trying again..");
+        } catch (StreamCorruptedException | IllegalArgumentException e) {
+            // Main.logger.log(Level.WARNING, "Stream corrupted. Trying again..");
             return null;
         }
 
@@ -205,7 +207,7 @@ public class TCPClient implements Runnable {
             } catch (IOException | BufferUnderflowException e) {
                 try {
                     socketChannel = SocketChannel.open(new InetSocketAddress(host, port));
-                    Main.logger.log(Level.INFO, "Reconnected to " + host + ":" + port);
+                    Main.logger.log(Level.FINE, "Reconnected to " + host + ":" + port);
                 } catch (IOException exc) {
                     isRunning = false;
                 }

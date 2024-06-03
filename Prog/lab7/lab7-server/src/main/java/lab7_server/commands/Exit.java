@@ -19,7 +19,7 @@ public class Exit extends Command {
      * @see ExitCode
      */
     @Override
-    public String invoke() {
+    public String run() {
         return "Завершение программы...";
     }
 

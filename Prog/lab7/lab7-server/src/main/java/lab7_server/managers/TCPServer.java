@@ -13,8 +13,15 @@ import java.nio.channels.SelectionKey;
 import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ForkJoinPool;
+import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Function;
 import java.util.logging.Level;
 
 import lab7_core.models.Message;
@@ -38,15 +45,18 @@ public class TCPServer implements Runnable {
     private String[] commandArgs = new String[]{};
 
     private Selector selector;
+    private ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
+    private ExecutorService executorService = Executors.newCachedThreadPool();
+    private ReentrantLock lock = new ReentrantLock();
 
     public TCPServer (int port, CollectionManager collectionManager, CommandManager commandManager, Reader reader) {
         this.port = port;
-        this.commandManager = commandManager;
         this.collectionManager = collectionManager;
+        this.commandManager = commandManager;
         this.reader = reader;
     }
 
-    public void acceptData () throws IOException {
+    public void acceptData (SelectionKey key) throws IOException {
         var ssc = (ServerSocketChannel) key.channel();
         var sc = ssc.accept();
         
@@ -58,7 +68,7 @@ public class TCPServer implements Runnable {
     private Message inputMessage;
     private Message outputMessage;
 
-    public void readData () throws IOException, ClassNotFoundException {
+    public void readData (SelectionKey key, AuthManager authManager) throws IOException, ClassNotFoundException {
         var sc = (SocketChannel) key.channel();
         sc.configureBlocking(false);
 
@@ -81,17 +91,23 @@ public class TCPServer implements Runnable {
             case "ticket":
                 command = commandManager.getCommand(commandArgs[0]);  
                 command.setObj(inputMessage.getObj());
-                outputMessage = new Message("response", command.run());
+                command.setLock(lock);
+                command.setAuthManager(authManager);
+                outputMessage = new Message("response", forkJoinPool.invoke(command));
                 break;
             case "event":
                 command = commandManager.getCommand(commandArgs[0]);
                 command.setObj(inputMessage.getObj());
-                outputMessage = new Message("response", command.run());
+                command.setLock(lock);
+                command.setAuthManager(authManager);
+                outputMessage = new Message("response", forkJoinPool.invoke(command));
                 break;
             case "script":
                 command = commandManager.getCommand(commandArgs[0]);
                 command.setObj(inputMessage.getObj());
-                outputMessage = new Message("response", command.run());
+                command.setLock(lock);
+                command.setAuthManager(authManager);
+                outputMessage = new Message("response", forkJoinPool.invoke(command));
                 break;
             default:
                 String[] userInput = inputMessage.getCommand();
@@ -101,8 +117,12 @@ public class TCPServer implements Runnable {
                     outputMessage = new Message("response", "Команда не найдена!");
                     break;
                 }
+
+                command.setLock(lock);
+                command.setAuthManager(authManager);
+
                 if (command.getName().equals("exit")) {
-                    outputMessage = new Message("exit", command.run());
+                    outputMessage = new Message("exit", forkJoinPool.invoke(command));
                     break;
                 }
                 
@@ -113,7 +133,7 @@ public class TCPServer implements Runnable {
                 } else if (command.getRequiredObject() != null) {
                     outputMessage = new Message(command.getRequiredObject());
                 } else {
-                    outputMessage = new Message("response", command.run());
+                    outputMessage = new Message("response", forkJoinPool.invoke(command));
                 }
                 break;
         }
@@ -122,24 +142,54 @@ public class TCPServer implements Runnable {
         sc.register(selector, SelectionKey.OP_WRITE);
     }
 
-    public void writeData() throws IOException {
-        var sc = (SocketChannel) key.channel();
-        sc.configureBlocking(false);
+    class writeRunnable implements Runnable {
+        public IOException exception;
+        private SelectionKey key;
 
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-            oos.writeObject(outputMessage);
-            ByteBuffer data = ByteBuffer.wrap(bos.toByteArray());
-            ByteBuffer dataLength = ByteBuffer.allocate(32).putInt(data.limit());
-            dataLength.flip();
-
-            sc.write(dataLength);
-            sc.write(data);
-            oos.flush();
-            oos.close();
-            data.clear();
+        public writeRunnable(SelectionKey key) {
+            this.key = key;
         }
 
-        sc.register(selector, SelectionKey.OP_READ);
+        public void run() {
+            try {
+                var sc = (SocketChannel) key.channel();
+                sc.configureBlocking(false);
+
+                try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
+                    oos.writeObject(outputMessage);
+                    ByteBuffer data = ByteBuffer.wrap(bos.toByteArray());
+                    ByteBuffer dataLength = ByteBuffer.allocate(32).putInt(data.limit());
+                    dataLength.flip();
+
+                    sc.write(dataLength);
+                    sc.write(data);
+                    oos.flush();
+                    oos.close();
+                    data.clear();
+                }
+
+                sc.register(selector, SelectionKey.OP_READ);
+            } catch (IOException e) {
+                this.exception = e;
+            }
+        }
+    }
+
+    public void clientThread(SelectionKey key) {
+        AuthManager authManager = new AuthManager();
+        
+        try {
+            if (key.isAcceptable()) acceptData(key);
+            if (key.isReadable()) readData(key, authManager);
+
+            if (key.isWritable()) {
+                writeRunnable wr = new writeRunnable(key);
+                executorService.submit(wr);
+                if (wr.exception != null) throw wr.exception;
+            }
+        } catch (IOException | ClassNotFoundException e) {
+            key.cancel();
+        }
     }
 
     public void run () {
@@ -174,13 +224,13 @@ public class TCPServer implements Runnable {
                 for (var iter = keys.iterator(); iter.hasNext(); ) {
                     key = iter.next(); iter.remove();
                     if (key.isValid()) {
-                        if (key.isAcceptable()) acceptData();
-                        if (key.isReadable()) readData();
-                        if (key.isWritable()) writeData();
+                        new Thread(() -> {
+                            clientThread(key);
+                        }).run();
                     }
                 }
             }
-        } catch (IOException | ClassNotFoundException e) {
+        } catch (IOException e) {
             Main.logger.log(Level.SEVERE, e.getMessage());
         }
     }

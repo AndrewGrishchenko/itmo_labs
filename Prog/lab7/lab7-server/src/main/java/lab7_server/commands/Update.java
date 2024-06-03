@@ -27,7 +27,7 @@ public class Update extends Command {
      * @see ExitCode
      */
     @Override
-    public String invoke() {
+    public String run() {
         String[] args = getArgs();
         if (args.length != 2) {
             return getUsage();

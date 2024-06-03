@@ -26,7 +26,7 @@ public class RemoveLower extends Command {
      * @see ExitCode
      */
     @Override
-    public String invoke() {
+    public String run() {
         Ticket ticket = (Ticket) getObj();
 
         collectionManager.removeLowerThanTicket(ticket);

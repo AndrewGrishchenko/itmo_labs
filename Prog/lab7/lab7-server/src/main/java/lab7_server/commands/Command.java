@@ -1,20 +1,25 @@
 package lab7_server.commands;
 
 import java.util.Objects;
+import java.util.concurrent.RecursiveTask;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 
 import lab7_server.Main;
-import lab7_server.interfaces.Runnable;
 import lab7_server.interfaces.Validatable;
+import lab7_server.managers.AuthManager;
 
-public abstract class Command implements Runnable, Validatable {
+public abstract class Command extends RecursiveTask<String> implements Validatable {
     private final String name;
     private final String description;
     private final String usage;
     private final String requiredObject;
+    private AuthManager authManager;
     
     private String[] args;
     private Object obj;
+
+    private ReentrantLock lock;
 
     public Command (String name, String description, String usage) {
         this.name = name;
@@ -62,6 +67,18 @@ public abstract class Command implements Runnable, Validatable {
         this.obj = obj;
     }
 
+    public void setLock (ReentrantLock lock) {
+        this.lock = lock;
+    }
+
+    public AuthManager getAuthManager () {
+        return authManager;
+    }
+
+    public void setAuthManager (AuthManager authManager) {
+        this.authManager = authManager;
+    }
+
     @Override
     public boolean equals (Object obj) {
         if (this == obj) return true;
@@ -78,8 +95,14 @@ public abstract class Command implements Runnable, Validatable {
     }
 
     @Override
-    public String run () {
+    public String compute () {
+        System.out.println(authManager.isLoggedIn());
+        if (!authManager.isLoggedIn() && !name.equals("login") && !name.equals("register")) return "You need to be logged in!";
+        
+        lock.lock();
         Main.logger.log(Level.INFO, "Running \"" + name + "\" command");
-        return invoke();
+        String res = run();
+        lock.unlock();
+        return res;
     }
 }

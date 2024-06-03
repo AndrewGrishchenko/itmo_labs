@@ -28,7 +28,7 @@ public class Show extends Command {
      * @see ExitCode
      */
     @Override
-    public String invoke() {
+    public String run() {
         
         String message = "";
         ArrayList<Ticket> tickets = collectionManager.toArray();

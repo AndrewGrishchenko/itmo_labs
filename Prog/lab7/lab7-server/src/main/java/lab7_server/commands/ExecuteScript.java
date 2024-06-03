@@ -102,7 +102,7 @@ public class ExecuteScript extends Command {
                 isFilling = false;
                 command.setObj(model);
 
-                response += command.run() + "\n";
+                response += command.compute() + "\n";
             }
 
             return;
@@ -141,7 +141,7 @@ public class ExecuteScript extends Command {
         }
 
         if (command.isValid() == null) {
-            response += command.run() + "\n";
+            response += command.compute() + "\n";
         } else {
             response += command.isValid() + "\n";
         }
@@ -167,7 +167,7 @@ public class ExecuteScript extends Command {
      * @see ExitCode
      */
     @Override
-    public String invoke() {
+    public String run() {
         scripts = (Scripts) getObj();
         
         handleScript(scripts.getPrimaryScript());

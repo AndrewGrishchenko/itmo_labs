@@ -17,7 +17,7 @@ public class AuthManager {
     public AuthManager () {
     }
 
-    public void register (String username, String password) {
+    public String register (String username, String password) {
         logger.info("Registering new user " + username);
 
         String hash = generateHash(password);
@@ -25,13 +25,14 @@ public class AuthManager {
 
         int id = DBManager.executeInsert("users", user);
         if (id != -1) {
-            System.out.println("User registered!");
+            userId = user.getId();
+            return "User registered!";
         } else {
-            System.out.println("User already exists!");
+            return "User already exists!";
         }
     }
 
-    public boolean login (String username, String password) {
+    public String login (String username, String password) {
         logger.info("Logging in user " + username);
 
         String hash = generateHash(password);
@@ -39,21 +40,21 @@ public class AuthManager {
         ArrayList<Object> users = DBManager.executeSelect("users");
         
         if (users.size() == 0) {
-            System.out.println("No such user found!");
-            return false;
+            return "No such user found!";
         }
 
         User user = (User) users.get(0);
         if (!hash.equals(user.getHash())) {
-            System.out.println("Password is not correct!");
-            return false;
+            return "Password is not correct!";
         }
 
-        System.out.println("Logged in successfully!");
-        return true;
+        userId = user.getId();
+        return "Logged in successfully!";
     }
 
     private String generateHash (String password) {
+        if (password == "") return password;
+        
         try {
             byte[] passwordBytes = password.getBytes();
             MessageDigest md = MessageDigest.getInstance("MD5");
@@ -62,5 +63,9 @@ public class AuthManager {
         } catch (NoSuchAlgorithmException e) {
             return null;
         }
+    }
+
+    public boolean isLoggedIn () {
+        return userId != null ? true : false;
     }
 }

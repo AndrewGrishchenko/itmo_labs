@@ -26,7 +26,7 @@ public class Info extends Command {
      * @see ExitCode
      */
     @Override
-    public String invoke() {
+    public String run() {
         String message = "Информация о коллекции:\n  Тип: " + collectionManager.getType()
         + "\n  Дата инициализации: " + collectionManager.getInitTime()
         + "\n  Дата последнего изменения: " + collectionManager.getLastUpdateTime()

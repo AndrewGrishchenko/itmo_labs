@@ -28,7 +28,9 @@ import lab7_server.commands.FilterGreaterThanEvent;
 import lab7_server.commands.Help;
 import lab7_server.commands.Info;
 import lab7_server.commands.Insert;
+import lab7_server.commands.Login;
 import lab7_server.commands.PrintFieldDescendingEvent;
+import lab7_server.commands.Register;
 import lab7_server.commands.RemoveAnyByEvent;
 import lab7_server.commands.RemoveKey;
 import lab7_server.commands.RemoveLower;
@@ -45,6 +47,7 @@ public class Main {
     public static final Logger logger = Logger.getLogger(Main.class.getName());
 
     public static void main(String[] args) {
+        AuthManager authManager = new AuthManager();
 
         final String fileName = "test1.xml";
         CollectionManager collectionManager = new CollectionManager(fileName);
@@ -74,13 +77,13 @@ public class Main {
             addCommand(new FilterGreaterThanEvent(collectionManager));
             addCommand(new PrintFieldDescendingEvent(collectionManager));
             addCommand(new Info(collectionManager));
+            addCommand(new Login(authManager));
+            addCommand(new Register(authManager));
         }};
         commandManager.addCommand(new ExecuteScript(commandManager));
         commandManager.addCommand(new Help(commandManager));
 
         Reader reader = new InputStreamReader(System.in);
-
-        // new TCPServer(4004, collectionManager, commandManager, reader).run();
 
         try {
             DBManager.init();
@@ -89,21 +92,25 @@ public class Main {
             System.exit(1);
         }
 
+        new TCPServer(4004, collectionManager, commandManager, reader).run();
+
+        
+
         // AuthManager am = new AuthManager();
         // am.register("some0", "123");
         // am.login("some0", "12");
         // am.login("some0", "123");
 
 
-        String[] parts = "2020-01-01 22:12:12 Europe/Moscow".split(" ");
-        LocalDateTime ldt = LocalDateTime.parse(parts[0] + "T" + parts[1]);
-        ZonedDateTime zdt = ldt.atZone(ZoneId.of(parts[2]));
-        Event event = new Event("123", zdt, Long.valueOf(10), "desc");
+        // String[] parts = "2020-01-01 22:12:12 Europe/Moscow".split(" ");
+        // LocalDateTime ldt = LocalDateTime.parse(parts[0] + "T" + parts[1]);
+        // ZonedDateTime zdt = ldt.atZone(ZoneId.of(parts[2]));
+        // Event event = new Event("123", zdt, Long.valueOf(10), "desc");
 
         // DBManager.executeInsert("events", event);
 
-        Ticket ticket = new Ticket(1, "ticket", new Coordinates(1.1, 1.2), 5, TicketType.VIP, event);
-        ticket.setCreatorId(1);
+        // Ticket ticket = new Ticket(1, "ticket", new Coordinates(1.1, 1.2), 5, TicketType.VIP, event);
+        // ticket.setCreatorId(1);
 
         // DBManager.findEvent(event);
         // DBManager.executeInsert("tickets", ticket);
@@ -113,9 +120,9 @@ public class Main {
         //     System.out.println(((Event) obj).toString());
         // });
 
-        ArrayList<Object> tickets = DBManager.executeSelect("tickets");
-        tickets.forEach((Object obj) -> {
-            System.out.println(((Ticket) obj).toString());
-        });
+        // ArrayList<Object> tickets = DBManager.executeSelect("tickets");
+        // tickets.forEach((Object obj) -> {
+        //     System.out.println(((Ticket) obj).toString());
+        // });
     }
 }

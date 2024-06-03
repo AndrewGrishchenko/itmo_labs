@@ -27,7 +27,7 @@ public class Insert extends Command {
      * @see ExitCode
      */
     @Override
-    public String invoke() {
+    public String run() {
         String[] args = getArgs();
         
         try {
