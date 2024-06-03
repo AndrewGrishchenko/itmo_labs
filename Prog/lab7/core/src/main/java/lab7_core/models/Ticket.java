@@ -15,9 +15,6 @@ import lab7_core.exceptions.InvalidDataException;
 public class Ticket implements Serializable, Comparable<Ticket> {
     private static final long serialVersionUID = 1L;
     
-    private static List<Integer> usedId = new ArrayList<>();
-    private static int lastId = 0;
-
     private int filledData = 1;
 
     private int id; //Значение поля должно быть больше 0, Значение этого поля должно быть уникальным, Значение этого поля должно генерироваться автоматически
@@ -27,12 +24,12 @@ public class Ticket implements Serializable, Comparable<Ticket> {
     private int price; //Значение поля должно быть больше 0
     private TicketType type; //Поле не может быть null
     private Event event; //Поле не может быть null
+    private int creatorId;
 
     /**
      * Конструктор класса
      */
     public Ticket() {
-        this.id = getNextId();
         creationDate = LocalDateTime.now();
     }
 
@@ -70,42 +67,14 @@ public class Ticket implements Serializable, Comparable<Ticket> {
      * @see TicketType
      * @see Event
      */
-    public Ticket(String name, Coordinates coordinates, int price, TicketType type, Event event) {
-        this.id = getNextId();
+    public Ticket(int id, String name, Coordinates coordinates, int price, TicketType type, Event event) {
+        this.id = id;
         this.name = name;
         this.coordinates = coordinates;
         this.creationDate = LocalDateTime.now();
         this.price = price;
         this.type = type;
         this.event = event;
-    }
-
-    /**
-     * Возвращает следующее свободное id
-     * @return следующее свободное id
-     */
-    private static int getNextId() {
-        int id = lastId + 1;
-        boolean found = false;
-        while (!found) {
-            if (containsId(id)) id += 1;
-            else found = true;
-        }
-        lastId = id;
-        usedId.add(id);
-        return id;
-    }
-
-    /**
-     * Проверяет наличие заданного id
-     * @param id значение id
-     * @return возвращает true если такой id уже есть, false в противном случае
-     */
-    private static boolean containsId(int id) {
-        for (int i = 0; i < usedId.size(); i++) {
-            if (usedId.get(i) == id) return true;
-        }
-        return false;
     }
 
     @Override
@@ -149,7 +118,6 @@ public class Ticket implements Serializable, Comparable<Ticket> {
         Coordinates coordinates = this.getCoordinates() == null ? new Coordinates() : this.getCoordinates();
         Event event = this.getEvent() == null ? new Event() : this.getEvent();
         while (filledData != 10) {
-            // try {
                 switch (filledData) {
                     case 1: this.setName(ScannerAdapter.getString("Введите name (String): "));
                             break;
@@ -173,9 +141,6 @@ public class Ticket implements Serializable, Comparable<Ticket> {
                             break;
                 }
                 filledData++;
-            // } catch (InvalidDataException e) {
-                // ConsoleAdapter.printErr(e.getMessage());
-            // }
         }
     }
 
@@ -364,5 +329,13 @@ public class Ticket implements Serializable, Comparable<Ticket> {
         if (event == null) throw new InvalidDataException("Ticket.event");
         event.setId(id);
         this.event = event;
+    }
+
+    public int getCreatorId() {
+        return creatorId;
+    }
+
+    public void setCreatorId(int creatorId) {
+        this.creatorId = creatorId;
     }
 }

@@ -1,0 +1,39 @@
+BEGIN;
+
+CREATE TYPE ticket_type AS ENUM (
+    'VIP', 'USUAL', 'BUDGETARY', 'CHEAP'
+);
+
+CREATE SEQUENCE users_seq INCREMENT 1 START 1;
+
+CREATE SEQUENCE events_seq INCREMENT 1 START 1;
+
+CREATE SEQUENCE tickets_seq INCREMENT 1 START 1;
+
+
+CREATE TABLE IF NOT EXISTS users (
+    id INT UNIQUE NOT NULL PRIMARY KEY,
+    username TEXT UNIQUE NOT NULL,
+    hash TEXT NOT NULL
+);
+
+CREATE TABLE IF NOT EXISTS events (
+    id INT UNIQUE NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    date TIMESTAMP NOT NULL,
+    tickets_count INT NOT NULL CONSTRAINT tc_limit CHECK(tickets_count > 0),
+    description TEXT
+);
+
+CREATE TABLE IF NOT EXISTS tickets (
+    id INT UNIQUE NOT NULL PRIMARY KEY,
+    name TEXT NOT NULL,
+    x FLOAT NOT NULL CONSTRAINT x_limit CHECK(x <= 87),
+    y FLOAT NOT NULL CONSTRAINT y_limit CHECK(y > -194),
+    price INTEGER NOT NULL CONSTRAINT price_limit CHECK(price > 0),
+    type ticket_type NOT NULL,
+    event_id INT NOT NULL REFERENCES events(id) ON DELETE CASCADE,
+    creator_id INT NOT NULL REFERENCES users(id) ON DELETE CASCADE
+);
+
+COMMIT;

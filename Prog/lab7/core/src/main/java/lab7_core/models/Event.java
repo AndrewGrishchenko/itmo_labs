@@ -1,6 +1,7 @@
 package lab7_core.models;
 
 import java.io.Serializable;
+import java.sql.Timestamp;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
@@ -51,6 +52,14 @@ public class Event implements Serializable, Comparable<Event> {
     public Event (String name, ZonedDateTime date, Long ticketsCount, String description) {
         this.name = name;
         this.date = date;
+        this.ticketsCount = ticketsCount;
+        this.description = description;
+    }
+
+    public Event (int id, String name, Timestamp timestamp, Long ticketsCount, String description) {
+        this.id = id;
+        this.name = name;
+        this.date = timestamp.toLocalDateTime().atZone(ZoneId.systemDefault());
         this.ticketsCount = ticketsCount;
         this.description = description;
     }
@@ -172,6 +181,11 @@ public class Event implements Serializable, Comparable<Event> {
      */
     public String getDate() {
         return DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss ").format(date) + date.getZone().toString();
+    }
+
+    public Timestamp getTimestamp() {
+        LocalDateTime ldt = date.toLocalDateTime();
+        return Timestamp.valueOf(ldt);
     }
 
     /**
