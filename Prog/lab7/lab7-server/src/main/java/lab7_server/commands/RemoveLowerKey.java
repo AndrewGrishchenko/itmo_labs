@@ -15,7 +15,7 @@ public class RemoveLowerKey extends Command {
      * @see CollectionManager
      */
     public RemoveLowerKey(CollectionManager collectionManager) {
-        super("remove_lower_key", "удалить из коллекции все элементы, ключ которых меньше, чем заданный", "'remove_lower_key <key>'");
+        super("remove_lower_key", "удалить из коллекции все элементы, ключ которых меньше, чем заданный", "'remove_lower_key <key>'", true, 2);
         this.collectionManager = collectionManager;
     }
 
@@ -41,7 +41,7 @@ public class RemoveLowerKey extends Command {
 
     @Override
     public String isValid() {
-        if (getArgs().length != 2) return getUsage();
+        if (!this.getMeta().testArgC(getArgs().length)) return getUsage();
         try {
             Integer.parseInt(getArgs()[1]);
         } catch (NumberFormatException e) {

@@ -5,15 +5,14 @@ import java.util.concurrent.RecursiveTask;
 import java.util.concurrent.locks.ReentrantLock;
 import java.util.logging.Level;
 
+import lab7_core.models.CommandMeta;
 import lab7_server.Main;
 import lab7_server.interfaces.Validatable;
 import lab7_server.managers.AuthManager;
 
 public abstract class Command extends RecursiveTask<String> implements Validatable {
-    private final String name;
-    private final String description;
-    private final String usage;
-    private final String requiredObject;
+    private final CommandMeta meta;
+
     private AuthManager authManager;
     
     private String[] args;
@@ -21,34 +20,28 @@ public abstract class Command extends RecursiveTask<String> implements Validatab
 
     private ReentrantLock lock;
 
-    public Command (String name, String description, String usage) {
-        this.name = name;
-        this.description = description;
-        this.usage = usage;
-        this.requiredObject = null;
+    public Command (String name, String description, String usage, boolean authRequired, int... argC) {
+        this.meta = new CommandMeta(name, description, usage, null, authRequired, argC);
     }
 
-    public Command (String name, String description, String usage, String requiredObject) {
-        this.name = name;
-        this.description = description;
-        this.usage = usage;
-        this.requiredObject = requiredObject;
+    public Command (String name, String description, String usage, String requiredObject, int... argC) {
+        this.meta = new CommandMeta(name, description, usage, requiredObject, true, argC);
     }
 
     public String getName () {
-        return name;
+        return meta.getName();
     }
 
     public String getDescription () {
-        return description;
+        return meta.getDescription();
     }
 
     public String getUsage () {
-        return "Использование: " + usage;
+        return "Использование: " + meta.getUsage();
     }
 
     public String getRequiredObject () {
-        return requiredObject;
+        return meta.getRequiredObject();
     }
 
     public String[] getArgs () {
@@ -71,6 +64,10 @@ public abstract class Command extends RecursiveTask<String> implements Validatab
         this.lock = lock;
     }
 
+    public CommandMeta getMeta () {
+        return meta;
+    }
+
     public AuthManager getAuthManager () {
         return authManager;
     }
@@ -84,25 +81,28 @@ public abstract class Command extends RecursiveTask<String> implements Validatab
         if (this == obj) return true;
         if (obj == null || getClass() != obj.getClass()) return false;
         Command other = (Command) obj;
-        return Objects.equals(name, other.name)
-            && Objects.equals(description, other.description) 
-            && Objects.equals(usage, other.usage);
+        return Objects.equals(meta, other.meta);
     }
 
     @Override
     public String toString () {
-        return usage + ": " + description;
+        return meta.getName() + ": " + meta.getDescription();
     }
 
     @Override
     public String compute () {
-        System.out.println(authManager.isLoggedIn());
-        if (!authManager.isLoggedIn() && !name.equals("login") && !name.equals("register")) return "You need to be logged in!";
-        
+        if (meta.isAuthRequired() && !authManager.isLoggedIn()) return "You need to be logged in!";
+
         lock.lock();
-        Main.logger.log(Level.INFO, "Running \"" + name + "\" command");
+        Main.logger.log(Level.INFO, "Running \"" + meta.getName() + "\" command");
         String res = run();
         lock.unlock();
         return res;
+    }
+
+    @Override
+    public String isValid() {
+        if (!this.getMeta().testArgC(getArgs().length)) return getUsage();
+        return null;
     }
 }

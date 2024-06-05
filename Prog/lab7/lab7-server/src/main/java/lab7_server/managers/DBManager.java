@@ -41,10 +41,9 @@ public class DBManager {
         String query = "SELECT * FROM " + table;
         
         if (condition.length != 0) {
-            query += " WHERE " + condition[0] + ";";
-        } else {
-            query += ";";
+            query += " WHERE " + condition[0];
         }
+        query += ";";
 
         try {
             Statement st = conn.createStatement();
@@ -155,23 +154,6 @@ public class DBManager {
         } catch (SQLException e) {
             return -1;
         }
-    }
-
-    public static boolean exists(String table, HashMap<String, String> conditions, String comp) {
-        String query = "SELECT EXISTS(SELECT 1 FROM " + table + "WHERE ";
-        
-        int i = 0;
-        for (String key : conditions.keySet()) {
-            if (i == conditions.size() - 1) {
-                query += key + "=" + conditions.get(key) + ";";
-            } else {
-                query += key + "=" + conditions.get(key) + " " + comp + " ";
-            }
-            i++;
-        }
-
-        System.out.println(query);
-        return true;
     }
 
     public static boolean exists (String table, String field, String value) {

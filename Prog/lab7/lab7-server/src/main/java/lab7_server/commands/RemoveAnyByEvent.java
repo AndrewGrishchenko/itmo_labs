@@ -16,7 +16,7 @@ public class RemoveAnyByEvent extends Command {
      * @see CollectionManager
      */
     public RemoveAnyByEvent(CollectionManager collectionManager) {
-        super("remove_any_by_event", "удалить из коллекции один элемент, значение поля event которого эквивалентно заданному", "'remove_any_by_event'", "event");
+        super("remove_any_by_event", "удалить из коллекции один элемент, значение поля event которого эквивалентно заданному", "'remove_any_by_event'", "event", 1);
         this.collectionManager = collectionManager;
     }
 
@@ -35,11 +35,5 @@ public class RemoveAnyByEvent extends Command {
         else {
             return "Данный ивент нигде не используется; ни один тикет не удален";
         }
-    }
-
-    @Override
-    public String isValid() {
-        if (getArgs().length != 1) return getUsage();
-        return null;
     }
 }

@@ -31,7 +31,7 @@ public class ExecuteScript extends Command {
      * @see CommandManager
      */
     public ExecuteScript (CommandManager commandManager) {
-        super("execute_script", "считать и исполнить скрипт из указанного файла. В скрипте содержатся команды в таком же виде, в котором их вводит пользователь в интерактивном режиме", "'execute_script <fileName>'", "script");
+        super("execute_script", "считать и исполнить скрипт из указанного файла. В скрипте содержатся команды в таком же виде, в котором их вводит пользователь в интерактивном режиме", "'execute_script <fileName>'", "script", 2);
         this.commandManager = commandManager;
     }
 
@@ -173,11 +173,5 @@ public class ExecuteScript extends Command {
         handleScript(scripts.getPrimaryScript());
         
         return response;
-    }
-
-    @Override
-    public String isValid() {
-        if (getArgs().length != 2) return getUsage();
-        return null;
     }
 }

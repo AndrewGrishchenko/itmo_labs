@@ -5,46 +5,18 @@ import java.io.Serializable;
 public class Message implements Serializable {
     private static final long serialVersionUID = 1L;
 
-    private String header;
-    private String[] command;
-    private String response;
-    private String fileName;
-    private Object obj;
+    private final String[] command;
+    private final String response;
+    // private final String fileName;
+    private final Object obj;
 
-    public Message (String header) {
-        this.header = header;
-    }
-
-    public Message (String header, String fileName, Object obj) {
-        this.header = header;
-        this.fileName = fileName;
-        this.obj = obj;
-    }
-
-    public Message (String header, String[] command) {
-        this.header = header;
+    public Message (String[] command, String response, Object obj) {
         this.command = command;
-    }
-
-    public Message (String header, String response) {
-        this.header = header;
         this.response = response;
-    }
-
-    public Message (String header, Object obj) {
-        this.header = header;
         this.obj = obj;
     }
 
-    public String getHeader () {
-        return header;
-    }
-
-    public Object getObj () {
-        return obj;
-    }
-
-    public String[] getCommand () {
+    public String[] getCommand() {
         return command;
     }
 
@@ -52,7 +24,7 @@ public class Message implements Serializable {
         return response;
     }
 
-    public String getFileName () {
-        return fileName;
+    public Object getObject() {
+        return obj;
     }
 }

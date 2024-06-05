@@ -20,9 +20,11 @@ import java.util.logging.Level;
 import lab7_client.Main;
 import lab7_core.adapters.ConsoleAdapter;
 import lab7_core.adapters.ScannerAdapter;
-import lab7_core.exceptions.InvalidDataException;
+import lab7_core.models.CommandMeta;
+import lab7_core.models.CommandSchema;
 import lab7_core.models.Event;
 import lab7_core.models.Message;
+import lab7_core.models.MessageBuilder;
 import lab7_core.models.Script;
 import lab7_core.models.Scripts;
 import lab7_core.models.Ticket;
@@ -37,10 +39,8 @@ public class TCPClient implements Runnable {
     private Scanner scanner;
 
     private Message msg;
-    private String fileName;
-    private String header;
 
-    private Object model;
+    private CommandSchema commandSchema;
 
     public TCPClient (String host, int port, Reader reader) {
         this.host = host;
@@ -74,16 +74,8 @@ public class TCPClient implements Runnable {
     }
 
     public Message read () throws IOException {
-        ByteBuffer responseLengthData = ByteBuffer.allocate(32);
-        socketChannel.read(responseLengthData);
-        responseLengthData.flip();
-        int responseLength = responseLengthData.getInt();
-
-        if (responseLength < 0) return null;
-
-        ByteBuffer responseData = ByteBuffer.allocate(responseLength);
+        ByteBuffer responseData = ByteBuffer.allocate(4096);
         socketChannel.read(responseData);
-        
         Message responseMessage = null;
 
         try {
@@ -94,7 +86,7 @@ public class TCPClient implements Runnable {
         } catch (ClassNotFoundException e) {
             
         } catch (StreamCorruptedException | IllegalArgumentException e) {
-            // Main.logger.log(Level.WARNING, "Stream corrupted. Trying again..");
+            Main.logger.log(Level.WARNING, "Stream corrupted. Trying again..");
             return null;
         }
 
@@ -102,25 +94,79 @@ public class TCPClient implements Runnable {
     }
 
     public void write (Message msg) throws IOException {
-        try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-            oos.writeObject(msg);
+        ByteArrayOutputStream bos = new ByteArrayOutputStream(); 
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.writeObject(msg);
 
-            ByteBuffer data = ByteBuffer.wrap(bos.toByteArray());
+        ByteBuffer data = ByteBuffer.wrap(bos.toByteArray());
+        socketChannel.write(data);
 
-            socketChannel.write(data);
-            oos.flush();
-            oos.close();
+        oos.flush();
+        oos.close();
+        data.clear();
+    }
+
+    private void getSchema () throws IOException {
+        ByteBuffer responseData = ByteBuffer.allocate(4096);
+        socketChannel.read(responseData);
+
+        try {
+            ByteArrayInputStream bais = new ByteArrayInputStream(responseData.array());
+            ObjectInputStream ois = new ObjectInputStream(bais);
+
+            commandSchema = (CommandSchema) ois.readObject();
+        } catch (ClassNotFoundException e) {
+
         }
+    }
+
+    public Message processInput (String[] userInput) {
+        CommandMeta meta = commandSchema.getMeta(userInput[0]);
+        
+        if (meta == null) {
+            System.out.println("Команда не найдена!");
+            return null;
+        }
+
+        if (!meta.testArgC(userInput.length)) {
+            System.out.println(meta.getUsage());
+            return null;
+        } else if (meta.getRequiredObject() != null) {
+            switch (meta.getRequiredObject()) {
+                case "ticket":
+                    Ticket ticket = new Ticket();
+                    ticket.fillData();
+                    return new MessageBuilder().command(userInput).obj(ticket).build();
+                case "event":
+                    Event event = new Event();
+                    event.fillData();
+                    return new MessageBuilder().command(userInput).obj(event).build();
+                default:
+                    return null;
+            }
+        } else {
+            return new MessageBuilder().command(userInput).build();
+        }
+    }
+
+    private void getResponse () throws IOException {
+        Message response = null;
+        while (true) {
+            write(msg);
+            response = read();
+            if (response != null) break;
+        }
+
+        System.out.println(response.getResponse());
     }
 
     public void run () {
         boolean isRunning = true;
         msg = null;
-        fileName = "";
-        header = "";
 
         try {
             socketChannel = SocketChannel.open(new InetSocketAddress(host, port));
+            getSchema();
         } catch (IOException e) {
             Main.logger.log(Level.INFO, "Server is unavailable. Try again later");
             return;
@@ -134,85 +180,38 @@ public class TCPClient implements Runnable {
         while (isRunning) {
             try {
                 while (true) {
-                    switch (header) {
-                        case "ticket":
-                            if (model == null) model = new Ticket();
-                            try {
-                                ((Ticket) model).fillData();
-                            } catch (InvalidDataException e) {
-                                Main.logger.log(Level.SEVERE, e.getMessage());
-                                continue;
-                            }
-                            
-                            msg = new Message("ticket", model);
-                            break;
-                        case "event":
-                            if (model == null) model = new Event();
-                            try {
-                                ((Event) model).fillData();
-                            } catch (InvalidDataException e) {
-                                Main.logger.log(Level.SEVERE, e.getMessage());
-                                continue;
-                            }
-                            
-                            msg = new Message("event", model);
-                            break;
-                        case "script":
-                            try {
-                                Scripts scripts = inspectScript(fileName);
-                                scripts.setPrimaryScript(fileName);
-                                msg = new Message("script", fileName, scripts);
-                            } catch (IOException e) {
-                                Main.logger.log(Level.SEVERE, "Файл " + e.getMessage() + " не найден!");
-                                header = "";
-                                continue;
-                            }
-                            break;
-                        default:
-                            ConsoleAdapter.prompt();
-                            String[] userInput = new String[]{};
-                            while (true) {
-                                if (reader.ready()) {
-                                    userInput = getUserInput();
-                                    break;
-                                }
-                            }
-
-                            if (userInput == null) continue;
-
-                            if (userInput[0].equals("execute_script") && userInput.length == 2) {
-                                fileName = userInput[1];
-                            }
-
-                            msg = new Message("command", userInput);
-                            break;
-                    }
-
-                    Message response = null;
+                    ConsoleAdapter.prompt();
+                    String[] userInput = new String[]{};
                     while (true) {
-                        write(msg);
-                        response = read();
-                        if (response != null) break;
+                        if (reader.ready()) {
+                            userInput = getUserInput();
+                            break;
+                        }
                     }
 
-                    header = response.getHeader();
-                    
-                    if (header.equals("response")) {
-                        System.out.println(response.getResponse());
-                    } else if (header.equals("exit")) {
-                        System.out.println(response.getResponse());
-                        break;
-                    }
+                    if (userInput == null) continue;
+
+                    // if (userInput[0].equals("execute_script") && userInput.length == 2) {
+                    //     fileName = userInput[1];
+                    // }
+
+                    msg = processInput(userInput);
+                    if (msg == null) continue;
+
+                    getResponse();
                 }
             } catch (IOException | BufferUnderflowException e) {
                 try {
                     socketChannel = SocketChannel.open(new InetSocketAddress(host, port));
-                    Main.logger.log(Level.FINE, "Reconnected to " + host + ":" + port);
+                    Main.logger.log(Level.INFO, "Reconnected to " + host + ":" + port);
+                    getSchema();
+                    getResponse();
                 } catch (IOException exc) {
                     isRunning = false;
                 }
             }
         }
+
         Main.logger.log(Level.INFO, "Connection closed");
     }
 }

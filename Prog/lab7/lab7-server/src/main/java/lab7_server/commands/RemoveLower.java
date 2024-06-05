@@ -16,7 +16,7 @@ public class RemoveLower extends Command {
      * @see CollectionManager
      */
     public RemoveLower(CollectionManager collectionManager) {
-        super("remove_lower", "удалить из коллекции все элементы, меньшие чем заданный", "'remove_lower'", "ticket");
+        super("remove_lower", "удалить из коллекции все элементы, меньшие чем заданный", "'remove_lower'", "ticket", 1);
         this.collectionManager = collectionManager;
     }
 
@@ -31,11 +31,5 @@ public class RemoveLower extends Command {
 
         collectionManager.removeLowerThanTicket(ticket);
         return "Тикеты удалены!";
-    }
-
-    @Override
-    public String isValid() {
-        if (getArgs().length != 1) return getUsage();
-        return null;
     }
 }

@@ -16,7 +16,7 @@ public class RemoveKey extends Command {
      * @see CollectionManager
      */
     public RemoveKey(CollectionManager collectionManager) {
-        super("remove_key", "удалить элемент из коллекции по его ключу", "'remove_key <key>'");
+        super("remove_key", "удалить элемент из коллекции по его ключу", "'remove_key <key>'", true, 2);
         this.collectionManager = collectionManager;
     }
 
@@ -42,7 +42,7 @@ public class RemoveKey extends Command {
 
     @Override
     public String isValid() {
-        if (getArgs().length != 2) return getUsage();
+        if (!this.getMeta().testArgC(getArgs().length)) return getUsage();
         try {
             if (!collectionManager.hasId(Integer.parseInt(getArgs()[1]))) return "Тикет с данным id не найден";
         } catch (NumberFormatException e) {

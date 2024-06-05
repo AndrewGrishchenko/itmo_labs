@@ -18,7 +18,7 @@ public class Show extends Command {
      * @see CollectionManager
      */
     public Show(CollectionManager collectionManager) {
-        super("show", "вывести в стандартный поток вывода все элементы коллекции в строковом представлении", "'show'");
+        super("show", "вывести в стандартный поток вывода все элементы коллекции в строковом представлении", "'show'", true, 1);
         this.collectionManager = collectionManager;
     }
 
@@ -29,7 +29,6 @@ public class Show extends Command {
      */
     @Override
     public String run() {
-        
         String message = "";
         ArrayList<Ticket> tickets = collectionManager.toArray();
         
@@ -42,11 +41,5 @@ public class Show extends Command {
         }
 
         return message;
-    }
-
-    @Override
-    public String isValid() {
-        if (getArgs().length != 1) return getUsage();
-        return null;
     }
 }

@@ -10,7 +10,7 @@ public class Exit extends Command {
      * Конструктор команды
      */
     public Exit() {
-        super("exit", "завершить программу (без сохранения в файл)", "'exit'");
+        super("exit", "завершить программу (без сохранения в файл)", "'exit'", false, 1);
     }
 
     /**
@@ -21,11 +21,5 @@ public class Exit extends Command {
     @Override
     public String run() {
         return "Завершение программы...";
-    }
-
-    @Override
-    public String isValid() {
-        if (getArgs().length != 1) return getUsage();
-        return null; 
     }
 }

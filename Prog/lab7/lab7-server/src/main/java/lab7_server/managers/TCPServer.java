@@ -6,7 +6,6 @@ import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.io.Reader;
-import java.io.StreamCorruptedException;
 import java.net.InetSocketAddress;
 import java.nio.ByteBuffer;
 import java.nio.channels.SelectionKey;
@@ -14,20 +13,20 @@ import java.nio.channels.Selector;
 import java.nio.channels.ServerSocketChannel;
 import java.nio.channels.SocketChannel;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.locks.ReentrantLock;
-import java.util.function.Function;
 import java.util.logging.Level;
 
 import lab7_core.models.Message;
+import lab7_core.models.MessageBuilder;
 import lab7_server.Main;
 import lab7_server.commands.Command;
 import lab7_server.commands.CommandManager;
+import lab7_server.models.ClientData;
 
 public class TCPServer implements Runnable {
     private CollectionManager collectionManager;
@@ -40,7 +39,6 @@ public class TCPServer implements Runnable {
 
     private final int port;
 
-    private String header = "";
     private Command command;
     private String[] commandArgs = new String[]{};
 
@@ -48,6 +46,8 @@ public class TCPServer implements Runnable {
     private ForkJoinPool forkJoinPool = ForkJoinPool.commonPool();
     private ExecutorService executorService = Executors.newCachedThreadPool();
     private ReentrantLock lock = new ReentrantLock();
+
+    private HashMap<SelectionKey, ClientData> clientMap = new HashMap<>();
 
     public TCPServer (int port, CollectionManager collectionManager, CommandManager commandManager, Reader reader) {
         this.port = port;
@@ -60,136 +60,122 @@ public class TCPServer implements Runnable {
         var ssc = (ServerSocketChannel) key.channel();
         var sc = ssc.accept();
         
+        sendSchema(sc);
+        
         sc.configureBlocking(false);
         sc.register(selector, SelectionKey.OP_READ);
-        System.out.println("accept with " + sc.socket().toString());
     }
 
-    private Message inputMessage;
-    private Message outputMessage;
+    private void sendSchema (SocketChannel sc) throws IOException {
+        sc.configureBlocking(false);
 
-    public void readData (SelectionKey key, AuthManager authManager) throws IOException, ClassNotFoundException {
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectOutputStream oos = new ObjectOutputStream(bos);
+        oos.writeObject(commandManager.genSchema());
+        ByteBuffer data = ByteBuffer.wrap(bos.toByteArray());
+
+        sc.write(data);
+        oos.flush();
+        oos.close();
+        data.clear();
+    }
+
+    private void setMessage (SelectionKey key, Message message) {
+        ClientData data = (ClientData) clientMap.get(key);
+        data.setMessage(message);
+        clientMap.replace(key, data);
+    }
+
+    private void clearKey (SelectionKey key) {
+        if (key.isValid()) {
+            SocketChannel socketChannel = (SocketChannel) key.channel();
+            try {
+                socketChannel.close();
+            } catch (IOException e) {
+
+            }
+            key.attach(null);
+            key.cancel();
+        }
+    }
+
+    private void proccessMessage (Message message, AuthManager authManager) {
+        commandArgs = message.getCommand();
+
+        command = commandManager.getCommand(commandArgs[0]);
+        command.setObj(message.getObject());
+        command.setLock(lock);
+        command.setAuthManager(authManager);
+        command.setArgs(commandArgs);
+
+        // Callable<String> callable = new Callable<String>() {
+        //     public String call() {
+        //         return command.compute();
+        //     }
+        // };
+
+        // ForkJoinTask<String> task = ForkJoinTask.adapt(callable);
+
+        // String some = forkJoinPool.invoke(task);
+        // setMessage(key, new MessageBuilder().response(some).build());
+        setMessage(key, new MessageBuilder().response(command.compute()).build());
+    }
+
+    public void readData (SelectionKey key) throws IOException, ClassNotFoundException {
         var sc = (SocketChannel) key.channel();
         sc.configureBlocking(false);
 
-        ByteBuffer clientData = ByteBuffer.allocate(2048);
-        int numBytes = sc.read(clientData);
+        ByteBuffer clientData = ByteBuffer.allocate(4096);
+        sc.read(clientData);
 
-        if (numBytes == -1) {
-            return;
-        }
-
-        try (ObjectInputStream ois = new ObjectInputStream(new ByteArrayInputStream(clientData.array()))) {
-            inputMessage = (Message) ois.readObject();
-        } catch (StreamCorruptedException e) {
-            key.cancel();
-        };
-        
-        header = inputMessage.getHeader();
-
-        switch (header) {
-            case "ticket":
-                command = commandManager.getCommand(commandArgs[0]);  
-                command.setObj(inputMessage.getObj());
-                command.setLock(lock);
-                command.setAuthManager(authManager);
-                outputMessage = new Message("response", forkJoinPool.invoke(command));
-                break;
-            case "event":
-                command = commandManager.getCommand(commandArgs[0]);
-                command.setObj(inputMessage.getObj());
-                command.setLock(lock);
-                command.setAuthManager(authManager);
-                outputMessage = new Message("response", forkJoinPool.invoke(command));
-                break;
-            case "script":
-                command = commandManager.getCommand(commandArgs[0]);
-                command.setObj(inputMessage.getObj());
-                command.setLock(lock);
-                command.setAuthManager(authManager);
-                outputMessage = new Message("response", forkJoinPool.invoke(command));
-                break;
-            default:
-                String[] userInput = inputMessage.getCommand();
-                commandArgs = userInput;
-                command = commandManager.getCommand(userInput[0]);
-                if (command == null) {
-                    outputMessage = new Message("response", "Команда не найдена!");
-                    break;
-                }
-
-                command.setLock(lock);
-                command.setAuthManager(authManager);
-
-                if (command.getName().equals("exit")) {
-                    outputMessage = new Message("exit", forkJoinPool.invoke(command));
-                    break;
-                }
+        new Thread(() -> {
+            try {
+                ByteArrayInputStream bais = new ByteArrayInputStream(clientData.array());
+                ObjectInputStream ois = new ObjectInputStream(bais);
+                Message inputMessage = (Message) ois.readObject();
                 
-                command.setArgs(userInput);                                
-                
-                if (command.isValid() != null) {
-                    outputMessage = new Message("response", command.isValid());
-                } else if (command.getRequiredObject() != null) {
-                    outputMessage = new Message(command.getRequiredObject());
-                } else {
-                    outputMessage = new Message("response", forkJoinPool.invoke(command));
-                }
-                break;
-        }
+                AuthManager authManager = clientMap.get(key).getAuthManager();
 
+                forkJoinPool.submit(() -> {
+                    proccessMessage(inputMessage, authManager);
+                }).join();
 
-        sc.register(selector, SelectionKey.OP_WRITE);
+                sc.register(selector, SelectionKey.OP_WRITE);
+            } catch (IOException | ClassNotFoundException e) {
+                clearKey(key);
+            }
+        }).start();
+
+        writeData(key);
     }
 
-    class writeRunnable implements Runnable {
-        public IOException exception;
-        private SelectionKey key;
-
-        public writeRunnable(SelectionKey key) {
-            this.key = key;
-        }
-
-        public void run() {
+    private void writeData (SelectionKey key) throws IOException {
+        executorService.submit(() -> {
             try {
+                if (!key.isValid()) return;
+                while(clientMap.get(key).getMessage() == null);
+
                 var sc = (SocketChannel) key.channel();
                 sc.configureBlocking(false);
 
-                try (ByteArrayOutputStream bos = new ByteArrayOutputStream(); ObjectOutputStream oos = new ObjectOutputStream(bos)) {
-                    oos.writeObject(outputMessage);
-                    ByteBuffer data = ByteBuffer.wrap(bos.toByteArray());
-                    ByteBuffer dataLength = ByteBuffer.allocate(32).putInt(data.limit());
-                    dataLength.flip();
+                ByteArrayOutputStream bos = new ByteArrayOutputStream();
+                ObjectOutputStream oos = new ObjectOutputStream(bos);
+                
+                while (clientMap.get(key).getMessage() == null);
+                oos.writeObject(clientMap.get(key).getMessage());
+                ByteBuffer data = ByteBuffer.wrap(bos.toByteArray());
 
-                    sc.write(dataLength);
-                    sc.write(data);
-                    oos.flush();
-                    oos.close();
-                    data.clear();
-                }
+                sc.write(data);
+                oos.flush();
+                oos.close();
+                data.clear();
 
+                setMessage(key, null);
                 sc.register(selector, SelectionKey.OP_READ);
             } catch (IOException e) {
-                this.exception = e;
+                clearKey(key);
             }
-        }
-    }
-
-    public void clientThread(SelectionKey key) {
-        AuthManager authManager = new AuthManager();
-        
-        try {
-            if (key.isAcceptable()) acceptData(key);
-            if (key.isReadable()) readData(key, authManager);
-
-            if (key.isWritable()) {
-                writeRunnable wr = new writeRunnable(key);
-                executorService.submit(wr);
-                if (wr.exception != null) throw wr.exception;
-            }
-        } catch (IOException | ClassNotFoundException e) {
-            key.cancel();
-        }
+        });
     }
 
     public void run () {
@@ -224,9 +210,16 @@ public class TCPServer implements Runnable {
                 for (var iter = keys.iterator(); iter.hasNext(); ) {
                     key = iter.next(); iter.remove();
                     if (key.isValid()) {
-                        new Thread(() -> {
-                            clientThread(key);
-                        }).run();
+                        if (!clientMap.containsKey(key)) {
+                            clientMap.put(key, new ClientData());
+                        }
+                
+                        try {
+                            if (key.isAcceptable()) acceptData(key);
+                            if (key.isReadable()) readData(key);
+                        } catch (IOException | ClassNotFoundException e) {
+                            clearKey(key);
+                        }
                     }
                 }
             }

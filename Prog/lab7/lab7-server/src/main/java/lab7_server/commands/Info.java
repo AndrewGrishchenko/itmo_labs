@@ -16,7 +16,7 @@ public class Info extends Command {
      * @see CollectionManager
      */
     public Info(CollectionManager collectionManager) {
-        super("info", "вывести в стандартный поток вывода информацию о коллекции (тип, дата инициализации, количество элементов и т.д.)", "'info'");
+        super("info", "вывести в стандартный поток вывода информацию о коллекции (тип, дата инициализации, количество элементов и т.д.)", "'info'", true, 1);
         this.collectionManager = collectionManager;
     }
 
@@ -34,11 +34,5 @@ public class Info extends Command {
         + "\n  Название xml файла: " + collectionManager.getFileName() + "\n";
 
         return message;
-    }
-
-    @Override
-    public String isValid() {
-        if (getArgs().length != 1) return getUsage();
-        return null;
     }
 }

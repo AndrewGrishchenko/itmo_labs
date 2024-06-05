@@ -17,7 +17,7 @@ public class Insert extends Command {
      * @see CollectionManager
      */
     public Insert(CollectionManager collectionManager) {
-        super("insert", "добавить новый элемент с заданным ключом", "'insert <key>'", "ticket");
+        super("insert", "добавить новый элемент с заданным ключом", "'insert <key>'", "ticket", 2);
         this.collectionManager = collectionManager;
     }
 
@@ -49,7 +49,7 @@ public class Insert extends Command {
 
     @Override
     public String isValid() {
-        if (getArgs().length != 2) return getUsage();
+        if (!this.getMeta().testArgC(getArgs().length)) return getUsage();
         try {
             if (collectionManager.hasId(Integer.parseInt(getArgs()[1]))) return "Тикет с id=" + getArgs()[1] + " уже существует!";
         } catch (NumberFormatException e) {

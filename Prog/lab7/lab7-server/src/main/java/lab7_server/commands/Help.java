@@ -16,7 +16,7 @@ public class Help extends Command {
      * @see CommandManager
      */
     public Help (CommandManager commandManager) {
-        super("help", "вывести справку по доступным командам", "'help'");
+        super("help", "вывести справку по доступным командам", "'help'", false, 1);
         this.commandManager = commandManager;
     }
 
@@ -34,11 +34,5 @@ public class Help extends Command {
         }
 
         return message;
-    }
-
-    @Override
-    public String isValid() {
-        if (getArgs().length != 1) return getUsage();
-        return null;
     }
 }

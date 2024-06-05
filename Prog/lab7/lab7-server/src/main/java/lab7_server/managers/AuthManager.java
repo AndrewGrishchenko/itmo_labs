@@ -12,7 +12,7 @@ import lab7_server.Main;
 public class AuthManager {
     private Logger logger = Main.logger;
 
-    private Integer userId = null;
+    private Integer userId;
 
     public AuthManager () {
     }
@@ -37,8 +37,8 @@ public class AuthManager {
 
         String hash = generateHash(password);
         
-        ArrayList<Object> users = DBManager.executeSelect("users");
-        
+        ArrayList<Object> users = DBManager.executeSelect("users", "username='" + username + "';");
+
         if (users.size() == 0) {
             return "No such user found!";
         }
@@ -50,6 +50,10 @@ public class AuthManager {
 
         userId = user.getId();
         return "Logged in successfully!";
+    }
+
+    public void logout () {
+        userId = null;
     }
 
     private String generateHash (String password) {
@@ -66,6 +70,6 @@ public class AuthManager {
     }
 
     public boolean isLoggedIn () {
-        return userId != null ? true : false;
+        return userId == null ? false : true;
     }
 }

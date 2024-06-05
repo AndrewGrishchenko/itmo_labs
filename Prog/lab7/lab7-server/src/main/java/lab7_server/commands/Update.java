@@ -17,7 +17,7 @@ public class Update extends Command {
      * @see CollectionManager
      */
     public Update(CollectionManager collectionManager) {
-        super("update", "обновить значение элемента коллекции, id которого равен заданному", "'update <id>'", "ticket");
+        super("update", "обновить значение элемента коллекции, id которого равен заданному", "'update <id>'", "ticket", 2);
         this.collectionManager = collectionManager;
     }
 
@@ -50,7 +50,8 @@ public class Update extends Command {
 
     @Override
     public String isValid() {
-        if (getArgs().length != 2) return getUsage();
+        //TODO: remove isValid, check ids and other in command, and create commandBuilder
+        if (!this.getMeta().testArgC(getArgs().length)) return getUsage();
         try {
             if (!collectionManager.hasId(Integer.parseInt(getArgs()[1]))) return "Тикет с данным id не найден!";
         } catch (NumberFormatException e) {

@@ -18,7 +18,7 @@ public class PrintFieldDescendingEvent extends Command {
      * @see CollectionManager
      */
     public PrintFieldDescendingEvent(CollectionManager collectionManager) {
-        super("print_field_descending_event", "вывести значения поля event всех элементов в порядке убывания", "'print_field_descending_event'");
+        super("print_field_descending_event", "вывести значения поля event всех элементов в порядке убывания", "'print_field_descending_event'", true, 1);
         this.collectionManager = collectionManager;
     }
 
@@ -36,11 +36,5 @@ public class PrintFieldDescendingEvent extends Command {
         }
         
         return message;
-    }
-
-    @Override
-    public String isValid() {
-        if (getArgs().length != 1) return getUsage();
-        return null;
     }
 }

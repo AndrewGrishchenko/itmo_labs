@@ -19,7 +19,7 @@ public class FilterGreaterThanEvent extends Command {
      * @see CollectionManager
      */
     public FilterGreaterThanEvent(CollectionManager collectionManager) {
-        super("filter_greater_than_event", "вывести элементы, значение поля event которых больше заданных", "'filter_greater_than_event'", "event");
+        super("filter_greater_than_event", "вывести элементы, значение поля event которых больше заданных", "'filter_greater_than_event'", "event", 1);
         this.collectionManager = collectionManager;
     }
 
@@ -39,11 +39,5 @@ public class FilterGreaterThanEvent extends Command {
         }
         
         return message;
-    }
-
-    @Override
-    public String isValid() {
-        if (getArgs().length != 1) return getUsage();
-        return null;
     }
 }

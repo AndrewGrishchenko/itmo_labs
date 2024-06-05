@@ -2,8 +2,6 @@ package lab7_core.models;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Objects;
 
 import lab7_core.adapters.ScannerAdapter;

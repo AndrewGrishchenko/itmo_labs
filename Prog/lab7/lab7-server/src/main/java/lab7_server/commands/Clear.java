@@ -15,7 +15,8 @@ public class Clear extends Command {
      * @see CollectionManager
      */
     public Clear(CollectionManager collectionManager) {
-        super("clear", "очистить коллекцию", "'clear'");
+        super("clear", "очистить коллекцию", "'clear'", true, 1);
+        
         this.collectionManager = collectionManager;
     }
 
@@ -28,11 +29,5 @@ public class Clear extends Command {
     public String run () {
         collectionManager.clearCollection();
         return "Коллекция очищена!";
-    }
-
-    @Override
-    public String isValid() {
-        if (getArgs().length != 1) return getUsage();
-        return null;
     }
 }
