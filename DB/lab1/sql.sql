@@ -76,7 +76,7 @@ INSERT INTO fire_sirens_alarms(fire_siren_id, caused_by_id, alarm_ts) VALUES (1,
 
 INSERT INTO actions(name) VALUES ('ничего не делать'), ('чинить двигатель'), ('курить');
 
-INSERT INTO people(ship_id, name, location_id, action_id) VALUES (1, 'Чандра', 2, 3), (1, 'Флойд', 3, 2);
+INSERT INTO people(ship_id, name, location_ id, action_id) VALUES (1, 'Чандра', 2, 3), (1, 'Флойд', 3, 2);
 INSERT INTO people_items(people_id, item) VALUES (1, 'сигары'), (2, 'сканворд'), (2, 'отвертка');
 
 
