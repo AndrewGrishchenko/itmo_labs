@@ -7,7 +7,6 @@ public class Message implements Serializable {
 
     private final String[] command;
     private final String response;
-    // private final String fileName;
     private final Object obj;
 
     public Message (String[] command, String response, Object obj) {

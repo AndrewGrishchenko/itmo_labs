@@ -242,6 +242,7 @@ public class DBManager {
         }
     }
 
+    //TODO: remove
     public static void revertId (String table) {
         String query = "SELECT MAX(id) FROM " + table + ";";
 

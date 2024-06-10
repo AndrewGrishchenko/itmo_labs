@@ -1,0 +1,602 @@
+@startuml
+skinparam dpi 300
+scale max 4000 width
+class lab6_server.commands.Clear extends lab6_server.commands.Command {
+-CollectionManager collectionManager
++Clear(CollectionManager collectionManager)
++String invoke()
++String isValid()
+}
+
+
+class lab6_client.lab6_server.Main {
++static final Logger logger = Logger.getLogger(Main.class.getName())
++static void main(String[] args)
+}
+lab6_client.Main --down[#AAA]-o lab6_client.managers.TCPClient
+
+class lab6_server.managers.CollectionManager {
+-HashMap<Integer, Ticket> collection = new HashMap<>()
+-List<Integer> sortSequence = new ArrayList<>()
+-LocalDateTime initTime
+-LocalDateTime lastUpdateTime
+-final String fileName
++CollectionManager (String fileName)
++String getFileName ()
++void addTicket(Ticket ticket) throws InvalidDataException
++void dumpData() throws FileNotFoundException, IOException, InvalidDataException
+-Tickets toTickets()
++void saveData() throws JsonProcessingException, FileNotFoundException
++void clearCollection()
++void removeTicketById(int id) throws IdNotFoundException
++Ticket getTicketById(int id) throws IdNotFoundException
++void changeTicketById(int id, Ticket ticket) throws IdNotFoundException
++ArrayList<Ticket> toArray()
++void removeLowerThanTicket(Ticket ticket)
++boolean removeOneByEvent(Event event)
++void removeLowerThanId(int id)
++List<Ticket> filterGreaterByEvent(Event event)
++List<Event> sortedDescendingEvents()
+-void sort()
++List<Integer> getKeys()
++boolean hasId(int key)
+-void save()
++String getInitTime()
++String getLastUpdateTime()
++String getType()
++int getSize()
+}
+lab6_server.managers.CollectionManager -down[#AAA]--o lab6_server.models.Tickets
+lab6_server.managers.CollectionManager -down[#AAA]-o lab6_server.exceptions.IdNotFoundException
+lab6_server.managers.CollectionManager -down[#AAA]--o lab6_server.exceptions.IdNotFoundException
+lab6_server.managers.CollectionManager -down[#AAA]-o lab6_server.exceptions.IdNotFoundException
+lab6_server.managers.CollectionManager --down[#AAA]-o lab6_server.utility.EventComparator
+lab6_server.managers.CollectionManager -down[#AAA]--o lab6_server.utility.TicketComparator
+
+abstract class lab6_server.commands.Command implements lab6_server.interfaces.Runnable, lab6_server.interfaces.Validatable {
+-final String name
+-final String description
+-final String usage
+-final String requiredObject
+-String[] args
+-Object obj
++Command (String name, String description, String usage)
++Command (String name, String description, String usage, String requiredObject)
++String getName ()
++String getDescription ()
++String getUsage ()
++String getRequiredObject ()
++String[] getArgs ()
++void setArgs (String[] args)
++Object getObj ()
++void setObj (Object obj)
++boolean equals (Object obj)
++String toString ()
++String run ()
+}
+
+
+class lab6_server.commands.CommandManager {
+-ArrayList<Command> commands = new ArrayList<Command>()
++void addCommand (Command command)
++ArrayList<Command> getCommands ()
++Command getCommand (String name)
+}
+
+
+class lab6_core.adapters.ConsoleAdapter {
++static void print(Object obj)
++static void println(Object obj)
++static void println()
++static void printErr(Object obj)
++static void prompt()
++static void promptFile()
+}
+
+
+class lab6_core.models.Coordinates implements Serializable {
+-static final long serialVersionUID = 1L
+-double x
+-Double y
++Coordinates()
++Coordinates(double x, Double y)
++String toString()
++boolean equals(Object obj)
++int hashCode()
++double getX()
++void setX(double x)
++Double getY()
++void setY(Double y)
+}
+lab6_core.models.Coordinates -down[#AAA]-o lab6_core.exceptions.InvalidDataException
+lab6_core.models.Coordinates -down[#AAA]--o lab6_core.exceptions.InvalidDataException
+
+class lab6_core.models.Event implements Serializable, Comparable {
+-static final long serialVersionUID = 1L
+-int filledData = 1
+-Integer id
+-String name
+-ZonedDateTime date
+-Long ticketsCount
+-String description
++Event()
++Event(int id)
++Event (String name, ZonedDateTime date, Long ticketsCount, String description)
++int compareTo(Event other)
++String toString()
++boolean equals(Object obj)
++int hashCode()
++void fillData()
++ValueChecker fillPartly (String[] line)
++Integer getId()
++void setId(int id)
++String getName()
++void setName(String name)
++String getDate()
++void setDate(String date) throws DateTimeParseException
++void setDate(ZonedDateTime zdt)
++Long getTicketsCount()
++void setTicketsCount(Long ticketsCount)
++String getDescription()
++void setDescription(String description)
+}
+lab6_core.models.Event -down[#AAA]-o lab6_core.models.ValueChecker
+lab6_core.models.Event --down[#AAA]-o lab6_core.models.ValueChecker
+lab6_core.models.Event -down[#AAA]--o lab6_core.models.ValueChecker
+lab6_core.models.Event -down[#AAA]-o lab6_core.exceptions.InvalidDataException
+lab6_core.models.Event -down[#AAA]--o lab6_core.exceptions.InvalidDataException
+lab6_core.models.Event -down[#AAA]-o lab6_core.exceptions.InvalidDataException
+lab6_core.models.Event --down[#AAA]-o lab6_core.exceptions.InvalidDataException
+
+class lab6_server.utility.EventComparator implements Comparator {
++int compare(Event o1, Event o2)
+}
+
+
+class lab6_server.commands.ExecuteScript extends lab6_server.commands.Command {
+-ArrayList<String> runningScripts = new ArrayList<>()
+-CommandManager commandManager
+-Scripts scripts
+-String response = ""
+-boolean isFilling = false
+-String fillType
+-Object model
+-Command command
++ExecuteScript (CommandManager commandManager)
++boolean containsScript(String fileName)
++void addRunningScript(String fileName)
++String getRunningScript()
++void removeLastRunningScript()
+-boolean fillModel (String[] line)
+-void handleInput (String input)
++void handleScript (Script script)
++String invoke()
++String isValid()
+}
+lab6_server.commands.ExecuteScript -down[#AAA]--o lab6_core.models.ValueChecker
+lab6_server.commands.ExecuteScript -down[#AAA]-o lab6_core.models.Ticket
+lab6_server.commands.ExecuteScript -down[#AAA]--o lab6_core.models.Event
+
+class lab6_server.commands.Exit extends lab6_server.commands.Command {
++Exit()
++String invoke()
++String isValid()
+}
+
+
+enum lab6_server.models.ExitCode {
+OK,
+ERROR,
+EXIT,
+}
+
+
+class lab6_server.commands.FilterGreaterThanEvent extends lab6_server.commands.Command {
+-CollectionManager collectionManager
++FilterGreaterThanEvent(CollectionManager collectionManager)
++String invoke()
++String isValid()
+}
+
+
+class lab6_server.commands.Help extends lab6_server.commands.Command {
+-CommandManager commandManager
++Help (CommandManager commandManager)
++String invoke()
++String isValid()
+}
+
+
+class lab6_server.exceptions.IdNotFoundException extends Exception {
++IdNotFoundException(String message)
+}
+
+
+class lab6_server.exceptions.IdNotUniqueException extends Exception {
++IdNotUniqueException(String message)
+}
+
+
+class lab6_core.exceptions.IncompleteScriptRuntimeException extends RuntimeException {
++IncompleteScriptRuntimeException (String message)
++IncompleteScriptRuntimeException()
+}
+
+
+class lab6_server.commands.Info extends lab6_server.commands.Command {
+-CollectionManager collectionManager
++Info(CollectionManager collectionManager)
++String invoke()
++String isValid()
+}
+
+
+class lab6_server.commands.Insert extends lab6_server.commands.Command {
+-CollectionManager collectionManager
++Insert(CollectionManager collectionManager)
++String invoke()
++String isValid()
+}
+lab6_server.commands.Insert -down[#AAA]-o lab6_server.exceptions.IdNotUniqueException
+
+class lab6_core.exceptions.InvalidDataException extends RuntimeException {
++InvalidDataException (String message)
+}
+
+
+class lab6_core.models.Message implements Serializable {
+-static final long serialVersionUID = 1L
+-String header
+-String[] command
+-String response
+-String fileName
+-Object obj
++Message (String header)
++Message (String header, String fileName, Object obj)
++Message (String header, String[] command)
++Message (String header, String response)
++Message (String header, Object obj)
++String getHeader ()
++Object getObj ()
++String[] getCommand ()
++String getResponse ()
++String getFileName ()
+}
+
+
+class lab6_server.commands.PrintFieldDescendingEvent extends lab6_server.commands.Command {
+-CollectionManager collectionManager
++PrintFieldDescendingEvent(CollectionManager collectionManager)
++String invoke()
++String isValid()
+}
+
+
+class lab6_server.commands.RemoveAnyByEvent extends lab6_server.commands.Command {
+-CollectionManager collectionManager
++RemoveAnyByEvent(CollectionManager collectionManager)
++String invoke()
++String isValid()
+}
+
+
+class lab6_server.commands.RemoveKey extends lab6_server.commands.Command {
+-CollectionManager collectionManager
++RemoveKey(CollectionManager collectionManager)
++String invoke()
++String isValid()
+}
+
+
+class lab6_server.commands.RemoveLower extends lab6_server.commands.Command {
+-CollectionManager collectionManager
++RemoveLower(CollectionManager collectionManager)
++String invoke()
++String isValid()
+}
+
+
+class lab6_server.commands.RemoveLowerKey extends lab6_server.commands.Command {
+-CollectionManager collectionManager
++RemoveLowerKey(CollectionManager collectionManager)
++String invoke()
++String isValid()
+}
+
+
+class lab6_server.commands.ReplaceIfLower extends lab6_server.commands.Command {
+-CollectionManager collectionManager
++ReplaceIfLower(CollectionManager collectionManager)
++String invoke()
++String isValid()
+}
+
+
+interface lab6_server.interfaces.Runnable {
++String invoke ()
++String run()
+}
+
+
+enum lab6_core.adapters.ScanMode {
+INTERACTIVE,
+FILE,
+FILL
+}
+
+
+class lab6_core.adapters.ScannerAdapter {
+-static ScanMode currentMode = ScanMode.INTERACTIVE
+-static HashMap<ScanMode, Scanner> scanners = new HashMap<ScanMode, Scanner>()
+static
+-static String[] line
++static boolean done = false
++static Scanner getScanner()
++static void addScanner(ScanMode mode, Scanner scanner)
++static void setInteractiveScanner (Scanner scanner)
++static void setInteractiveMode ()
++static void setFileMode (Scanner scanner)
++static void setFillMode ()
++static void fill (String[] line)
++static boolean hasNext()
++static String[] getUserInput()
++static String[] getCommand()
++static String getString(String message)
++static Double getDouble(String message)
++static double getPrimitiveDouble(String message)
++static int getPrimitiveInt(String message)
++static Long getLong(String message)
++static ZonedDateTime getZonedDateTime(String message)
++static TicketType getTicketType(String message)
+}
+lab6_core.adapters.ScannerAdapter --down[#AAA]-o lab6_core.exceptions.IncompleteScriptRuntimeException
+lab6_core.adapters.ScannerAdapter -down[#AAA]--o lab6_core.exceptions.TooManyArgumentsException
+lab6_core.adapters.ScannerAdapter -down[#AAA]-o lab6_core.exceptions.InvalidDataException
+lab6_core.adapters.ScannerAdapter -down[#AAA]--o lab6_core.exceptions.InvalidDataException
+lab6_core.adapters.ScannerAdapter -down[#AAA]-o lab6_core.exceptions.TooManyArgumentsException
+lab6_core.adapters.ScannerAdapter --down[#AAA]-o lab6_core.exceptions.InvalidDataException
+lab6_core.adapters.ScannerAdapter -down[#AAA]--o lab6_core.exceptions.InvalidDataException
+lab6_core.adapters.ScannerAdapter -down[#AAA]-o lab6_core.exceptions.TooManyArgumentsException
+lab6_core.adapters.ScannerAdapter -down[#AAA]--o lab6_core.exceptions.InvalidDataException
+lab6_core.adapters.ScannerAdapter -down[#AAA]-o lab6_core.exceptions.InvalidDataException
+'!>10 lab6_core.adapters.ScannerAdapter --down[#AAA]-o lab6_core.exceptions.TooManyArgumentsException
+'!>10 lab6_core.adapters.ScannerAdapter -down[#AAA]--o lab6_core.exceptions.InvalidDataException
+'!>10 lab6_core.adapters.ScannerAdapter -down[#AAA]-o lab6_core.exceptions.InvalidDataException
+'!>10 lab6_core.adapters.ScannerAdapter -down[#AAA]--o lab6_core.exceptions.InvalidDataException
+'!>10 lab6_core.adapters.ScannerAdapter -down[#AAA]-o lab6_core.exceptions.InvalidDataException
+'!>10 lab6_core.adapters.ScannerAdapter --down[#AAA]-o lab6_core.exceptions.InvalidDataException
+
+class lab6_core.models.Script implements Serializable {
+-static final long serialVersionUID = 1L
+-final String fileName
+-final String[] content
++Script (String fileName, String[] content)
++String getFileName ()
++String[] getContent ()
++boolean equals(Object obj)
++int hashCode()
+}
+
+
+class lab6_server.exceptions.ScriptProcessingException extends Exception {
++ScriptProcessingException(String command)
+}
+
+
+class lab6_core.models.Scripts implements Serializable {
+-static final long serialVersionUID = 1L
+-HashSet<Script> scripts = new HashSet<Script>()
+-String primaryScript
++Scripts(Script... scripts)
++void addScript (Script script)
++Script findScript (String fileName)
++boolean containsScript (String fileName)
++Script getPrimaryScript()
++void setPrimaryScript (String primaryScriptName)
++HashSet<Script> getScripts()
++void merge (Scripts other)
+}
+
+
+class lab6_client.lab6_server.Main {
++static final Logger logger = Logger.getLogger(Main.class.getName())
++static void main(String[] args)
+}
+lab6_server.Main -down[#AAA]--o lab6_server.managers.CollectionManager
+lab6_server.Main -down[#AAA]-o lab6_server.commands.CommandManager
+lab6_server.Main -down[#AAA]--o lab6_server.commands.Exit
+lab6_server.Main -down[#AAA]-o lab6_server.commands.Show
+lab6_server.Main --down[#AAA]-o lab6_server.commands.Clear
+lab6_server.Main -down[#AAA]--o lab6_server.commands.RemoveKey
+lab6_server.Main -down[#AAA]-o lab6_server.commands.Insert
+lab6_server.Main -down[#AAA]--o lab6_server.commands.Update
+lab6_server.Main -down[#AAA]-o lab6_server.commands.RemoveLower
+lab6_server.Main --down[#AAA]-o lab6_server.commands.ReplaceIfLower
+'!>10 lab6_server.Main -down[#AAA]--o lab6_server.commands.RemoveLowerKey
+'!>10 lab6_server.Main -down[#AAA]-o lab6_server.commands.RemoveAnyByEvent
+'!>10 lab6_server.Main -down[#AAA]--o lab6_server.commands.FilterGreaterThanEvent
+'!>10 lab6_server.Main -down[#AAA]-o lab6_server.commands.PrintFieldDescendingEvent
+'!>10 lab6_server.Main --down[#AAA]-o lab6_server.commands.Info
+'!>10 lab6_server.Main -down[#AAA]--o lab6_server.commands.ExecuteScript
+'!>10 lab6_server.Main -down[#AAA]-o lab6_server.commands.Help
+'!>10 lab6_server.Main -down[#AAA]--o lab6_server.managers.TCPServer
+
+class lab6_server.commands.Show extends lab6_server.commands.Command {
+-CollectionManager collectionManager
++Show(CollectionManager collectionManager)
++String invoke()
++String isValid()
+}
+
+
+class lab6_client.managers.TCPClient implements lab6_server.interfaces.Runnable {
+-SocketChannel socketChannel
+-final String host
+-final int port
+-final Reader reader
+-Scanner scanner
+-Message msg
+-String fileName
+-String header
+-Object model
++TCPClient (String host, int port, Reader reader)
+-String[] getUserInput()
++Scripts inspectScript (String fileName) throws IOException
++Message read () throws IOException
++void write (Message msg) throws IOException
++void run ()
+}
+lab6_client.managers.TCPClient -down[#AAA]-o lab6_core.models.Scripts
+lab6_client.managers.TCPClient --down[#AAA]-o lab6_core.models.Script
+lab6_client.managers.TCPClient -down[#AAA]--o lab6_core.models.Ticket
+lab6_client.managers.TCPClient -down[#AAA]-o lab6_core.models.Message
+lab6_client.managers.TCPClient -down[#AAA]--o lab6_core.models.Event
+lab6_client.managers.TCPClient -down[#AAA]-o lab6_core.models.Message
+lab6_client.managers.TCPClient --down[#AAA]-o lab6_core.models.Message
+lab6_client.managers.TCPClient -down[#AAA]--o lab6_core.models.Message
+
+class lab6_server.managers.TCPServer implements lab6_server.interfaces.Runnable {
+-CollectionManager collectionManager
+-CommandManager commandManager
+-Reader reader
+-Scanner scanner
+-SelectionKey key
+-final int port
+-String header = ""
+-Command command
+-String[] commandArgs = new String[]
+
+-Selector selector
++TCPServer (int port, CollectionManager collectionManager, CommandManager commandManager, Reader reader)
++void acceptData () throws IOException
+-Message inputMessage
+-Message outputMessage
++void readData () throws IOException, ClassNotFoundException
++void writeData() throws IOException
++void run ()
+}
+lab6_server.managers.TCPServer -down[#AAA]-o lab6_core.models.Message
+lab6_server.managers.TCPServer -down[#AAA]--o lab6_core.models.Message
+lab6_server.managers.TCPServer -down[#AAA]-o lab6_core.models.Message
+lab6_server.managers.TCPServer --down[#AAA]-o lab6_core.models.Message
+lab6_server.managers.TCPServer -down[#AAA]--o lab6_core.models.Message
+lab6_server.managers.TCPServer -down[#AAA]-o lab6_core.models.Message
+lab6_server.managers.TCPServer -down[#AAA]--o lab6_core.models.Message
+lab6_server.managers.TCPServer -down[#AAA]-o lab6_core.models.Message
+
+class lab6_core.models.Ticket implements Serializable, Comparable {
+-static final long serialVersionUID = 1L
+-static List<Integer> usedId = new ArrayList<>()
+-static int lastId = 0
+-int filledData = 1
+-int id
+-String name
+-Coordinates coordinates
+-LocalDateTime creationDate
+-int price
+-TicketType type
+-Event event
++Ticket()
++Ticket(int id)
++Ticket(Ticket another)
++Ticket(String name, Coordinates coordinates, int price, TicketType type, Event event)
+-static int getNextId()
+-static boolean containsId(int id)
++String toString()
++boolean equals(Object obj)
++int hashCode()
++int compareTo(Ticket other)
++void fillData()
++ValueChecker fillPartly (String[] line)
++void restoreData(Ticket oldTicket)
++int getId()
++void setId(int id)
++String getName()
++void setName(String name)
++Coordinates getCoordinates()
++void setCoordinates(Coordinates coordinates)
++LocalDateTime getCreationDate()
++int getPrice()
++void setPrice(int price)
++TicketType getType()
++void setType(TicketType type)
++void setType(String type)
++Event getEvent()
++void setEvent(Event event)
+}
+lab6_core.models.Ticket --down[#AAA]-o lab6_core.models.Coordinates
+lab6_core.models.Ticket -down[#AAA]--o lab6_core.models.Event
+lab6_core.models.Ticket -down[#AAA]-o lab6_core.models.Coordinates
+lab6_core.models.Ticket -down[#AAA]--o lab6_core.models.Event
+lab6_core.models.Ticket -down[#AAA]-o lab6_core.models.ValueChecker
+lab6_core.models.Ticket --down[#AAA]-o lab6_core.models.ValueChecker
+lab6_core.models.Ticket -down[#AAA]--o lab6_core.models.ValueChecker
+lab6_core.models.Ticket -down[#AAA]-o lab6_core.exceptions.InvalidDataException
+lab6_core.models.Ticket -down[#AAA]--o lab6_core.exceptions.InvalidDataException
+lab6_core.models.Ticket -down[#AAA]-o lab6_core.exceptions.InvalidDataException
+'!>10 lab6_core.models.Ticket --down[#AAA]-o lab6_core.exceptions.InvalidDataException
+'!>10 lab6_core.models.Ticket -down[#AAA]--o lab6_core.exceptions.InvalidDataException
+'!>10 lab6_core.models.Ticket -down[#AAA]-o lab6_core.exceptions.InvalidDataException
+
+class lab6_server.utility.TicketComparator implements Comparator {
+-HashMap<Integer, Ticket> collection
++TicketComparator(HashMap<Integer, Ticket> collection)
++int compare(Integer o1, Integer o2)
+}
+
+
+abstract class lab6_server.models.TicketMixin {
+-int id
+-LocalDateTime creationDate
+}
+
+
+enum lab6_core.models.TicketType {
+VIP,
+USUAL,
+BUDGETARY,
+CHEAP
+}
+
+
+class lab6_server.models.Tickets {
+= false)
+-List<Ticket> ticket = new ArrayList<>()
++List<Ticket> getTicket()
++void setTicket(List<Ticket> ticket)
++void addTicket(Ticket ticket)
+}
+
+
+class lab6_core.exceptions.TooManyArgumentsException extends Exception {
++TooManyArgumentsException(String message)
+}
+
+
+class lab6_server.commands.Update extends lab6_server.commands.Command {
+-CollectionManager collectionManager
++Update(CollectionManager collectionManager)
++String invoke()
++String isValid()
+}
+
+
+interface lab6_server.interfaces.Validatable {
++String isValid()
+}
+
+
+class lab6_core.models.ValueChecker {
+-final boolean check
+-final String message
+-final String error
++ValueChecker (boolean check)
++ValueChecker (boolean check, String message)
++ValueChecker (boolean check, String message, String error)
++boolean getCheck()
++String getMessage()
++String getError()
+}
+
+
+@enduml

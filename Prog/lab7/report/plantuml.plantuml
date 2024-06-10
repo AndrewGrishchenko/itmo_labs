@@ -1,0 +1,695 @@
+@startuml
+skinparam dpi 300
+scale max 4000 width
+class lab7_server.managers.AuthManager {
+-Logger logger = Main.logger
+-Integer userId
++AuthManager ()
++String register (String username, String password)
++String login (String username, String password)
++void logout ()
+-String generateHash (String password)
++boolean isLoggedIn ()
++Integer getUserId ()
+}
+lab7_server.managers.AuthManager --down[#AAA]-o lab7_core.models.User
+
+class lab7_server.commands.Clear extends lab7_server.commands.Command {
+-CollectionManager collectionManager
++Clear(CollectionManager collectionManager)
++String run ()
+}
+
+
+class lab7_server.models.ClientData {
+-AuthManager authManager
+-Message message
++ClientData ()
++AuthManager getAuthManager ()
++void setAuthManager (AuthManager authManager)
++Message getMessage ()
++void setMessage (Message message)
+}
+lab7_server.models.ClientData -down[#AAA]--o lab7_server.managers.AuthManager
+
+class lab7_client.lab7_server.Main {
++static final Logger logger = Logger.getLogger(Main.class.getName())
++static void main(String[] args)
+}
+lab7_client.Main -down[#AAA]-o lab7_client.managers.TCPClient
+
+class lab7_server.managers.CollectionManager {
+-class CollectionObserver
+-CollectionObserver collection = new CollectionObserver()
+-List<Integer> sortSequence = new ArrayList<>()
+-LocalDateTime initTime
+-LocalDateTime lastUpdateTime
++CollectionManager ()
++void addTicket(Ticket ticket) throws InvalidDataException
++boolean replaceTicket (Ticket oldTicket, Ticket newTicket, int userId)
++boolean removeTicketByUser (Integer key, int userId)
++void dumpData() throws FileNotFoundException, IOException, InvalidDataException
++Collection<Ticket> getValues ()
++Ticket getTicketById(int id) throws IdNotFoundException
++ArrayList<Ticket> toArray()
++void removeLowerThanTicket(Ticket ticket)
++void removeLowerThanId(int id)
++List<Ticket> filterGreaterByEvent(Event event)
++List<Event> sortedDescendingEvents()
+-void sort()
++List<Integer> getKeys()
++boolean hasId(int key)
+-void save()
++String getInitTime()
++String getLastUpdateTime()
++String getType()
++int getSize()
+}
+lab7_server.managers.CollectionManager -down[#AAA]--o lab7_server.exceptions.IdNotFoundException
+lab7_server.managers.CollectionManager -down[#AAA]-o lab7_server.utility.EventComparator
+lab7_server.managers.CollectionManager --down[#AAA]-o lab7_server.utility.TicketComparator
+
+abstract class lab7_server.commands.Command extends RecursiveTask implements lab7_server.interfaces.Validatable {
+-final CommandMeta meta
+-AuthManager authManager = new AuthManager()
+-String[] args
+-Object obj
+-ReentrantLock lock
++Command (String name, String description, String usage, boolean authRequired, int... argC)
++Command (String name, String description, String usage, String requiredObject, int... argC)
++Command (String name, String description, String usage, String requiredObject, boolean authRequired, int... argC)
++String getName ()
++String getDescription ()
++String getUsage ()
++String getRequiredObject ()
++String[] getArgs ()
++void setArgs (String[] args)
++Object getObj ()
++void setObj (Object obj)
++ReentrantLock getLock ()
++void setLock (ReentrantLock lock)
++CommandMeta getMeta ()
++AuthManager getAuthManager ()
++void setAuthManager (AuthManager authManager)
++boolean equals (Object obj)
++String toString ()
++String compute ()
++String isValid()
+}
+lab7_server.commands.Command -down[#AAA]--o lab7_server.managers.AuthManager
+lab7_server.commands.Command -down[#AAA]-o lab7_core.models.CommandMeta
+lab7_server.commands.Command -down[#AAA]--o lab7_core.models.CommandMeta
+lab7_server.commands.Command -down[#AAA]-o lab7_core.models.CommandMeta
+
+class lab7_server.commands.CommandManager {
+-ArrayList<Command> commands = new ArrayList<Command>()
++void addCommand (Command command)
++ArrayList<Command> getCommands ()
++Command getCommand (String name)
++CommandSchema genSchema ()
+}
+lab7_server.commands.CommandManager --down[#AAA]-o lab7_core.models.CommandSchema
+
+class lab7_core.models.CommandMeta implements Serializable {
+-static final long serialVersionUID = 1L
+-final String name
+-final String description
+-final String usage
+-final String requiredObject
+-final boolean authRequired
+-final int[] argC
++CommandMeta(String name, String description, String usage, String requiredObject, boolean authRequired, int... argC)
++String getName ()
++String getDescription ()
++String getUsage ()
++String getRequiredObject ()
++boolean isAuthRequired ()
++int[] getArgC ()
++boolean testArgC (int argC)
++String toString ()
++boolean equals (Object obj)
+}
+
+
+class lab7_core.models.CommandSchema implements Serializable {
+-static final long serialVersionUID = 1L
+-HashMap<String, CommandMeta> commands = new HashMap<>()
++void addCommand(String command, CommandMeta meta)
++CommandMeta getMeta (String command)
++String toString ()
+}
+
+
+class lab7_core.adapters.ConsoleAdapter {
++static void print(Object obj)
++static void println(Object obj)
++static void println()
++static void printErr(Object obj)
++static void prompt()
++static void promptFile()
+}
+
+
+class lab7_core.models.Coordinates implements Serializable {
+-static final long serialVersionUID = 1L
+-double x
+-Double y
++Coordinates()
++Coordinates(double x, Double y)
++String toString()
++boolean equals(Object obj)
++int hashCode()
++double getX()
++void setX(double x)
++Double getY()
++void setY(Double y)
+}
+lab7_core.models.Coordinates -down[#AAA]--o lab7_core.exceptions.InvalidDataException
+lab7_core.models.Coordinates -down[#AAA]-o lab7_core.exceptions.InvalidDataException
+
+class lab7_server.managers.DBManager {
+-static final String url = "jdbc:postgresql://localhost:5432/studs"
+-static Connection conn = null
+-static HashMap<String, Integer> lastIds = new HashMap<>()
+
++static void init () throws SQLException
++static ArrayList<Object> executeSelect (String table, String... condition)
++static void deleteTicket (int id)
++static void updateEvent (Event event)
++static void updateTicket (Ticket ticket)
++static int executeInsert (String table, Object value)
++static int findEventId(Event event)
++static boolean exists (String table, String field, String value)
++static int getNextId (String table)
++static void revertId (String table)
+}
+lab7_server.managers.DBManager -down[#AAA]--o lab7_core.models.User
+lab7_server.managers.DBManager -down[#AAA]-o lab7_core.models.Event
+lab7_server.managers.DBManager --down[#AAA]-o lab7_core.models.Ticket
+lab7_server.managers.DBManager -down[#AAA]--o lab7_core.models.Coordinates
+
+class lab7_core.models.Event implements Serializable, Comparable {
+-static final long serialVersionUID = 1L
+-int filledData = 1
+-Integer id
+-String name
+-ZonedDateTime date
+-Long ticketsCount
+-String description
++Event()
++Event(int id)
++Event (String name, ZonedDateTime date, Long ticketsCount, String description)
++Event (int id, String name, Timestamp timestamp, Long ticketsCount, String description)
++int compareTo(Event other)
++String toString()
++boolean equals(Object obj)
++int hashCode()
++void fillData()
++ValueChecker fillPartly (String[] line)
++Integer getId()
++void setId(int id)
++String getName()
++void setName(String name)
++String getDate()
++Timestamp getTimestamp()
++void setDate(String date) throws DateTimeParseException
++void setDate(ZonedDateTime zdt)
++Long getTicketsCount()
++void setTicketsCount(Long ticketsCount)
++String getDescription()
++void setDescription(String description)
+}
+lab7_core.models.Event -down[#AAA]-o lab7_core.models.ValueChecker
+lab7_core.models.Event -down[#AAA]--o lab7_core.models.ValueChecker
+lab7_core.models.Event -down[#AAA]-o lab7_core.models.ValueChecker
+lab7_core.models.Event --down[#AAA]-o lab7_core.exceptions.InvalidDataException
+lab7_core.models.Event -down[#AAA]--o lab7_core.exceptions.InvalidDataException
+lab7_core.models.Event -down[#AAA]-o lab7_core.exceptions.InvalidDataException
+lab7_core.models.Event -down[#AAA]--o lab7_core.exceptions.InvalidDataException
+
+class lab7_server.utility.EventComparator implements Comparator {
++int compare(Event o1, Event o2)
+}
+
+
+class lab7_server.commands.ExecuteScript extends lab7_server.commands.Command {
+-ArrayList<String> runningScripts = new ArrayList<>()
+-CommandManager commandManager
+-Scripts scripts
+-String response = ""
+-boolean isFilling = false
+-String fillType
+-Object model
+-Command command
+-AuthManager authManager = getAuthManager()
++ExecuteScript (CommandManager commandManager)
++boolean containsScript(String fileName)
++void addRunningScript(String fileName)
++String getRunningScript()
++void removeLastRunningScript()
+-boolean fillModel (String[] line)
+-void handleInput (String scriptFileName, String input)
++void handleScript (Script script)
++String run()
+}
+lab7_server.commands.ExecuteScript -down[#AAA]-o lab7_core.models.ValueChecker
+lab7_server.commands.ExecuteScript --down[#AAA]-o lab7_core.models.Ticket
+lab7_server.commands.ExecuteScript -down[#AAA]--o lab7_core.models.Event
+
+class lab7_server.commands.Exit extends lab7_server.commands.Command {
++Exit()
++String run()
+}
+
+
+enum lab7_server.models.ExitCode {
+OK,
+ERROR,
+EXIT,
+}
+
+
+class lab7_server.commands.FilterGreaterThanEvent extends lab7_server.commands.Command {
+-CollectionManager collectionManager
++FilterGreaterThanEvent(CollectionManager collectionManager)
++String run()
+}
+
+
+class lab7_server.commands.Help extends lab7_server.commands.Command {
+-CommandManager commandManager
++Help (CommandManager commandManager)
++String run()
+}
+
+
+class lab7_server.exceptions.IdNotFoundException extends Exception {
++IdNotFoundException(String message)
+}
+
+
+class lab7_server.exceptions.IdNotUniqueException extends Exception {
++IdNotUniqueException(String message)
+}
+
+
+class lab7_core.exceptions.IncompleteScriptRuntimeException extends RuntimeException {
++IncompleteScriptRuntimeException (String message)
++IncompleteScriptRuntimeException()
+}
+
+
+class lab7_server.commands.Info extends lab7_server.commands.Command {
+-CollectionManager collectionManager
++Info(CollectionManager collectionManager)
++String run()
+}
+
+
+class lab7_server.commands.Insert extends lab7_server.commands.Command {
+-CollectionManager collectionManager
++Insert(CollectionManager collectionManager)
++String run()
++String isValid()
+}
+lab7_server.commands.Insert -down[#AAA]-o lab7_server.exceptions.IdNotUniqueException
+
+class lab7_core.exceptions.InvalidDataException extends RuntimeException {
++InvalidDataException (String message)
+}
+
+
+class lab7_server.commands.Login extends lab7_server.commands.Command {
++Login ()
++String run()
+}
+
+
+class lab7_server.commands.Logout extends lab7_server.commands.Command {
++Logout()
++String run()
+}
+
+
+class lab7_core.models.Message implements Serializable {
+-static final long serialVersionUID = 1L
+-final String[] command
+-final String response
+-final Object obj
++Message (String[] command, String response, Object obj)
++String[] getCommand()
++String getResponse ()
++Object getObject()
+}
+
+
+class lab7_core.models.MessageBuilder {
+-String[] command
+-String response
+-Object obj
++MessageBuilder command (String[] command)
++MessageBuilder response (String response)
++MessageBuilder obj (Object obj)
++Message build ()
+}
+lab7_core.models.MessageBuilder -down[#AAA]--o lab7_core.models.Message
+
+class lab7_server.commands.PrintFieldDescendingEvent extends lab7_server.commands.Command {
+-CollectionManager collectionManager
++PrintFieldDescendingEvent(CollectionManager collectionManager)
++String run()
+}
+
+
+class lab7_server.commands.Register extends lab7_server.commands.Command {
++Register ()
++String run()
+}
+
+
+class lab7_server.commands.RemoveAnyByEvent extends lab7_server.commands.Command {
+-CollectionManager collectionManager
++RemoveAnyByEvent(CollectionManager collectionManager)
++String run()
+}
+
+
+class lab7_server.commands.RemoveKey extends lab7_server.commands.Command {
+-CollectionManager collectionManager
++RemoveKey(CollectionManager collectionManager)
++String run()
++String isValid()
+}
+
+
+class lab7_server.commands.RemoveLower extends lab7_server.commands.Command {
+-CollectionManager collectionManager
++RemoveLower(CollectionManager collectionManager)
++String run()
+}
+
+
+class lab7_server.commands.RemoveLowerKey extends lab7_server.commands.Command {
+-CollectionManager collectionManager
++RemoveLowerKey(CollectionManager collectionManager)
++String run()
++String isValid()
+}
+
+
+class lab7_server.commands.ReplaceIfLower extends lab7_server.commands.Command {
+-CollectionManager collectionManager
++ReplaceIfLower(CollectionManager collectionManager)
++String run()
++String isValid()
+}
+
+
+interface lab7_server.interfaces.Runnable {
++String invoke ()
++String run()
+}
+
+
+enum lab7_core.adapters.ScanMode {
+INTERACTIVE,
+FILE,
+FILL
+}
+
+
+class lab7_core.adapters.ScannerAdapter {
+-static ScanMode currentMode = ScanMode.INTERACTIVE
+-static HashMap<ScanMode, Scanner> scanners = new HashMap<ScanMode, Scanner>()
+static
+-static String[] line
++static boolean done = false
++static Scanner getScanner()
++static void addScanner(ScanMode mode, Scanner scanner)
++static void setInteractiveScanner (Scanner scanner)
++static void setInteractiveMode ()
++static void setFileMode (Scanner scanner)
++static void setFillMode ()
++static void fill (String[] line)
++static boolean hasNext()
++static String[] getUserInput()
++static String[] getCommand()
++static String getString(String message)
++static Double getDouble(String message)
++static double getPrimitiveDouble(String message)
++static int getPrimitiveInt(String message)
++static Long getLong(String message)
++static ZonedDateTime getZonedDateTime(String message)
++static TicketType getTicketType(String message)
+}
+lab7_core.adapters.ScannerAdapter -down[#AAA]-o lab7_core.exceptions.IncompleteScriptRuntimeException
+lab7_core.adapters.ScannerAdapter --down[#AAA]-o lab7_core.exceptions.TooManyArgumentsException
+lab7_core.adapters.ScannerAdapter -down[#AAA]--o lab7_core.exceptions.InvalidDataException
+lab7_core.adapters.ScannerAdapter -down[#AAA]-o lab7_core.exceptions.InvalidDataException
+lab7_core.adapters.ScannerAdapter -down[#AAA]--o lab7_core.exceptions.TooManyArgumentsException
+lab7_core.adapters.ScannerAdapter -down[#AAA]-o lab7_core.exceptions.InvalidDataException
+lab7_core.adapters.ScannerAdapter --down[#AAA]-o lab7_core.exceptions.InvalidDataException
+lab7_core.adapters.ScannerAdapter -down[#AAA]--o lab7_core.exceptions.TooManyArgumentsException
+lab7_core.adapters.ScannerAdapter -down[#AAA]-o lab7_core.exceptions.InvalidDataException
+lab7_core.adapters.ScannerAdapter -down[#AAA]--o lab7_core.exceptions.InvalidDataException
+'!>10 lab7_core.adapters.ScannerAdapter -down[#AAA]-o lab7_core.exceptions.TooManyArgumentsException
+'!>10 lab7_core.adapters.ScannerAdapter --down[#AAA]-o lab7_core.exceptions.InvalidDataException
+'!>10 lab7_core.adapters.ScannerAdapter -down[#AAA]--o lab7_core.exceptions.InvalidDataException
+'!>10 lab7_core.adapters.ScannerAdapter -down[#AAA]-o lab7_core.exceptions.InvalidDataException
+'!>10 lab7_core.adapters.ScannerAdapter -down[#AAA]--o lab7_core.exceptions.InvalidDataException
+'!>10 lab7_core.adapters.ScannerAdapter -down[#AAA]-o lab7_core.exceptions.InvalidDataException
+
+class lab7_core.models.Script implements Serializable {
+-static final long serialVersionUID = 1L
+-final String fileName
+-final String[] content
++Script (String fileName, String[] content)
++String getFileName ()
++String[] getContent ()
++boolean equals(Object obj)
++int hashCode()
+}
+
+
+class lab7_server.exceptions.ScriptProcessingException extends Exception {
++ScriptProcessingException(String command)
+}
+
+
+class lab7_core.models.Scripts implements Serializable {
+-static final long serialVersionUID = 1L
+-HashSet<Script> scripts = new HashSet<Script>()
+-String primaryScript
++Scripts(Script... scripts)
++void addScript (Script script)
++Script findScript (String fileName)
++boolean containsScript (String fileName)
++Script getPrimaryScript()
++void setPrimaryScript (String primaryScriptName)
++HashSet<Script> getScripts()
++void merge (Scripts other)
+}
+
+
+class lab7_client.lab7_server.Main {
++static final Logger logger = Logger.getLogger(Main.class.getName())
++static void main(String[] args)
+}
+lab7_server.Main --down[#AAA]-o lab7_server.managers.CollectionManager
+lab7_server.Main -down[#AAA]--o lab7_server.commands.CommandManager
+lab7_server.Main -down[#AAA]-o lab7_server.commands.Exit
+lab7_server.Main -down[#AAA]--o lab7_server.commands.Show
+lab7_server.Main -down[#AAA]-o lab7_server.commands.Clear
+lab7_server.Main --down[#AAA]-o lab7_server.commands.RemoveKey
+lab7_server.Main -down[#AAA]--o lab7_server.commands.Insert
+lab7_server.Main -down[#AAA]-o lab7_server.commands.Update
+lab7_server.Main -down[#AAA]--o lab7_server.commands.RemoveLower
+lab7_server.Main -down[#AAA]-o lab7_server.commands.ReplaceIfLower
+'!>10 lab7_server.Main --down[#AAA]-o lab7_server.commands.RemoveLowerKey
+'!>10 lab7_server.Main -down[#AAA]--o lab7_server.commands.RemoveAnyByEvent
+'!>10 lab7_server.Main -down[#AAA]-o lab7_server.commands.FilterGreaterThanEvent
+'!>10 lab7_server.Main -down[#AAA]--o lab7_server.commands.PrintFieldDescendingEvent
+'!>10 lab7_server.Main -down[#AAA]-o lab7_server.commands.Info
+'!>10 lab7_server.Main --down[#AAA]-o lab7_server.commands.Login
+'!>10 lab7_server.Main -down[#AAA]--o lab7_server.commands.Register
+'!>10 lab7_server.Main -down[#AAA]-o lab7_server.commands.Logout
+'!>10 lab7_server.Main -down[#AAA]--o lab7_server.commands.ExecuteScript
+'!>10 lab7_server.Main -down[#AAA]-o lab7_server.commands.Help
+'!>10 lab7_server.Main --down[#AAA]-o lab7_server.managers.TCPServer
+
+class lab7_server.commands.Show extends lab7_server.commands.Command {
+-CollectionManager collectionManager
++Show(CollectionManager collectionManager)
++String run()
+}
+
+
+class lab7_client.managers.TCPClient implements lab7_server.interfaces.Runnable {
+-SocketChannel socketChannel
+-final String host
+-final int port
+-final Reader reader
+-Scanner scanner
+-Message msg
+-CommandSchema commandSchema
++TCPClient (String host, int port, Reader reader)
+-String[] getUserInput()
++Scripts inspectScript (String fileName)
++Message read () throws IOException
++void write (Message msg) throws IOException
+-void getSchema () throws IOException
++Message processInput (String[] userInput)
+-void getResponse () throws IOException
++void run ()
+}
+lab7_client.managers.TCPClient -down[#AAA]--o lab7_core.models.Scripts
+lab7_client.managers.TCPClient -down[#AAA]-o lab7_core.models.Script
+lab7_client.managers.TCPClient -down[#AAA]--o lab7_core.exceptions.InvalidDataException
+lab7_client.managers.TCPClient -down[#AAA]-o lab7_core.models.Ticket
+lab7_client.managers.TCPClient --down[#AAA]-o lab7_core.models.Event
+lab7_client.managers.TCPClient -down[#AAA]--o lab7_core.models.MessageBuilder
+lab7_client.managers.TCPClient -down[#AAA]-o lab7_core.models.MessageBuilder
+lab7_client.managers.TCPClient -down[#AAA]--o lab7_core.models.MessageBuilder
+lab7_client.managers.TCPClient -down[#AAA]-o lab7_core.models.MessageBuilder
+
+class lab7_server.managers.TCPServer implements lab7_server.interfaces.Runnable {
+-CommandManager commandManager
+-Reader reader
+-Scanner scanner
+-SelectionKey key
+-final int port
+-Command command
+-String[] commandArgs = new String[]
+
+-Selector selector
+-ForkJoinPool forkJoinPool = ForkJoinPool.commonPool()
+-ExecutorService executorService = Executors.newCachedThreadPool()
+-ReentrantLock lock = new ReentrantLock()
+-HashMap<SelectionKey, ClientData> clientMap = new HashMap<>()
++TCPServer (int port, CommandManager commandManager, Reader reader)
++void acceptData (SelectionKey key) throws IOException
+-void sendSchema (SocketChannel sc) throws IOException
+-void setMessage (SelectionKey key, Message message)
+-void clearKey (SelectionKey key)
+-void proccessMessage (Message message, AuthManager authManager)
++void readData (SelectionKey key) throws IOException, ClassNotFoundException
+-void writeData (SelectionKey key) throws IOException
++void run ()
+}
+lab7_server.managers.TCPServer --down[#AAA]-o lab7_core.models.MessageBuilder
+lab7_server.managers.TCPServer -down[#AAA]--o lab7_server.models.ClientData
+
+class lab7_core.models.Ticket implements Serializable, Comparable {
+-static final long serialVersionUID = 1L
+-int filledData = 1
+-int id
+-String name
+-Coordinates coordinates
+-LocalDateTime creationDate
+-int price
+-TicketType type
+-Event event
+-int creatorId
++Ticket()
++Ticket(int id)
++Ticket(Ticket another)
++Ticket(int id, String name, Coordinates coordinates, int price, TicketType type, Event event, int creatorId)
++String toString()
++boolean equals(Object obj)
++int hashCode()
++int compareTo(Ticket other)
++void fillData()
++ValueChecker fillPartly (String[] line)
++void restoreData(Ticket oldTicket)
++int getId()
++void setId(int id)
++String getName()
++void setName(String name)
++Coordinates getCoordinates()
++void setCoordinates(Coordinates coordinates)
++LocalDateTime getCreationDate()
++int getPrice()
++void setPrice(int price)
++TicketType getType()
++void setType(TicketType type)
++void setType(String type)
++Event getEvent()
++void setEvent(Event event)
++int getCreatorId()
++void setCreatorId(int creatorId)
+}
+lab7_core.models.Ticket -down[#AAA]-o lab7_core.models.Coordinates
+lab7_core.models.Ticket -down[#AAA]--o lab7_core.models.Event
+lab7_core.models.Ticket -down[#AAA]-o lab7_core.models.Coordinates
+lab7_core.models.Ticket --down[#AAA]-o lab7_core.models.Event
+lab7_core.models.Ticket -down[#AAA]--o lab7_core.models.ValueChecker
+lab7_core.models.Ticket -down[#AAA]-o lab7_core.models.ValueChecker
+lab7_core.models.Ticket -down[#AAA]--o lab7_core.models.ValueChecker
+lab7_core.models.Ticket -down[#AAA]-o lab7_core.exceptions.InvalidDataException
+lab7_core.models.Ticket --down[#AAA]-o lab7_core.exceptions.InvalidDataException
+lab7_core.models.Ticket -down[#AAA]--o lab7_core.exceptions.InvalidDataException
+'!>10 lab7_core.models.Ticket -down[#AAA]-o lab7_core.exceptions.InvalidDataException
+'!>10 lab7_core.models.Ticket -down[#AAA]--o lab7_core.exceptions.InvalidDataException
+'!>10 lab7_core.models.Ticket -down[#AAA]-o lab7_core.exceptions.InvalidDataException
+
+class lab7_server.utility.TicketComparator implements Comparator {
+-HashMap<Integer, Ticket> collection
++TicketComparator(HashMap<Integer, Ticket> collection)
++int compare(Integer o1, Integer o2)
+}
+
+
+enum lab7_core.models.TicketType {
+VIP,
+USUAL,
+BUDGETARY,
+CHEAP
+}
+
+
+class lab7_core.exceptions.TooManyArgumentsException extends Exception {
++TooManyArgumentsException(String message)
+}
+
+
+class lab7_server.commands.Update extends lab7_server.commands.Command {
+-CollectionManager collectionManager
++Update(CollectionManager collectionManager)
++String run()
++String isValid()
+}
+
+
+class lab7_core.models.User {
+-int id
+-final String username
+-final String hash
++User (int id, String username, String hash)
++User (String username, String hash)
++int getId()
++String getUsername ()
++String getHash ()
++String toString ()
+}
+
+
+interface lab7_server.interfaces.Validatable {
++String run()
++String isValid()
+}
+
+
+class lab7_core.models.ValueChecker {
+-final boolean check
+-final String message
+-final String error
++ValueChecker (boolean check)
++ValueChecker (boolean check, String message)
++ValueChecker (boolean check, String message, String error)
++boolean getCheck()
++String getMessage()
++String getError()
+}
+
+
+@enduml

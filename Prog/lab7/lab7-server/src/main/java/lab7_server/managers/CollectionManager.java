@@ -66,6 +66,7 @@ public class CollectionManager {
                 collection.put(ticket.getId(), ticket);
                 sortSequence.add(ticket.getId());
             });
+
             sort();
         }
     }
