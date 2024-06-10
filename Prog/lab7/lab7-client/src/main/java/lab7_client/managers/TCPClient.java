@@ -157,6 +157,7 @@ public class TCPClient implements Runnable {
                     }
                 } catch (InvalidDataException e) {
                     System.out.println(e.getMessage());
+                    return null;
                 }
             }
         } else {
@@ -205,10 +206,6 @@ public class TCPClient implements Runnable {
                     }
 
                     if (userInput == null) continue;
-
-                    // if (userInput[0].equals("execute_script") && userInput.length == 2) {
-                    //     fileName = userInput[1];
-                    // }
 
                     msg = processInput(userInput);
                     if (msg == null) continue;

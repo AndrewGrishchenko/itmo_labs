@@ -81,6 +81,6 @@ public class Main {
 
         Reader reader = new InputStreamReader(System.in);
 
-        new TCPServer(4004, collectionManager, commandManager, reader).run();
+        new TCPServer(4004, commandManager, reader).run();
     }
 }

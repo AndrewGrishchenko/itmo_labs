@@ -29,7 +29,6 @@ import lab7_server.commands.CommandManager;
 import lab7_server.models.ClientData;
 
 public class TCPServer implements Runnable {
-    private CollectionManager collectionManager;
     private CommandManager commandManager;
     
     private Reader reader;
@@ -49,9 +48,8 @@ public class TCPServer implements Runnable {
 
     private HashMap<SelectionKey, ClientData> clientMap = new HashMap<>();
 
-    public TCPServer (int port, CollectionManager collectionManager, CommandManager commandManager, Reader reader) {
-        this.port = port;
-        this.collectionManager = collectionManager;
+    public TCPServer (int port, CommandManager commandManager, Reader reader) {
+        this.port = port;;
         this.commandManager = commandManager;
         this.reader = reader;
     }
@@ -108,16 +106,6 @@ public class TCPServer implements Runnable {
         command.setAuthManager(authManager);
         command.setArgs(commandArgs);
 
-        // Callable<String> callable = new Callable<String>() {
-        //     public String call() {
-        //         return command.compute();
-        //     }
-        // };
-
-        // ForkJoinTask<String> task = ForkJoinTask.adapt(callable);
-
-        // String some = forkJoinPool.invoke(task);
-        // setMessage(key, new MessageBuilder().response(some).build());
         setMessage(key, new MessageBuilder().response(command.compute()).build());
     }
 
@@ -192,14 +180,8 @@ public class TCPServer implements Runnable {
             while (true) {
                 if (reader.ready() && scanner.hasNext()) {
                     String line = scanner.nextLine();
-                    if (line.equals("save")) {
-                        Main.logger.log(Level.INFO, "Saving...");
-                        collectionManager.saveData();
-                        Main.logger.log(Level.INFO, "Saved!");
-                    } else if (line.equals("exit")) {
-                        Main.logger.log(Level.INFO, "Saving...");
-                        collectionManager.saveData();
-                        Main.logger.log(Level.INFO, "Saved!");
+                    if (line.equals("exit")) {
+                        Main.logger.log(Level.INFO, "Exiting...");
                         break;
                     }   
                 }

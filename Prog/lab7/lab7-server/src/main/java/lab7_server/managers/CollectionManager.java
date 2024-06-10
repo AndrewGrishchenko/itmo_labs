@@ -10,8 +10,6 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
-
 import lab7_server.exceptions.IdNotFoundException;
 import lab7_core.exceptions.InvalidDataException;
 import lab7_core.models.Event;
@@ -40,7 +38,6 @@ public class CollectionManager {
 
         public void remove (Integer key) {
             collection.remove(key);
-            //TODO: think of making rule of deleting values that belongs to current user
         }
 
         public Collection<Ticket> values () {
@@ -137,59 +134,9 @@ public class CollectionManager {
         .map((Object ticket) -> ((Ticket) ticket))
         .toList());
 
-        // FileInputStream fileInputStream = new FileInputStream(fileName);
-        // InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
-
-        // Scanner scanner = new Scanner(inputStreamReader).useDelimiter("\\A");
-        // String xml = scanner.hasNext() ? scanner.next() : "";
-        
-        // scanner.close();
-        // inputStreamReader.close();
-        // fileInputStream.close();
-
-        // XmlMapper xmlMapper = new XmlMapper();
-
-        // Tickets map = xmlMapper.readValue(xml, Tickets.class);
-        // List<Ticket> ticketsList = map.getTicket();
-        // for (int i = 0; i < ticketsList.size(); i++) {
-        //     collection.put(ticketsList.get(i).getId(), ticketsList.get(i));
-        //     sortSequence.add(ticketsList.get(i).getId());
-        // }
-
         sort();
     }
 
-    /**
-     * Сохраняет коллекцию в файл
-     * @param fileName имя файла для сохранения
-     * @throws JsonProcessingException возникает при ошибке парсинга
-     * @throws FileNotFoundException возникает при отсутствии файла
-     */
-    public void saveData() throws JsonProcessingException, FileNotFoundException {
-        // PrintWriter printWriter = new PrintWriter(fileName);
-        // if (collection.isEmpty()) printWriter.println();
-        // else {
-        //     XmlMapper xmlMapper = new XmlMapper();
-        //     xmlMapper.enable(SerializationFeature.INDENT_OUTPUT);
-        //     xmlMapper.addMixIn(Ticket.class, TicketMixin.class);
-
-        //     Tickets tickets = toTickets();            
-        //     String xml = xmlMapper.writeValueAsString(tickets);
-
-        //     printWriter.println(xml);
-        // }
-        // printWriter.close();
-        
-    }
-
-    /**
-     * Очищает коллекцию
-     */
-    // public void clearCollection() {
-        // collection.clear();
-        // sortSequence.clear();
-        // save();
-    // }
     public Collection<Ticket> getValues () {
         return collection.getCollection().values();
     }
