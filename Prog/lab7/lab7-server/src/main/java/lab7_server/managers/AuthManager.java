@@ -72,4 +72,8 @@ public class AuthManager {
     public boolean isLoggedIn () {
         return userId == null ? false : true;
     }
+
+    public Integer getUserId () {
+        return userId;
+    }
 }

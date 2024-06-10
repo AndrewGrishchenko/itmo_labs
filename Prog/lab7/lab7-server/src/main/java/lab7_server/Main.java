@@ -38,8 +38,14 @@ public class Main {
     public static final Logger logger = Logger.getLogger(Main.class.getName());
 
     public static void main(String[] args) {
-        final String fileName = "test1.xml";
-        CollectionManager collectionManager = new CollectionManager(fileName);
+        try {
+            DBManager.init();
+        } catch (SQLException e) {
+            logger.log(Level.SEVERE, "Database connection error");
+            System.exit(1);
+        }
+        
+        CollectionManager collectionManager = new CollectionManager();
         try {
             collectionManager.dumpData();
         } catch (FileNotFoundException e) {
@@ -74,13 +80,6 @@ public class Main {
         commandManager.addCommand(new Help(commandManager));
 
         Reader reader = new InputStreamReader(System.in);
-
-        try {
-            DBManager.init();
-        } catch (SQLException e) {
-            logger.log(Level.SEVERE, "Database connection error");
-            System.exit(1);
-        }
 
         new TCPServer(4004, collectionManager, commandManager, reader).run();
     }

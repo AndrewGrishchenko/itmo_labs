@@ -36,11 +36,11 @@ public class Update extends Command {
         try {
             int id = Integer.parseInt(args[1]);
             
+            Ticket oldTicket = collectionManager.getTicketById(id);
             Ticket newTicket = (Ticket) getObj();
-            newTicket.setId(id);
 
-            collectionManager.changeTicketById(id, newTicket);
-            return "Тикет обновлен!";
+            if (collectionManager.replaceTicket(oldTicket, newTicket, getAuthManager().getUserId())) return "Тикет обновлен!";
+            return "Тикет не принадлежит вам!";
         } catch (IdNotFoundException e) {
             return e.getMessage();
         } catch (NumberFormatException e) {

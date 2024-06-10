@@ -20,6 +20,7 @@ import java.util.logging.Level;
 import lab7_client.Main;
 import lab7_core.adapters.ConsoleAdapter;
 import lab7_core.adapters.ScannerAdapter;
+import lab7_core.exceptions.InvalidDataException;
 import lab7_core.models.CommandMeta;
 import lab7_core.models.CommandSchema;
 import lab7_core.models.Event;
@@ -54,27 +55,32 @@ public class TCPClient implements Runnable {
         return line;
     }
     
-    public Scripts inspectScript (String fileName) throws IOException {
+    public Scripts inspectScript (String fileName) {
         Scripts scripts = new Scripts();
+        scripts.setPrimaryScript(fileName);
 
-        String[] commands = new String(Files.readAllBytes(Paths.get(fileName)), StandardCharsets.UTF_8).split("\n");
-        scripts.addScript(new Script(fileName, commands));
+        try {
+            String[] commands = new String(Files.readAllBytes(Paths.get(fileName)), StandardCharsets.UTF_8).split("\n");
+            scripts.addScript(new Script(fileName, commands));
 
-        String[] line;
+            String[] line;
 
-        for (String command : commands) {
-            line = command.split(" ");
-            if (line.length == 1 && line[0].length() == 0) continue;
-            if (line[0].equals("execute_script")) {
-                if (!scripts.containsScript(line[1])) scripts.merge(inspectScript(line[1]));
+            for (String command : commands) {
+                line = command.split(" ");
+                if (line.length == 1 && line[0].length() == 0) continue;
+                if (line[0].equals("execute_script")) {
+                    if (!scripts.containsScript(line[1])) scripts.merge(inspectScript(line[1]));
+                }
             }
+            
+            return scripts;
+        } catch (IOException e) {
+            throw new InvalidDataException("Скрипт " + fileName + " не найден!");
         }
-        
-        return scripts;
     }
 
     public Message read () throws IOException {
-        ByteBuffer responseData = ByteBuffer.allocate(4096);
+        ByteBuffer responseData = ByteBuffer.allocate(8192);
         socketChannel.read(responseData);
         Message responseMessage = null;
 
@@ -132,17 +138,26 @@ public class TCPClient implements Runnable {
             System.out.println(meta.getUsage());
             return null;
         } else if (meta.getRequiredObject() != null) {
-            switch (meta.getRequiredObject()) {
-                case "ticket":
-                    Ticket ticket = new Ticket();
-                    ticket.fillData();
-                    return new MessageBuilder().command(userInput).obj(ticket).build();
-                case "event":
-                    Event event = new Event();
-                    event.fillData();
-                    return new MessageBuilder().command(userInput).obj(event).build();
-                default:
-                    return null;
+            Ticket ticket = new Ticket();
+            Event event = new Event();
+                            
+            while (true) {
+                try {
+                    switch (meta.getRequiredObject()) {
+                        case "ticket":
+                            ticket.fillData();
+                            return new MessageBuilder().command(userInput).obj(ticket).build();
+                        case "event":
+                            event.fillData();
+                            return new MessageBuilder().command(userInput).obj(event).build();
+                        case "script":
+                            return new MessageBuilder().command(userInput).obj(inspectScript(userInput[1])).build();
+                        default:
+                            return null;
+                    }
+                } catch (InvalidDataException e) {
+                    System.out.println(e.getMessage());
+                }
             }
         } else {
             return new MessageBuilder().command(userInput).build();
@@ -202,6 +217,7 @@ public class TCPClient implements Runnable {
                 }
             } catch (IOException | BufferUnderflowException e) {
                 try {
+                    e.printStackTrace();
                     socketChannel = SocketChannel.open(new InetSocketAddress(host, port));
                     Main.logger.log(Level.INFO, "Reconnected to " + host + ":" + port);
                     getSchema();

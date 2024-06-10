@@ -32,11 +32,11 @@ public class Insert extends Command {
         
         try {
             int id = Integer.parseInt(args[1]);
-            if (collectionManager.hasId(id)) throw new IdNotUniqueException("Тикет с id=" + args[1] + " уже существует!"); 
+            if (collectionManager.hasId(id)) throw new IdNotUniqueException("Тикет с id=" + args[1] + " уже существует!");
 
             Ticket ticket = (Ticket) getObj();
             ticket.setId(id);
-
+            ticket.setCreatorId(getAuthManager().getUserId());
             
             collectionManager.addTicket(ticket);
             return "Тикет был создан!";

@@ -1,53 +1,86 @@
 package lab7_server.managers;
 
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.PrintWriter;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Scanner;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 
 import lab7_server.exceptions.IdNotFoundException;
 import lab7_core.exceptions.InvalidDataException;
 import lab7_core.models.Event;
 import lab7_core.models.Ticket;
-import lab7_server.models.Tickets;
 import lab7_server.utility.EventComparator;
 import lab7_server.utility.TicketComparator;
-import lab7_server.models.TicketMixin;
 
 /**
  * Менеджер коллекции
  */
 public class CollectionManager {
-    private HashMap<Integer, Ticket> collection = new HashMap<>();
+    private class CollectionObserver {
+        private HashMap<Integer, Ticket> collection = new HashMap<>();
+        
+        public void put (Integer key, Ticket value) {
+            DBManager.executeInsert("tickets", value);
+            collection.put(key, value);
+            sortSequence.add(value.getId());
+            sort();
+            save();
+        }
+
+        public Ticket get (Integer key) {
+            return collection.get(key);
+        }
+
+        public void remove (Integer key) {
+            collection.remove(key);
+            //TODO: think of making rule of deleting values that belongs to current user
+        }
+
+        public Collection<Ticket> values () {
+            return collection.values();
+        }
+
+        public boolean containsKey (Integer key) {
+            return collection.containsKey(key);
+        }
+
+        public int size () {
+            return collection.size();
+        }
+
+        public void replace (Integer key, Ticket value) {
+            DBManager.updateTicket(value);
+            collection.replace(key, value);
+        }
+
+        public HashMap<Integer, Ticket> getCollection () {
+            return collection;
+        }
+
+        public void dump (List<Ticket> tickets) {
+            tickets.stream().forEach((ticket) -> {
+                collection.put(ticket.getId(), ticket);
+                sortSequence.add(ticket.getId());
+            });
+            sort();
+        }
+    }
+
+    // private HashMap<Integer, Ticket> collection = new HashMap<>();
+    private CollectionObserver collection = new CollectionObserver();
     private List<Integer> sortSequence = new ArrayList<>();
 
     private LocalDateTime initTime;
     private LocalDateTime lastUpdateTime;
 
-    private final String fileName;
-
-    public CollectionManager (String fileName) {
-        this.fileName = fileName;
-    }
-
-    /**
-     * Возвращает имя xml файла
-     * @return имя xml файла
-     */
-    public String getFileName () {
-        return fileName;
+    public CollectionManager () {
     }
 
     /**
@@ -58,9 +91,35 @@ public class CollectionManager {
      */
     public void addTicket(Ticket ticket) throws InvalidDataException {
         collection.put(ticket.getId(), ticket);
-        sortSequence.add(ticket.getId());
-        sort();      
-        save();  
+    }
+
+    public boolean replaceTicket (Ticket oldTicket, Ticket newTicket, int userId) {
+        newTicket.setId(oldTicket.getId());
+        Event event = newTicket.getEvent();
+        event.setId(oldTicket.getEvent().getId());
+        newTicket.setEvent(event);
+
+
+        if (oldTicket.getCreatorId() == userId) {
+            collection.replace(oldTicket.getId(), newTicket);
+            return true;
+        }
+        return false;
+    }
+
+    public boolean removeTicketByUser (Integer key, int userId) {
+        if (collection.get(key).getCreatorId() == userId) {
+            DBManager.deleteTicket(key);
+            for (int i = 0; i < sortSequence.size(); i++) {
+                if (sortSequence.get(i) == collection.get(key).getId()) {
+                    sortSequence.remove(i);
+                    save();
+                }
+            }
+            collection.remove(key);
+            return true;
+        }
+        return false;
     }
 
     /**
@@ -74,39 +133,30 @@ public class CollectionManager {
         initTime = LocalDateTime.now();
         lastUpdateTime = initTime;
         
-        FileInputStream fileInputStream = new FileInputStream(fileName);
-        InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
+        collection.dump(DBManager.executeSelect("tickets").stream()
+        .map((Object ticket) -> ((Ticket) ticket))
+        .toList());
 
-        Scanner scanner = new Scanner(inputStreamReader).useDelimiter("\\A");
-        String xml = scanner.hasNext() ? scanner.next() : "";
+        // FileInputStream fileInputStream = new FileInputStream(fileName);
+        // InputStreamReader inputStreamReader = new InputStreamReader(fileInputStream);
+
+        // Scanner scanner = new Scanner(inputStreamReader).useDelimiter("\\A");
+        // String xml = scanner.hasNext() ? scanner.next() : "";
         
-        scanner.close();
-        inputStreamReader.close();
-        fileInputStream.close();
+        // scanner.close();
+        // inputStreamReader.close();
+        // fileInputStream.close();
 
-        XmlMapper xmlMapper = new XmlMapper();
+        // XmlMapper xmlMapper = new XmlMapper();
 
-        Tickets map = xmlMapper.readValue(xml, Tickets.class);
-        List<Ticket> ticketsList = map.getTicket();
-        for (int i = 0; i < ticketsList.size(); i++) {
-            collection.put(ticketsList.get(i).getId(), ticketsList.get(i));
-            sortSequence.add(ticketsList.get(i).getId());
-        }
+        // Tickets map = xmlMapper.readValue(xml, Tickets.class);
+        // List<Ticket> ticketsList = map.getTicket();
+        // for (int i = 0; i < ticketsList.size(); i++) {
+        //     collection.put(ticketsList.get(i).getId(), ticketsList.get(i));
+        //     sortSequence.add(ticketsList.get(i).getId());
+        // }
 
         sort();
-    }
-
-    /**
-     * Конвертирует коллекцию в объект класса {@link Tickets}
-     * @return Объект класса {@link Tickets}
-     */
-    private Tickets toTickets() {
-        Tickets tickets = new Tickets();
-        for (int i = 0; i < sortSequence.size(); i++) {
-            tickets.addTicket(collection.get(sortSequence.get(i)));
-        }
-
-        return tickets;
     }
 
     /**
@@ -116,47 +166,32 @@ public class CollectionManager {
      * @throws FileNotFoundException возникает при отсутствии файла
      */
     public void saveData() throws JsonProcessingException, FileNotFoundException {
-        PrintWriter printWriter = new PrintWriter(fileName);
-        if (collection.isEmpty()) printWriter.println();
-        else {
-            XmlMapper xmlMapper = new XmlMapper();
-            xmlMapper.enable(SerializationFeature.INDENT_OUTPUT);
-            xmlMapper.addMixIn(Ticket.class, TicketMixin.class);
+        // PrintWriter printWriter = new PrintWriter(fileName);
+        // if (collection.isEmpty()) printWriter.println();
+        // else {
+        //     XmlMapper xmlMapper = new XmlMapper();
+        //     xmlMapper.enable(SerializationFeature.INDENT_OUTPUT);
+        //     xmlMapper.addMixIn(Ticket.class, TicketMixin.class);
 
-            Tickets tickets = toTickets();            
-            String xml = xmlMapper.writeValueAsString(tickets);
+        //     Tickets tickets = toTickets();            
+        //     String xml = xmlMapper.writeValueAsString(tickets);
 
-            printWriter.println(xml);
-        }
-        printWriter.close();
+        //     printWriter.println(xml);
+        // }
+        // printWriter.close();
+        
     }
 
     /**
      * Очищает коллекцию
      */
-    public void clearCollection() {
-        collection.clear();
-        sortSequence.clear();
-        save();
-    }
-
-    /**
-     * Удаляет элемент коллекции по ключу
-     * @param id ключ
-     * @throws IdNotFoundException возникает при отсутствии элемента с заданным ключом
-     */
-    public void removeTicketById(int id) throws IdNotFoundException {
-        if (!collection.containsKey(id)) {
-            throw new IdNotFoundException("Тикета с id=" + String.valueOf(id) + " не существует!");
-        }
-        collection.remove(id);
-        for (int i = 0; i < sortSequence.size(); i++) {
-            if (sortSequence.get(i) == id) {
-                sortSequence.remove(i);
-                save();
-                return;
-            }
-        }
+    // public void clearCollection() {
+        // collection.clear();
+        // sortSequence.clear();
+        // save();
+    // }
+    public Collection<Ticket> getValues () {
+        return collection.getCollection().values();
     }
 
     /**
@@ -172,22 +207,6 @@ public class CollectionManager {
         }
 
         return collection.get(id);
-    }
-
-    /**
-     * Заменяет элемент коллекции по ключу
-     * @param id ключ
-     * @param ticket новый элемент коллекции
-     * @throws IdNotFoundException возникает при отсутствии элемента с заданным ключом
-     * @see Ticket
-     */
-    public void changeTicketById(int id, Ticket ticket) throws IdNotFoundException {
-        if (!collection.containsKey(id)) {
-            throw new IdNotFoundException("Тикета с id=" + String.valueOf(id) + " не существует!");
-        }
-
-        collection.replace(id, ticket);
-        save();
     }
 
     /**
@@ -214,23 +233,6 @@ public class CollectionManager {
             if (sortSequence.size() == 0) break;
         }
         save();
-    }
-
-    /**
-     * Удаляет один элемент коллекции, значение поля event которого эквивалентно заданному
-     * @param event заданное значение типа {@link Event}
-     * @return возвращает true если был удален хотя бы один элемент, и false в противном случае
-     */
-    public boolean removeOneByEvent(Event event) {
-        for (int i = 0; i < sortSequence.size(); i++) {
-            if (event.equals(collection.get(sortSequence.get(i)).getEvent())) {
-                collection.remove(collection.get(sortSequence.get(i)).getId());
-                sortSequence.remove(i);
-                save();
-                return true;
-            }
-        }
-        return false;
     }
 
     /**
@@ -283,7 +285,7 @@ public class CollectionManager {
      * Сортирует коллекцию
      */
     private void sort() {
-        Comparator<Integer> ticketsComparator = new TicketComparator(collection);
+        Comparator<Integer> ticketsComparator = new TicketComparator(collection.getCollection());
         Collections.sort(sortSequence, ticketsComparator);
     }
 

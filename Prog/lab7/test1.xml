@@ -1,19 +1,21 @@
 <Tickets>
   <ticket>
-    <name>ticket1</name>
+    <name>ticket2</name>
     <coordinates>
-      <x>1.1</x>
-      <y>1.2</y>
+      <x>2.1</x>
+      <y>2.2</y>
     </coordinates>
-    <price>100</price>
-    <type>VIP</type>
+    <price>200</price>
+    <type>USUAL</type>
     <event>
-      <id>1</id>
-      <name>event1</name>
-      <date>2020-01-01 22:12:12 Europe/Moscow</date>
-      <ticketsCount>1</ticketsCount>
-      <description>desc1</description>
+      <id>0</id>
+      <name>event2</name>
+      <date>2020-01-01 22:12:12 Europe/London</date>
+      <ticketsCount>2</ticketsCount>
+      <description>desc2</description>
+      <timestamp>1577905932000</timestamp>
     </event>
+    <creatorId>0</creatorId>
   </ticket>
   <ticket>
     <name>ticket2</name>
@@ -24,12 +26,14 @@
     <price>200</price>
     <type>USUAL</type>
     <event>
-      <id>2</id>
+      <id>0</id>
       <name>event2</name>
       <date>2020-01-01 22:12:12 Europe/London</date>
       <ticketsCount>2</ticketsCount>
       <description>desc2</description>
+      <timestamp>1577905932000</timestamp>
     </event>
+    <creatorId>0</creatorId>
   </ticket>
 </Tickets>
 

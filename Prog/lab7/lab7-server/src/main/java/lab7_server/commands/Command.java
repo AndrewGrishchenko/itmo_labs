@@ -13,7 +13,7 @@ import lab7_server.managers.AuthManager;
 public abstract class Command extends RecursiveTask<String> implements Validatable {
     private final CommandMeta meta;
 
-    private AuthManager authManager;
+    private AuthManager authManager = new AuthManager();
     
     private String[] args;
     private Object obj;
@@ -26,6 +26,10 @@ public abstract class Command extends RecursiveTask<String> implements Validatab
 
     public Command (String name, String description, String usage, String requiredObject, int... argC) {
         this.meta = new CommandMeta(name, description, usage, requiredObject, true, argC);
+    }
+
+    public Command (String name, String description, String usage, String requiredObject, boolean authRequired, int... argC) {
+        this.meta = new CommandMeta(name, description, usage, requiredObject, authRequired, argC);
     }
 
     public String getName () {
@@ -58,6 +62,10 @@ public abstract class Command extends RecursiveTask<String> implements Validatab
 
     public void setObj (Object obj) {
         this.obj = obj;
+    }
+
+    public ReentrantLock getLock () {
+        return lock;
     }
 
     public void setLock (ReentrantLock lock) {

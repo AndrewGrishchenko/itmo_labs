@@ -1,5 +1,6 @@
 package lab7_server.commands;
 
+import lab7_core.models.Ticket;
 import lab7_server.managers.CollectionManager;
 import lab7_server.models.ExitCode;
 
@@ -27,7 +28,9 @@ public class Clear extends Command {
      */
     @Override
     public String run () {
-        collectionManager.clearCollection();
-        return "Коллекция очищена!";
+        for (Ticket ticket : collectionManager.toArray()) {
+            collectionManager.removeTicketByUser(ticket.getId(), getAuthManager().getUserId());
+        }
+        return "Ваши элементы коллекции очищены!";
     }
 }

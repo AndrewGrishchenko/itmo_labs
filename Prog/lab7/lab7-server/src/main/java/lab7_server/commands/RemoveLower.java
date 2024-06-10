@@ -29,7 +29,12 @@ public class RemoveLower extends Command {
     public String run() {
         Ticket ticket = (Ticket) getObj();
 
-        collectionManager.removeLowerThanTicket(ticket);
-        return "Тикеты удалены!";
+        int count = 0;
+        for (Ticket cTicket : collectionManager.toArray()) {
+            if (cTicket.compareTo(ticket) < 0) {
+                if (collectionManager.removeTicketByUser(cTicket.getId(), getAuthManager().getUserId())) count++;
+            }
+        }
+        return "Удалено " + String.valueOf(count) + " тикетов!";
     }
 }

@@ -1,6 +1,5 @@
 package lab7_server.commands;
 
-import lab7_server.exceptions.IdNotFoundException;
 import lab7_server.managers.CollectionManager;
 import lab7_server.models.ExitCode;
 
@@ -31,12 +30,12 @@ public class RemoveKey extends Command {
 
         try {
             int id = Integer.parseInt(args[1]);
-            collectionManager.removeTicketById(id);
-            return "Тикет с id=" + String.valueOf(id) + " удален!";
+            if(collectionManager.removeTicketByUser(id, getAuthManager().getUserId()))
+                return "Тикет с id=" + String.valueOf(id) + " удален!";
+            else
+                return "Данный тикет не принадлежит вам";
         } catch (NumberFormatException e) {
             return "id должен являться числом!";
-        } catch (IdNotFoundException e) {
-            return e.getMessage();
         }
     }
 

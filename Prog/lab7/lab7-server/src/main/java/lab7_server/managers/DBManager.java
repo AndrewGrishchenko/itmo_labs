@@ -62,7 +62,7 @@ public class DBManager {
                         break;
                     case "tickets":
                         Event ticket_event = (Event) executeSelect("events", "id=" + String.valueOf(rs.getInt(7))).get(0);
-                        Ticket ticket = new Ticket(rs.getInt(1), rs.getString(2), new Coordinates((double) rs.getFloat(3), (double) rs.getFloat(4)), rs.getInt(5), TicketType.valueOf(rs.getString(6)), ticket_event);
+                        Ticket ticket = new Ticket(rs.getInt(1), rs.getString(2), new Coordinates((double) rs.getFloat(3), (double) rs.getFloat(4)), rs.getInt(5), TicketType.valueOf(rs.getString(6)), ticket_event, rs.getInt(8));
                         result.add(ticket);
                         break;
                 }
@@ -71,6 +71,55 @@ public class DBManager {
             return result;
         } catch (SQLException e) {
             return null;
+        }
+    }
+
+    public static void deleteTicket (int id) {
+        String query = "DELETE FROM tickets WHERE id=" + String.valueOf(id) + ";";
+
+        try {
+            Statement st = conn.createStatement();
+            st.executeQuery(query);
+        } catch (SQLException e) {
+            return;
+        }
+    }
+
+    public static void updateEvent (Event event) {
+        try {
+            String query = "UPDATE events SET (name, date, tickets_count, description) = (?, ?, ?, ?) WHERE id=?;";
+
+            PreparedStatement pst = conn.prepareStatement(query);
+            pst.setString(1, event.getName());
+            pst.setTimestamp(2, event.getTimestamp());
+            pst.setInt(3, event.getTicketsCount().intValue());
+            pst.setString(4, event.getDescription());
+
+            pst.setInt(5, event.getId());
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            return;
+        }
+    }
+
+    public static void updateTicket (Ticket ticket) {
+        try {
+            String query = "UPDATE tickets SET (name, x, y, price, type, event_id) = (?, ?, ?, ?, CAST(? AS ticket_type), ?) WHERE id=?;";
+            
+            updateEvent(ticket.getEvent());
+            
+            PreparedStatement pst = conn.prepareStatement(query);
+            pst.setString(1, ticket.getName());
+            pst.setDouble(2, ticket.getCoordinates().getX());
+            pst.setDouble(3, ticket.getCoordinates().getY());
+            pst.setInt(4, ticket.getPrice());
+            pst.setString(5, ticket.getType().toString());
+            pst.setInt(6, ticket.getEvent().getId());
+            
+            pst.setInt(7, ticket.getId());
+            pst.executeUpdate();
+        } catch (SQLException e) {
+            return;
         }
     }
 
@@ -90,7 +139,7 @@ public class DBManager {
                     if (exists(table, "username", user.getUsername())) return id;
 
                     id = getNextId(table);
-                    pst.setInt(1, getNextId(table));
+                    pst.setInt(1, id);
                     pst.setString(2, user.getUsername());
                     pst.setString(3, user.getHash());
                     pst.executeUpdate();
@@ -102,7 +151,7 @@ public class DBManager {
                     Event event = (Event) value;
 
                     id = getNextId(table);
-                    pst.setInt(1, getNextId(table));
+                    pst.setInt(1, id);
                     pst.setString(2, event.getName());
                     pst.setTimestamp(3, event.getTimestamp());
                     pst.setInt(4, event.getTicketsCount().intValue());
@@ -114,21 +163,26 @@ public class DBManager {
                     pst = conn.prepareStatement(query);
 
                     Ticket ticket = (Ticket) value;
+                    int event_id = findEventId(ticket.getEvent());
+                    if (event_id == -1) {
+                        event_id = executeInsert("events", ticket.getEvent());
+                    }
 
-                    id = getNextId(table);
-                    pst.setInt(1, id);
+                    id = ticket.getId();
+                    pst.setInt(1, ticket.getId());
                     pst.setString(2, ticket.getName());
                     pst.setFloat(3, (float) ticket.getCoordinates().getX());
                     pst.setFloat(4, ticket.getCoordinates().getY().floatValue());
                     pst.setInt(5, ticket.getPrice());
                     pst.setString(6, ticket.getType().toString());
-                    pst.setInt(7, findEventId(ticket.getEvent()));
+                    pst.setInt(7, event_id);
                     pst.setInt(8, ticket.getCreatorId());
                     pst.executeUpdate();
                     break;
             }
             return id;
         } catch (SQLException e) {
+            e.printStackTrace();
             revertId(table);
             return id;
         }

@@ -125,7 +125,7 @@ public class TCPServer implements Runnable {
         var sc = (SocketChannel) key.channel();
         sc.configureBlocking(false);
 
-        ByteBuffer clientData = ByteBuffer.allocate(4096);
+        ByteBuffer clientData = ByteBuffer.allocate(8192);
         sc.read(clientData);
 
         new Thread(() -> {

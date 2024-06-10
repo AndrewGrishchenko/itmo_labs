@@ -1,5 +1,6 @@
 package lab7_server.commands;
 
+import lab7_core.models.Ticket;
 import lab7_server.managers.CollectionManager;
 import lab7_server.models.ExitCode;
 
@@ -28,15 +29,14 @@ public class RemoveLowerKey extends Command {
     public String run() {
         String[] args = getArgs();
 
-        try {
-            int id = Integer.parseInt(args[1]);
-            collectionManager.removeLowerThanId(id);
-            return "Тикеты удалены!";
-        } catch (NumberFormatException e) {
-            return "Данные должны являться числом!";
-        } catch (IllegalArgumentException e) {
-            return "Введенные данные неверны!";
+        int id = Integer.parseInt(args[1]);
+        int count = 0;
+        for (Ticket ticket : collectionManager.toArray()) {
+            if (ticket.getId() < id) {
+                if(collectionManager.removeTicketByUser(ticket.getId(), getAuthManager().getUserId())) count++;
+            }
         }
+        return "Удалено " + String.valueOf(count) + " тикетов!";
     }
 
     @Override

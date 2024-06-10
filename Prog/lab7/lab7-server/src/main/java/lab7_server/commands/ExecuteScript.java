@@ -8,6 +8,7 @@ import lab7_core.models.Script;
 import lab7_core.models.Scripts;
 import lab7_core.models.Ticket;
 import lab7_core.models.ValueChecker;
+import lab7_server.managers.AuthManager;
 
 /**
  * Команда 'execute_script'. Запускает скрипт из файла
@@ -24,6 +25,8 @@ public class ExecuteScript extends Command {
 
     private Object model;
     private Command command;
+
+    private AuthManager authManager = getAuthManager();
     
     /**
      * Конструктор команды
@@ -31,7 +34,7 @@ public class ExecuteScript extends Command {
      * @see CommandManager
      */
     public ExecuteScript (CommandManager commandManager) {
-        super("execute_script", "считать и исполнить скрипт из указанного файла. В скрипте содержатся команды в таком же виде, в котором их вводит пользователь в интерактивном режиме", "'execute_script <fileName>'", "script", 2);
+        super("execute_script", "считать и исполнить скрипт из указанного файла. В скрипте содержатся команды в таком же виде, в котором их вводит пользователь в интерактивном режиме", "'execute_script <fileName>'", "script", false, 2);
         this.commandManager = commandManager;
     }
 
@@ -92,8 +95,8 @@ public class ExecuteScript extends Command {
         return result.getCheck();
     }
 
-    private void handleInput (String input) {
-        response += "(" + getArgs()[1] + ")> ";
+    private void handleInput (String scriptFileName, String input) {
+        response += "(" + scriptFileName + ")> ";
 
         String[] line = input.split(" ");
         
@@ -111,9 +114,16 @@ public class ExecuteScript extends Command {
         response += input + "\n";
 
         command = commandManager.getCommand(line[0]);
+        command.setAuthManager(authManager);
+        command.setLock(getLock());
 
         if (command == null) {
             response += "Команда \"" + line[0] + "\" не найдена!\n";
+            return;
+        }
+
+        if (command.getMeta().isAuthRequired() && !authManager.isLoggedIn()) {
+            response += "You need to be logged in!\n";
             return;
         }
 
@@ -149,7 +159,7 @@ public class ExecuteScript extends Command {
 
     public void handleScript (Script script) {
         addRunningScript(script.getFileName());
-        Arrays.stream(script.getContent()).filter(line -> line.length() > 0).forEach(line -> handleInput(line));
+        Arrays.stream(script.getContent()).filter(line -> line.length() > 0).forEach(line -> handleInput(script.getFileName(), line));
         
         if (isFilling) {
             isFilling = false;
@@ -169,9 +179,15 @@ public class ExecuteScript extends Command {
     @Override
     public String run() {
         scripts = (Scripts) getObj();
-        
+        runningScripts.clear();
+        response = "";
+        isFilling = false;
+        fillType = null;
+        model = null;
+        command = null;
+
         handleScript(scripts.getPrimaryScript());
-        
+
         return response;
     }
 }

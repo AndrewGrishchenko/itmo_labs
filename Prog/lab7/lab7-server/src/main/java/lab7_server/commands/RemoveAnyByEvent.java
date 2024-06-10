@@ -3,6 +3,7 @@ package lab7_server.commands;
 import lab7_server.managers.CollectionManager;
 import lab7_server.models.ExitCode;
 import lab7_core.models.Event;
+import lab7_core.models.Ticket;
 
 /**
  * Команда 'remove_any_by_event'. Удаляет из коллекции один элемент, значение поля event которого эквивалентно заданному
@@ -29,11 +30,14 @@ public class RemoveAnyByEvent extends Command {
     public String run() {
         Event event = (Event) getObj();
         
-        if (collectionManager.removeOneByEvent(event)) {
-            return "Тикет с данным ивентом был удален!";
+        for (Ticket ticket : collectionManager.toArray()) {
+            if (ticket.getCreatorId() == getAuthManager().getUserId()) {
+                if (ticket.getEvent().equals(event)) {
+                    collectionManager.removeTicketByUser(ticket.getId(), getAuthManager().getUserId());
+                    return "Тикет с данным ивентом был удален!";
+                }
+            }
         }
-        else {
-            return "Данный ивент нигде не используется; ни один тикет не удален";
-        }
+        return "Данный ивент нигде не используется; ни один тикет не удален";
     }
 }

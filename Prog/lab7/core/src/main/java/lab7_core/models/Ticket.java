@@ -65,7 +65,7 @@ public class Ticket implements Serializable, Comparable<Ticket> {
      * @see TicketType
      * @see Event
      */
-    public Ticket(int id, String name, Coordinates coordinates, int price, TicketType type, Event event) {
+    public Ticket(int id, String name, Coordinates coordinates, int price, TicketType type, Event event, int creatorId) {
         this.id = id;
         this.name = name;
         this.coordinates = coordinates;
@@ -73,6 +73,7 @@ public class Ticket implements Serializable, Comparable<Ticket> {
         this.price = price;
         this.type = type;
         this.event = event;
+        this.creatorId = creatorId;
     }
 
     @Override
@@ -170,12 +171,15 @@ public class Ticket implements Serializable, Comparable<Ticket> {
                         break;
                 case 6: msg = "Введите event.name (String): ";
                         event.setName(ScannerAdapter.getString(null));
+                        setEvent(event);
                         break;
                 case 7: msg = "Введите event.date (формат: 2020-01-23 15:30:55 Europe/Moscow): ";
                         event.setDate(ScannerAdapter.getZonedDateTime(null));
+                        setEvent(event);
                         break;
                 case 8: msg = "Введите event.ticketsCount (Long): ";
                         event.setTicketsCount(ScannerAdapter.getLong(null));
+                        setEvent(event);
                         break;
                 case 9: msg = "Введите description (String): ";
                         event.setDescription(ScannerAdapter.getString(null));

@@ -30,8 +30,7 @@ public class Info extends Command {
         String message = "Информация о коллекции:\n  Тип: " + collectionManager.getType()
         + "\n  Дата инициализации: " + collectionManager.getInitTime()
         + "\n  Дата последнего изменения: " + collectionManager.getLastUpdateTime()
-        + "\n  Количество элементов: " + collectionManager.getSize()
-        + "\n  Название xml файла: " + collectionManager.getFileName() + "\n";
+        + "\n  Количество элементов: " + collectionManager.getSize() + "\n";
 
         return message;
     }

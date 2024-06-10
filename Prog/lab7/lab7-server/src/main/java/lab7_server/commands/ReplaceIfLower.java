@@ -36,16 +36,13 @@ public class ReplaceIfLower extends Command {
             Ticket newTicket = (Ticket) getObj();
 
             if (oldTicket.compareTo(newTicket) > 0) {
-                collectionManager.changeTicketById(oldTicket.getId(), newTicket);
-                return "Тикет заменен!";
+                if (collectionManager.replaceTicket(oldTicket, newTicket, getAuthManager().getUserId())) return "Тикет заменен!";
+                return "Тикет не принадлежит вам!";
             }
-            else {
-                return "Новое значение больше старого; тикет не заменен!";
-            }
+            
+            return "Новое значение больше старого; тикет не заменен!";
         } catch (IdNotFoundException e) {
             return e.getMessage();
-        } catch (NumberFormatException e) {
-            return "введенные данные должны являться числом!";
         }
     }
 
