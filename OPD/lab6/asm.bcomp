@@ -1,0 +1,63 @@
+ORG 0x0
+V0: WORD $DEFAULT, 0x180
+V1: WORD $int1, 0x180
+V2: WORD $DEFAULT, 0x180
+V3: WORD $int2, 0x180
+V4: WORD $DEFAULT, 0x180
+V5: WORD $DEFAULT, 0x180
+V6: WORD $DEFAULT, 0x180
+V7: WORD $DEFAULT, 0x180
+DEFAULT: IRET
+
+ORG 0x28
+X: WORD 0x0
+min: WORD 0xFFEB ; -21
+max: WORD 0x002A ; 42
+
+int1:  DI
+       LD X
+       ADD X
+       ADD X
+       OUT 2
+       EI
+       IRET
+
+int2:  DI
+       IN 6
+       AND X
+       PUSH
+       CALL CHECK
+       POP
+       ST X
+       EI
+       IRET
+
+START: CLA
+       LD #0x9
+       OUT 3
+       LD #0xB
+       OUT 7
+       CLA
+       EI
+INCR:  DI
+       LD X
+       INC
+       INC
+       PUSH
+       CALL CHECK
+       POP
+       ST X
+       EI
+       JUMP INCR
+       HLT
+
+; в стеке число которое хотим записать
+CHECK:     LD (SP+1)
+           CMP min
+           BPL CHECK_MAX
+           JUMP SET_ODZ
+CHECK_MAX: CMP max
+           BMI RETURN
+SET_ODZ:   LD min
+RETURN:    ST (SP+1)
+           RET
