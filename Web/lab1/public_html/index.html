@@ -1,0 +1,106 @@
+<html>
+    <head>
+        <script type="text/javascript" src="script.js" defer></script>
+    </head>
+    <body>
+        <table>
+            <tr>
+                <td scope="col">
+                    <svg height="300" width="300">
+                        <polygon fill="#2B65EC" points="150,150 150,100 250,150"/>
+                        <polygon fill="#2B65EC" points="150,150 150,250 100,250 100,150"/>
+                        <path fill="#2B65EC" d="M250,150 A100,100 0 0,1 150,250 L150,150 z"/>
+
+                        <line stroke="black" x1="0" x2="300" y1="150" y2="150"/>
+                        <line stroke="black" x1="150" x2="150" y1="0" y2="300"/>
+                        <polygon fill="black" stroke="black" points="300,150 285,156 285,144"/>
+                        <polygon fill="black" stroke="black" points="150,0 144,15 156,15"/>
+
+                        <line stroke="black" x1="200" x2="200" y1="155" y2="145"/>
+                        <line stroke="black" x1="250" x2="250" y1="155" y2="145"/>
+                        <line stroke="black" x1="50" x2="50" y1="155" y2="145"/>
+                        <line stroke="black" x1="100" x2="100" y1="155" y2="145"/>
+                        <line stroke="black" x1="145" x2="155" y1="100" y2="100"/>
+                        <line stroke="black" x1="145" x2="155" y1="50" y2="50"/>
+                        <line stroke="black" x1="145" x2="155" y1="200" y2="200"/>
+                        <line stroke="black" x1="145" x2="155" y1="250" y2="250"/>
+
+                        <text fill="black" x="195" y="140">R/2</text>
+                        <text fill="black" x="250" y="140">R</text>
+                        <text fill="black" x="40" y="140">-R</text>
+                        <text fill="black" x="85" y="140">-R/2</text>
+                        <text fill="black" x="160" y="55">R</text>
+                        <text fill="black" x="160" y="105">R/2</text>
+                        <text fill="black" x="160" y="204">-R/2</text>
+                        <text fill="black" x="160" y="255">-R</text>
+                        <text fill="black" x="285" y="140">X</text>
+                        <text fill="black" x="160" y="15">Y</text>
+
+                        <circle id="point" r="4" cx="150" cy="150" fill="black" stroke="white" visibility="hidden="/>
+                    </svg>
+                </td>
+                <td scope="col">
+                    <form action="" id="coordinates-form">
+                        <div style="display: flex">
+                            X: 
+                            <select id="x">
+                                <option>-2</option>
+                                <option>-1.5</option>
+                                <option>-1</option>
+                                <option>-0.5</option>
+                                <option>0</option>
+                                <option>0.5</option>
+                                <option>1</option>
+                                <option>1.5</option>
+                                <option>2</option>
+                            </select>
+                        </div>
+                        <div style="display: flex">
+                            Y: 
+                            <input type="text" id="y" placeholder="(-3; 3)" required>
+                        </div>
+                        <div style="display: flex">
+                            R: 
+                            <label>
+                                <input type="radio" name="r" value="1" checked>
+                                1
+                            </label>
+                            <label>
+                                <input type="radio" name="r" value="2">
+                                2
+                            </label>
+                            <label>
+                                <input type="radio" name="r" value="3">
+                                3
+                            </label>
+                            <label>
+                                <input type="radio" name="r" value="4">
+                                4
+                            </label>
+                            <label>
+                                <input type="radio" name="r" value="5">
+                                5
+                            </label>
+                        </div>
+                        <button type="submit">Отправить</button>
+                        <button type="reset">Очистить</button>
+                    </form>
+                </td>
+            </tr>
+        </table>
+        <table id="records" border="1px">
+            <thead>
+                <tr>
+                    <td scope="col">X</td>
+                    <td scope="col">Y</td>
+                    <td scope="col">R</td>
+                    <td scope="col">Текущее время</td>
+                    <td scope="col">Время исполнения</td>
+                    <td scope="col">Результат попадания</td>
+                </tr>
+            </thead>
+            <tbody>
+            </tbody>
+        </table>
+    </body>
+</html>
