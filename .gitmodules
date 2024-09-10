@@ -1,0 +1,3 @@
+[submodule "PL/assignment-1-io-library"]
+	path = PL/assignment-1-io-library
+	url = https://gitlab.se.ifmo.ru/AndrewGrishchenko/assignment-1-io-library
