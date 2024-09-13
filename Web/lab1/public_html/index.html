@@ -1,15 +1,22 @@
 <html>
     <head>
         <script type="text/javascript" src="script.js" defer></script>
+        <link rel="stylesheet" href="styles.css">
     </head>
     <body>
-        <table>
-            <tr>
+        <header class="header">
+            <div style="display: flex">
+                <span>Грищенко Андрей P3208</span>
+                <span>Вариант 79</span>
+            </div>
+        </header>
+        <table class="content-table">
+            <tr class="content-cell">
                 <td scope="col">
                     <svg height="300" width="300">
-                        <polygon fill="#2B65EC" points="150,150 150,100 250,150"/>
-                        <polygon fill="#2B65EC" points="150,150 150,250 100,250 100,150"/>
-                        <path fill="#2B65EC" d="M250,150 A100,100 0 0,1 150,250 L150,150 z"/>
+                        <polygon fill="#F2476A" points="150,150 150,100 250,150"/>
+                        <polygon fill="#F2476A" points="150,150 150,250 100,250 100,150"/>
+                        <path fill="#F2476A" d="M250,150 A100,100 0 0,1 150,250 L150,150 z"/>
 
                         <line stroke="black" x1="0" x2="300" y1="150" y2="150"/>
                         <line stroke="black" x1="150" x2="150" y1="0" y2="300"/>
@@ -41,7 +48,7 @@
                 </td>
                 <td scope="col">
                     <form action="" id="coordinates-form">
-                        <div style="display: flex">
+                        <div class="x-select">
                             X: 
                             <select id="x">
                                 <option>-2</option>
@@ -55,11 +62,11 @@
                                 <option>2</option>
                             </select>
                         </div>
-                        <div style="display: flex">
+                        <div class="y-text">
                             Y: 
                             <input type="text" id="y" placeholder="(-3; 3)" required>
                         </div>
-                        <div style="display: flex">
+                        <div class="r-radio">
                             R: 
                             <label>
                                 <input type="radio" name="r" value="1" checked>
@@ -88,17 +95,15 @@
                 </td>
             </tr>
         </table>
-        <table id="records" border="1px">
-            <thead>
-                <tr>
-                    <td scope="col">X</td>
-                    <td scope="col">Y</td>
-                    <td scope="col">R</td>
-                    <td scope="col">Текущее время</td>
-                    <td scope="col">Время исполнения</td>
-                    <td scope="col">Результат попадания</td>
-                </tr>
-            </thead>
+        <table class="records-table" id="records">
+            <tr class="table-header">
+                <th scope="col">X</td>
+                <th scope="col">Y</td>
+                <th scope="col">R</td>
+                <th scope="col">Текущее время</td>
+                <th scope="col">Время исполнения</td>
+                <th scope="col">Результат попадания</td>
+            </tr>
             <tbody>
             </tbody>
         </table>

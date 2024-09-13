@@ -30,6 +30,7 @@ coordinatesForm.addEventListener("submit", (e) => {
             if (jsonResponse.status == "ok") {
                 let tableRef = document.getElementById('records');
                 let newRow = tableRef.insertRow(-1);
+                newRow.setAttribute('class', 'table-row');
 
                 let cellX = newRow.insertCell(0);
                 let cellY = newRow.insertCell(1);
@@ -43,7 +44,7 @@ coordinatesForm.addEventListener("submit", (e) => {
                 cellR.appendChild(document.createTextNode(jsonResponse.r));
                 cellCurTime.appendChild(document.createTextNode(jsonResponse.current_time));
                 cellExecTime.appendChild(document.createTextNode(jsonResponse.execution_time + ' мкс'));
-                cellRes.appendChild(document.createTextNode(jsonResponse.result));
+                cellRes.appendChild(document.createTextNode(jsonResponse.result == "hit" ? "Попал" : "Промазал"));
             } else {
                 alert(jsonResponse.message);
             }
