@@ -1,3 +1,5 @@
+package com.andrew;
+
 import java.util.HashMap;
 
 public class Parameters {
@@ -5,7 +7,6 @@ public class Parameters {
     private HashMap<String, String> params = new HashMap<>();
 
     public static Parameters fromURI (String URI) {
-        // /point?x=1&y=2&r=3
         Parameters params = new Parameters();
 
         String[] url = URI.split("\\?");
