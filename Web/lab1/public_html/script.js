@@ -1,6 +1,6 @@
 let coordinatesForm = document.getElementById('coordinates-form');
 
-if (localStorage.getItem("data") == "null") {
+if (localStorage.getItem("data") == null) {
     localStorage.setItem("data", JSON.stringify([]));
 }
 
@@ -57,25 +57,17 @@ coordinatesForm.addEventListener("submit", (e) => {
     }
 
     var url = 'fcgi-bin/server-1.0.jar?x=' + x + '&y=' + y + '&r=' + r;
-    var xhr = new XMLHttpRequest();
-    xhr.open('GET', url, true);
-    xhr.responseType = 'json';
-    xhr.onload = function () {
-        var status = xhr.status;
-        if (status === 200) {
-            var jsonResponse = xhr.response;
-            if (jsonResponse.status == "ok") {
-                appendRow(jsonResponse.x, jsonResponse.y, jsonResponse.r, jsonResponse.current_time, jsonResponse.execution_time, jsonResponse.result);
+    
+    fetch(url).then(response => response.json())
+    .then(jsonResponse => {
+        if (jsonResponse.status == "ok") {
+            appendRow(jsonResponse.x, jsonResponse.y, jsonResponse.r, jsonResponse.current_time, jsonResponse.execution_time, jsonResponse.result);
 
-                let data = JSON.parse(localStorage.getItem("data"));
-                data.push([jsonResponse.x, jsonResponse.y, jsonResponse.r, jsonResponse.current_time, jsonResponse.execution_time, jsonResponse.result]);
-                localStorage.setItem("data", JSON.stringify(data));
-            } else {
-                alert(jsonResponse.message);
-            }
+            let data = JSON.parse(localStorage.getItem("data"));
+            data.push([jsonResponse.x, jsonResponse.y, jsonResponse.r, jsonResponse.current_time, jsonResponse.execution_time, jsonResponse.result]);
+            localStorage.setItem("data", JSON.stringify(data));
         } else {
-            alert("fcgi request err");
+            alert(jsonResponse.message);
         }
-    };
-    xhr.send();
+    });
 });
