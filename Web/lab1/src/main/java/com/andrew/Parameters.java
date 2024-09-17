@@ -10,7 +10,7 @@ public class Parameters {
         Parameters params = new Parameters();
 
         String[] url = URI.split("\\?");
-        params.setURL(url[0].replace("/", ""));
+        params.setURL(url[0].replace("fcgi-bin/", ""));
 
         if (url.length == 2) {
             String[] parts = url[1].split("\\&");

@@ -19,7 +19,8 @@ coordinatesForm.addEventListener("submit", (e) => {
         point.setAttribute("visibility", "hidden");
     }
 
-    var url = 'http://localhost/point?x=' + x + '&y=' + y + '&r=' + r;
+    //var url = 'http://helios.cs.ifmo.ru/point?x=' + x + '&y=' + y + '&r=' + r;
+    var url = 'fcgi-bin/server-1.0.jar?x=' + x + '&y=' + y + '&r=' + r;
     var xhr = new XMLHttpRequest();
     xhr.open('GET', url, true);
     xhr.responseType = 'json';
