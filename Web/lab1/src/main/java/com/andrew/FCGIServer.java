@@ -16,29 +16,24 @@ class FCGIServer {
         while (fcgiinterface.FCGIaccept() >= 0) {
             String URI = (String) fcgiinterface.request.params.get("REQUEST_URI");
 
-	    out.println("Access-Control-Allow-Origin: *;");
-	    out.println("Connection: keep-alive;");
-	    out.println("Content-Type: application/json\n\n");
+            out.println("Access-Control-Allow-Origin: *");
+            out.println("Connection: keep-alive");
+            out.println("Content-Type: application/json\n\n");
 
-	    try {
+            try {
                 Parameters params = Parameters.fromURI(URI);
-
-		point(params);
-	    } catch (Exception e) {
-		JSONBuilder builder = new JSONBuilder();
-		builder.addValue("status", "error");
-		builder.addValue("message", e.getMessage());
-	    }
+                point(params);
+            } catch (Exception e) {
+                JSONBuilder builder = new JSONBuilder();
+                builder.addValue("status", "error");
+                builder.addValue("message", e.getMessage());
+            }
         }
     }
 
     public static void point (Parameters params) {
         long startTime = System.nanoTime();
 
-        //out.println("Access-Control-Allow-Origin: *");
-	//out.println("Connection: keep-alive");
-        //out.println("Content-Type: application/json\n");
-        
         JSONBuilder builder = new JSONBuilder();
         try {
             double x = Double.parseDouble(params.get("x"));
