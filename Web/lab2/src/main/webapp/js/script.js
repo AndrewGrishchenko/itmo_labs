@@ -1,8 +1,7 @@
 import {draw_graph, draw_point, click2point_perm, clear_points} from "./graph.js"
 
 var currentX;
-var currentR = 1;
-draw_graph(currentR);
+var currentR;
 
 fetch('controller?points').then(response => response.json())
     .then(jsonResponse => {
@@ -44,7 +43,7 @@ x_buttons.forEach(button => {
 
 document.getElementById('coordinates-form').addEventListener("submit", async (e) => {
     e.preventDefault();
-    
+
     let x = Number(currentX);
     let y = Number(document.getElementById('y').value);
     let r = Number(currentR);
@@ -56,13 +55,18 @@ document.getElementById('coordinates-form').addEventListener("submit", async (e)
 });
 
 async function check_point (x, y, r) {
-    if (x == null) {
+    if (isNaN(x)) {
         alert("Select X!");
         return;
     }
 
     if (y <= -3 || y >= 5) {
         alert("Y must be in (-3; 5)!");
+        return;
+    }
+
+    if (isNaN(r)) {
+        alert("Select R!");
         return;
     }
 

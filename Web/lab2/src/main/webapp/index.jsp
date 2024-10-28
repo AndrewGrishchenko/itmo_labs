@@ -42,7 +42,7 @@
                         <div class="r-radio">
                             R: 
                             <label>
-                                <input type="radio" name="r" value="1" checked>
+                                <input type="radio" name="r" value="1">
                                 1
                             </label>
                             <label>
