@@ -32,8 +32,17 @@ public class ControllerServlet extends HttpServlet {
             resp.setCharacterEncoding("UTF-8");
             out.print(pointList.toJSON());
             out.flush();
+        } else if (req.getQueryString().equals("clear")) {
+            PointList pointList = (PointList) req.getSession().getAttribute("points");
+            if (pointList == null) {
+                pointList = new PointList();
+            } else {
+                pointList.clear();
+            }
+            req.getSession().setAttribute("points", pointList);
+            req.getRequestDispatcher(req.getContextPath()).forward(req, resp);
         } else {
-            Pattern pattern = Pattern.compile("^x=.*&y=.*&r=.*");
+            Pattern pattern = Pattern.compile("^x=.*&y=.*&r=.*&action=.*$");
             Matcher matcher = pattern.matcher(req.getQueryString());
             if (matcher.matches()) {
                 req.getRequestDispatcher("/point").forward(req, resp);

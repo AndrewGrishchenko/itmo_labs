@@ -24,12 +24,15 @@ public class AreaCheckServlet extends HttpServlet {
         point.setCurTime(dtf.format(LocalDateTime.now()));
         Long startTime = System.nanoTime();
         
-        String[] params = req.getQueryString().split("&");
-        point.setX(Double.parseDouble(params[0].split("=")[1]));
-        point.setY(Double.parseDouble(params[1].split("=")[1]));
-        point.setR(Double.parseDouble(params[2].split("=")[1]));
+        double x = Double.parseDouble(req.getParameter("x"));
+        double y = Double.parseDouble(req.getParameter("y"));
+        int r = Integer.parseInt(req.getParameter("r"));
+        String action = req.getParameter("action");
 
-        point.setHit(isHit(point.getX(), point.getY(), point.getR()));
+        point.setX(x);
+        point.setY(y);
+        point.setR(r);
+        point.setHit(isHit(x, y, r));
 
         Long endTime = System.nanoTime();
         point.setExecTime((endTime - startTime) / 1000);
@@ -41,11 +44,15 @@ public class AreaCheckServlet extends HttpServlet {
         }
         pointList.addPoint(point);
 
-        PrintWriter out = resp.getWriter();
-        resp.setContentType("application/json");
-        resp.setCharacterEncoding("UTF-8");
-        out.print(point.toJSON());
-        out.flush();
+        if (action.equals("checkPoint")) {
+            PrintWriter out = resp.getWriter();
+            resp.setContentType("application/json");
+            resp.setCharacterEncoding("UTF-8");
+            out.print(point.toJSON());
+            out.flush();
+        } else if (action.equals("submit")) {
+            req.getRequestDispatcher("jsp/result.jsp").forward(req, resp);
+        }
     }
 
     private boolean isHit (double x, double y, double r) {

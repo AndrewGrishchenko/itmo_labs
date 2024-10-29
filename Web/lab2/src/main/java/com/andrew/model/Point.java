@@ -8,7 +8,7 @@ public class Point implements Serializable {
 
     private double x;
     private double y;
-    private double r;
+    private int r;
     private String curTime;
     private long execTime;
     private boolean hit;
@@ -16,7 +16,7 @@ public class Point implements Serializable {
     public Point () {
     }
 
-    public Point (double x, double y, double r, String curTime, long execTime, boolean hit) {
+    public Point (double x, double y, int r, String curTime, long execTime, boolean hit) {
         this.x = x;
         this.y = y;
         this.r = r;
@@ -52,11 +52,11 @@ public class Point implements Serializable {
         this.y = y;
     }
 
-    public double getR() {
+    public int getR() {
         return r;
     }
 
-    public void setR (double r) {
+    public void setR (int r) {
         this.r = r;
     }
 

@@ -23,6 +23,14 @@ public class PointList implements Serializable {
         return points;
     }
 
+    public Point getLastPoint () {
+        return points.isEmpty() ? null : points.get(points.size() - 1);
+    }
+
+    public void clear () {
+        points.clear();
+    }
+
     public String toJSON () {
         StringBuilder sb = new StringBuilder();
         sb.append('[');

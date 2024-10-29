@@ -2,6 +2,9 @@
 <%@ page import="com.andrew.model.Point" %>
 <%@ page import="com.andrew.model.PointList" %>
 
+<div style="text-align: center">
+    <button id="clearHistoryButton">Очистить историю</button>
+</div>
 <table class="records-table" id="records">
     <thead>
         <tr class="table-header">

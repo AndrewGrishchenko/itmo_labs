@@ -22,6 +22,10 @@ export function clear_points () {
     });
 }
 
+export function clear_graph () {
+    calculator.setBlank();
+}
+
 export function click2point_perm (x, y) {
     let calcRect = elt.getBoundingClientRect();
     return calculator.pixelsToMath({

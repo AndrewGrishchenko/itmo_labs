@@ -104,3 +104,21 @@ button:hover {
     text-align: center;
     font-weight: lighter;
 }
+
+.h-text div {
+    display: flex;
+    background-color: #72a0f5;
+    justify-content: space-between;
+    border: 1px solid #143166;
+
+    flex-direction: column;
+    align-items: center;
+    margin: 10px 10px 10px;
+}
+
+.h-text span {
+    font-size: 30px;
+    font-weight: bold;
+    text-align: center;
+    color: #f5a9f4;
+}

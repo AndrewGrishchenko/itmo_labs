@@ -10,12 +10,7 @@
         <link rel="stylesheet" href="css/styles.css">
     </head>
     <body>
-        <header class="header">
-            <div style="display: flex">
-                <span>Грищенко Андрей P3208</span>
-                <span>Вариант 223317</span>
-            </div>
-        </header>
+        <jsp:include page="jsp/header.jsp"/>
         <table class="content-table">
             <tr class="content-cell">
                 <td scope="col">
@@ -25,15 +20,15 @@
                     <form action="" id="coordinates-form">
                         <div class="x-button">
                             X:
-                            <input type="button" name="x" id="x" value="-5">
-                            <input type="button" name="x" id="x" value="-4">
-                            <input type="button" name="x" id="x" value="-3">
-                            <input type="button" name="x" id="x" value="-2">
-                            <input type="button" name="x" id="x" value="-1">
-                            <input type="button" name="x" id="x" value="0">
-                            <input type="button" name="x" id="x" value="1">
-                            <input type="button" name="x" id="x" value="2">
-                            <input type="button" name="x" id="x" value="3">
+                            <input type="button" name="x" id="x_-5" value="-5">
+                            <input type="button" name="x" id="x_-4" value="-4">
+                            <input type="button" name="x" id="x_-3" value="-3">
+                            <input type="button" name="x" id="x_-2" value="-2">
+                            <input type="button" name="x" id="x_-1" value="-1">
+                            <input type="button" name="x" id="x_0" value="0">
+                            <input type="button" name="x" id="x_1" value="1">
+                            <input type="button" name="x" id="x_2" value="2">
+                            <input type="button" name="x" id="x_3" value="3">
                         </div>
                         <div class="y-text">
                             Y: 
@@ -42,23 +37,23 @@
                         <div class="r-radio">
                             R: 
                             <label>
-                                <input type="radio" name="r" value="1">
+                                <input type="radio" name="r" id="r_1" value="1">
                                 1
                             </label>
                             <label>
-                                <input type="radio" name="r" value="2">
+                                <input type="radio" name="r" id="r_2" value="2">
                                 2
                             </label>
                             <label>
-                                <input type="radio" name="r" value="3">
+                                <input type="radio" name="r" id="r_3" value="3">
                                 3
                             </label>
                             <label>
-                                <input type="radio" name="r" value="4">
+                                <input type="radio" name="r" id="r_4" value="4">
                                 4
                             </label>
                             <label>
-                                <input type="radio" name="r" value="5">
+                                <input type="radio" name="r" id="r_5" value="5">
                                 5
                             </label>
                         </div>
