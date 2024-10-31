@@ -4,7 +4,6 @@
     <head>
         <title>Lab2</title>
         <meta charset="UTF-8">
-        <script src="https://www.desmos.com/api/v1.9/calculator.js?apiKey=dcb31709b452b1cf9dc26972add0fda6"></script>
         <script type="module" src="js/graph.js" defer></script>
         <script type="module" src="js/script.js" defer></script>
         <link rel="stylesheet" href="css/styles.css">
