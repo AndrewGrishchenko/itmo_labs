@@ -14,7 +14,66 @@
         <table class="content-table">
             <tr class="content-cell">
                 <td scope="col">
-                    <div id="calculator" style="width: 600px; height: 400px;"></div>
+                    <div class="svg-container">
+                        <svg id="svg" width="600" height="600" viewBox="-7 -7 14 14">
+                            <polyline id="poly" style="fill:none;stroke:#F2476A;stroke-width:0.1"/>
+
+                            <line stroke="black" stroke-width="0.05" x1="-7" y1="0" x2="7" y2="0"/>
+                            <line stroke="black" stroke-width="0.05" x1="0" y1="-7" x2="0" y2="7"/>
+                            
+                            <line stroke="black" stroke-width="0.05" x1="-6" y1="-0.2" x2="-6" y2="0.2"/>
+                            <line stroke="black" stroke-width="0.05" x1="-5" y1="-0.2" x2="-5" y2="0.2"/>
+                            <line stroke="black" stroke-width="0.05" x1="-4" y1="-0.2" x2="-4" y2="0.2"/>
+                            <line stroke="black" stroke-width="0.05" x1="-3" y1="-0.2" x2="-3" y2="0.2"/>
+                            <line stroke="black" stroke-width="0.05" x1="-2" y1="-0.2" x2="-2" y2="0.2"/>
+                            <line stroke="black" stroke-width="0.05" x1="-1" y1="-0.2" x2="-1" y2="0.2"/>
+                            <line stroke="black" stroke-width="0.05" x1="1" y1="-0.2" x2="1" y2="0.2"/>
+                            <line stroke="black" stroke-width="0.05" x1="2" y1="-0.2" x2="2" y2="0.2"/>
+                            <line stroke="black" stroke-width="0.05" x1="3" y1="-0.2" x2="3" y2="0.2"/>
+                            <line stroke="black" stroke-width="0.05" x1="4" y1="-0.2" x2="4" y2="0.2"/>
+                            <line stroke="black" stroke-width="0.05" x1="5" y1="-0.2" x2="5" y2="0.2"/>
+                            <line stroke="black" stroke-width="0.05" x1="6" y1="-0.2" x2="6" y2="0.2"/>
+
+                            <line stroke="black" stroke-width="0.05" x1="-0.2" y1="-6" x2="0.2" y2="-6"/>
+                            <line stroke="black" stroke-width="0.05" x1="-0.2" y1="-5" x2="0.2" y2="-5"/>
+                            <line stroke="black" stroke-width="0.05" x1="-0.2" y1="-4" x2="0.2" y2="-4"/>
+                            <line stroke="black" stroke-width="0.05" x1="-0.2" y1="-3" x2="0.2" y2="-3"/>
+                            <line stroke="black" stroke-width="0.05" x1="-0.2" y1="-2" x2="0.2" y2="-2"/>
+                            <line stroke="black" stroke-width="0.05" x1="-0.2" y1="-1" x2="0.2" y2="-1"/>
+                            <line stroke="black" stroke-width="0.05" x1="-0.2" y1="1" x2="0.2" y2="1"/>
+                            <line stroke="black" stroke-width="0.05" x1="-0.2" y1="2" x2="0.2" y2="2"/>
+                            <line stroke="black" stroke-width="0.05" x1="-0.2" y1="3" x2="0.2" y2="3"/>
+                            <line stroke="black" stroke-width="0.05" x1="-0.2" y1="4" x2="0.2" y2="4"/>
+                            <line stroke="black" stroke-width="0.05" x1="-0.2" y1="5" x2="0.2" y2="5"/>
+                            <line stroke="black" stroke-width="0.05" x1="-0.2" y1="6" x2="0.2" y2="6"/>
+
+                            <text fill="black" x="-6.25" y="0.625" style="font-size: 0.5px;">-6</text>
+                            <text fill="black" x="-5.25" y="0.625" style="font-size: 0.5px;">-5</text>
+                            <text fill="black" x="-4.25" y="0.625" style="font-size: 0.5px;">-4</text>
+                            <text fill="black" x="-3.25" y="0.625" style="font-size: 0.5px;">-3</text>
+                            <text fill="black" x="-2.25" y="0.625" style="font-size: 0.5px;">-2</text>
+                            <text fill="black" x="-1.25" y="0.625" style="font-size: 0.5px;">-1</text>
+                            <text fill="black" x="0.85" y="0.675" style="font-size: 0.5px;">1</text>
+                            <text fill="black" x="1.85" y="0.675" style="font-size: 0.5px;">2</text>
+                            <text fill="black" x="2.85" y="0.675" style="font-size: 0.5px;">3</text>
+                            <text fill="black" x="3.85" y="0.675" style="font-size: 0.5px;">4</text>
+                            <text fill="black" x="4.85" y="0.675" style="font-size: 0.5px;">5</text>
+                            <text fill="black" x="5.85" y="0.675" style="font-size: 0.5px;">6</text>
+
+                            <text fill="black" x="0.3" y="6.125" style="font-size: 0.5px;">-6</text>
+                            <text fill="black" x="0.3" y="5.125" style="font-size: 0.5px;">-5</text>
+                            <text fill="black" x="0.3" y="4.125" style="font-size: 0.5px;">-4</text>
+                            <text fill="black" x="0.3" y="3.125" style="font-size: 0.5px;">-3</text>
+                            <text fill="black" x="0.3" y="2.125" style="font-size: 0.5px;">-2</text>
+                            <text fill="black" x="0.3" y="1.125" style="font-size: 0.5px;">-1</text>
+                            <text fill="black" x="0.3" y="-0.875" style="font-size: 0.5px;">1</text>
+                            <text fill="black" x="0.3" y="-1.875" style="font-size: 0.5px;">2</text>
+                            <text fill="black" x="0.3" y="-2.875" style="font-size: 0.5px;">3</text>
+                            <text fill="black" x="0.3" y="-3.875" style="font-size: 0.5px;">4</text>
+                            <text fill="black" x="0.3" y="-4.875" style="font-size: 0.5px;">5</text>
+                            <text fill="black" x="0.3" y="-5.875" style="font-size: 0.5px;">6</text>
+                        </svg>
+                    </div>
                 </td>
                 <td scope="col">
                     <form action="" id="coordinates-form">

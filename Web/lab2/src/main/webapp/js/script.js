@@ -1,4 +1,4 @@
-import {draw_graph, draw_point, click2point_perm, clear_points, clear_graph} from "./graph.js"
+import {draw_graph, draw_point, click2point_perm, clear_points, clear_graph, svg} from "./graph.js"
 
 var currentX = localStorage.getItem("x");
 var currentY = localStorage.getItem("y");
@@ -37,12 +37,12 @@ function updateHistory () {
 
 updateHistory();
 
-document.getElementById("calculator").addEventListener("click", async (e) => {
-    let point = click2point_perm(e.clientX, e.clientY);
-    
-    let hit = await check_point(point.x, point.y, currentR, "checkPoint");
+svg.addEventListener("click", async (e) => {
+    let [x, y] = click2point_perm(e.clientX, e.clientY);
+
+    let hit = await check_point(x, y, currentR, "checkPoint");
     if (hit !== undefined) {
-        draw_point(point.x, point.y, hit ? 'green' : 'red');
+        draw_point(x, y, hit ? 'green' : 'red');
     }
 });
 
@@ -101,7 +101,7 @@ async function check_point (x, y, r, action) {
         return;
     }
 
-    if (y <= -3 || y >= 5) {
+    if (y <= -3 || y >= 5 || isNaN(y)) {
         alert("Y must be in (-3; 5)!");
         return;
     }

@@ -122,3 +122,12 @@ button:hover {
     text-align: center;
     color: #f5a9f4;
 }
+
+.svg-container {
+    width: 600px;
+    height: 600px;
+    background-image: url("../image/cat.gif");
+    background-size: cover;
+    background-position: center;
+    position: relative;
+}

@@ -1,94 +1,173 @@
-var elt = document.getElementById('calculator');
-
-var calculator = Desmos.GraphingCalculator(elt, {
-    keypad: false,
-    expressions: false,
-    settingsMenu: false,
-    zoomButtons: false,
-    expressionsTopbar: false,
-    pointsOfInterest: false,
-    lockViewport: true,
-    zoomFit: true,
-    trace: false,
-    xAxisStep: 1,
-    yAxisStep: 1,
-});
-
-var points = [];
+export var svg = document.getElementById('svg');
+var poly = document.getElementById('poly');
+let graphAbortController;
 
 export function clear_points () {
-    points.forEach((expression) => {
-        calculator.removeExpression(expression);
+    const circles = document.querySelectorAll('circle[name="point"]');
+    circles.forEach(circle => {
+        circle.remove();
     });
 }
 
 export function clear_graph () {
-    calculator.setBlank();
+    poly.setAttribute("points", "");
 }
 
 export function click2point_perm (x, y) {
-    let calcRect = elt.getBoundingClientRect();
-    return calculator.pixelsToMath({
-        x: x - calcRect.left,
-        y: y - calcRect.top
-    });
+    const rect = svg.getBoundingClientRect();
+    const graphX = (x - rect.left) / rect.width * 14 - 7;
+    const graphY = (y - rect.top) / rect.height * 14 - 7;
+    
+    return [graphX, -graphY];
 }
 
 export function draw_point (x, y, color) {
-    points.push({
-        id: 'p' + (points.length + 1),
-        latex: `(${x}, ${y})`,
-        color: color
-    });
-    calculator.setExpression(points[points.length - 1]);
+    const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+    circle.setAttribute("name", "point");
+    circle.setAttribute("cx", x);
+    circle.setAttribute("cy", -y);
+    circle.setAttribute("r", 0.1);
+    circle.setAttribute("fill", color);
+    svg.appendChild(circle);
 }
 
-export function draw_graph (r) {
-    let k = 49 / r
-    calculator.setExpression({
-        id: 'k',
-        latex: 'k=' + k.toString()
-    });
-    calculator.setExpression({
-        id: 's',
-        latex: '\\s(x)=\\sqrt{(\\abs(x*k/7))/(x*k/7)}',
-        hidden: true
-    });
-    calculator.setExpression({
-        id: 'graph2',
-        latex: '(x*k/49)^2*s(\\abs(x*k/7)-3)+(y*k/21)^2*s(y*k/7+3*\\sqrt{33}/7)-1=0',
-        color: '#F2476A'
-    });
-    calculator.setExpression({
-        id: 'graph3',
-        latex: '\\abs(x*k/14)-((3*\\sqrt{33}-7)/112)*(x*k/7)^2-3+\\sqrt{1-(\\abs(\\abs(x*k/7)-2)-1)^2}-y*k/7=0',
-        color: '#F2476A'
-    });
-    calculator.setExpression({
-        id: 'graph4',
-        latex: '9*s((1-\\abs(x*k/7))*(\\abs(x*k/7)-.75))-8*\\abs(x*k/7)-y*k/7=0',
-        color: '#F2476A'
-    });
-    calculator.setExpression({
-        id: 'graph5',
-        latex: '3*\\abs(x*k/7)+.75*s((.75-\\abs(x*k/7))*(\\abs(x*k/7)-.5))-y*k/7=0',
-        color: '#F2476A'
-    });
-    calculator.setExpression({
-        id: 'graph6',
-        latex: '2.25*s((.5-x*k/7)*(x*k/7+.5))-y*k/7=0',
-        color: '#F2476A'
-    });
-    calculator.setExpression({
-        id: 'graph7',
-        latex: '6*\\sqrt{10}/7+(1.5-.5*\\abs(x*k/7))*s(\\abs(x*k/7)-1)-6*\\sqrt{10}/14*\\sqrt{4-(\\abs(x*k/7)-1)^2}-y*k/7=0',
-        color: '#F2476A'
-    });
+export async function draw_graph (r) {
+    if (graphAbortController) {
+        graphAbortController.abort();
+    }
 
-    calculator.setMathBounds({
-        left: -r - 1,
-        right: r + 1,
-        bottom: -r - 1,
-        top: r + 1
-    });
+    graphAbortController = new AbortController();
+    const { signal } = graphAbortController;
+    
+    let points = part1(r) + part2(r) + part3(r) + part4(r);
+    let pointsArray = points.split(" ");
+    let tmp_points = "";
+    
+    for (let i = 0; i < pointsArray.length; i++) {
+        if (signal.aborted) {
+            return;
+        }
+
+        tmp_points += pointsArray[i] + ' '
+        document.getElementById('poly').setAttribute('points', tmp_points);
+        await delay(0.01);
+    }
+}
+
+function delay(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+}
+
+function eqs (x, y, r) {
+    let firstAreaA = Math.abs(x) / (r / 7) - 3;
+    let firstSecondAreaA = Math.abs(y / (r / 7) + 3 / 7 * Math.sqrt(33));
+    let firstSecondAreaB = Math.pow((y / (r / 7)) / 3, 2);
+    let firstSecondAreaC = Math.sqrt(Math.abs(firstSecondAreaA) / firstSecondAreaA);
+    let firstArea = (y / (r / 7)) >= 0 && Math.pow(x / r, 2)
+            * Math.sqrt(Math.abs(firstAreaA) / (firstAreaA))
+            + firstSecondAreaB
+            * firstSecondAreaC
+            - 1 <= 0;
+
+    let secondAreaA = Math.abs(x) / (r / 7) - 4;
+    let secondArea = (y / (r / 7)) < 0 && Math.pow(x / r, 2)
+            * Math.sqrt(Math.abs(secondAreaA) / (secondAreaA))
+            + firstSecondAreaB
+            * firstSecondAreaC
+            - 1 <= 0;
+
+    let thirdArea = (y / (r / 7)) < 0 && Math.abs((x / (r / 7)) / 2)
+            - (3 * Math.sqrt(33) - 7) * Math.pow((x / (r / 7)), 2) / 112
+            - 3 + Math.sqrt(1 - Math.pow(Math.abs(Math.abs(x) / (r / 7) - 2) - 1, 2))
+            - y / (r / 7) <= 0;
+
+    let fourthArea = Math.abs(x) / (r / 7) <= 1 && Math.abs(x) / (r / 7) >= 0.75
+            && y / (r / 7) <= 3 && y / (r / 7) >= 0
+            && 9 - 8 * Math.abs(x) / (r / 7) >= y / (r / 7);
+
+    let fifthArea = y / (r / 7) >= 0
+            && Math.abs(x) / (r / 7) <= 0.75 && Math.abs(x) / (r / 7) >= 0.5
+            && 3 * Math.abs(x) / (r / 7) + 0.75 >= y / (r / 7);
+
+    let sixthArea = x / (r / 7) <= 0.5 && x / (r / 7) >= -0.5
+            && y / (r / 7) >= 0
+            && y / (r / 7) <= 2.25;
+
+    let seventhAreaA = Math.abs(x) / (r / 7) - 1;
+    let seventhArea = y / (r / 7) >= 0 && 6 * Math.sqrt(10) / 7
+            + (1.5 - 0.5 * Math.abs(x) / (r / 7))
+            * Math.sqrt(Math.abs(seventhAreaA) / seventhAreaA)
+            - 6 * Math.sqrt(10) / 14
+            * Math.sqrt(4 - Math.pow(seventhAreaA, 2)) >= y / (r / 7);
+
+    return firstArea || secondArea || thirdArea
+            || fourthArea || fifthArea || sixthArea || seventhArea;
+}
+
+function part1 (r, step=0.01) {
+    let points = "";
+    for (let x = 0; x <= r; x += step) {
+        let maxY = null;
+        for (let y = r; y >= 0; y -= step) {
+            if (eqs(x, y, r) && y >= maxY) {
+                maxY = y;
+            }
+        }
+
+        if (maxY != null) {
+            points += x + "," + -maxY + " ";
+        }
+    }
+    return points;
+}
+
+function part2 (r, step=0.01) {
+    let points = "";
+    for (let x = r; x >= 0; x -= step) {
+        let minY = null;
+        for (let y = 0; y >= -r; y -= step) {
+            if (eqs(x, y, r) && y <= minY) {
+                minY = y;
+            }
+        }
+
+        if (minY != null) {
+            points += x + "," + -minY + " ";
+        }
+    }
+    return points;
+}
+
+function part3 (r, step=0.01) {
+    let points = "";
+    for (let x = 0; x >= -r; x -= step) {
+        let minY = null;
+        for (let y = -r; y <= 0; y += step) {
+            if (eqs(x, y, r) && y <= minY) {
+                minY = y;
+            }
+        }
+
+        if (minY != null) {
+            points += x + "," + -minY + " ";
+        }
+    }
+    return points;
+}
+
+function part4 (r, step=0.01) {
+    let points = "";
+    for (let x = -r; x <= 0; x += step) {
+        let maxY = null;
+        for (let y = 0; y <= r; y += step) {
+            if (eqs(x, y, r) && y >= maxY) {
+                maxY = y;
+            }
+        }
+
+        if (maxY != null) {
+            points += x + "," + -maxY + " ";
+        }
+    }
+    return points;
 }
