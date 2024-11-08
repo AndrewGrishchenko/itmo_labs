@@ -19,6 +19,7 @@ def mandelbrot_set(xmin, xmax, ymin, ymax, width, height, max_iter):
             m_set[i, j] = mandelbrot(c, max_iter)
     return m_set
 
-plt.imshow(mandelbrot_set(-2, 1, -1.5, 1.5, 1000, 1000, 100), cmap='inferno')
+plt.imshow(mandelbrot_set(-2, 1, -1.5, 1.5, 2000, 2000, 100), cmap='inferno')
+#plt.imshow(mandelbrot_set(-0.8, -0.7, 0.1, 0.2, 1000, 1000, 100), cmap='inferno')
 plt.colorbar()
 plt.show()
