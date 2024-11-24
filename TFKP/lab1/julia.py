@@ -5,7 +5,7 @@ def julia(c, z, max_iter):
     for n in range(max_iter):
         if abs(z) > 2:
             return n
-        z = z*z + c
+        z = z**5 + c
     return max_iter
 
 def julia_set(xmin, xmax, ymin, ymax, width, height, c, max_iter):
@@ -18,7 +18,9 @@ def julia_set(xmin, xmax, ymin, ymax, width, height, c, max_iter):
             j_set[i, j] = julia(c, z, max_iter)
     return j_set
 
-plt.imshow(julia_set(-1.5, 1.5, -1.5, 1.5, 1500, 1500, -0.5251993 + 0.5251993j, 150), cmap='inferno')
-#plt.imshow(julia_set(-1.5, 1.5, -1.5, 1.5, 1500, 1500, 0.28 + 0.0113j, 400), cmap='inferno')
+# plt.imshow(julia_set(-1.5, 1.5, -1.5, 1.5, 3000, 3000, -0.5251993 + 0.5251993j, 150), cmap='inferno')
+# plt.imshow(julia_set(-1.5, 1.5, -1.5, 1.5, 3000, 3000, 0.28 + 0.0113j, 400), cmap='inferno')
+# plt.imshow(julia_set(-1.5, 1.5, -1.5, 1.5, 3000, 3000, -0.70176 - 0.3842j, 200), cmap='inferno')
+plt.imshow(julia_set(-1.5, 1.5, -1.5, 1.5, 3000, 3000, -0.549653 + 0.003j, 200), cmap='inferno')
 plt.colorbar()
 plt.show()
