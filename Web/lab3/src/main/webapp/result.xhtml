@@ -1,0 +1,33 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:p="http://primefaces.org/ui">
+    <h:head>
+        <meta charset="UTF-8"/>
+    </h:head>
+    <h:body>
+        <div style="text-align: center">
+            <button id="clearHistoryButton">Очистить историю</button>
+        </div>
+
+        <p:dataTable value="#{pointBean.points}" var="point" rendered="#{not empty PointBean.points}" class="records-table" id="records">
+            <p:column headerText="X" class="table-header">
+                <h:outputText value="#{point.x}"/>
+            </p:column>
+            <p:column headerText="Y" class="table-header">
+                <h:outputText value="#{point.y}"/>
+            </p:column>
+            <p:column headerText="Текущее время" class="table-header">
+                <h:outputText value="#{point.curTime}"/>
+            </p:column>
+            <p:column headerText="R" class="table-header">
+                <h:outputText value="#{point.r}"/>
+            </p:column>
+            <p:column headerText="Время исполнения" class="table-header">
+                <h:outputText value="#{point.execTime}"/>
+            </p:column>
+            <p:column headerText="Результат попадания" class="table-header">
+                <h:outputText value="#{point.hit}"/>
+            </p:column>
+        </p:dataTable>
+    </h:body>
+</html>
