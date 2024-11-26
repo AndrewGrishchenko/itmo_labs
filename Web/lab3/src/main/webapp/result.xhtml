@@ -9,23 +9,23 @@
             <button id="clearHistoryButton">Очистить историю</button>
         </div>
 
-        <p:dataTable value="#{pointBean.points}" var="point" rendered="#{not empty PointBean.points}" class="records-table" id="records">
-            <p:column headerText="X" class="table-header">
+        <p:dataTable value="#{tableBean.points}" var="point" rendered="#{not empty tableBean.points}" styleClass="records-table" id="records">
+            <p:column headerText="X" styleClass="table-header">
                 <h:outputText value="#{point.x}"/>
             </p:column>
-            <p:column headerText="Y" class="table-header">
+            <p:column headerText="Y" styleClass="table-header">
                 <h:outputText value="#{point.y}"/>
             </p:column>
-            <p:column headerText="Текущее время" class="table-header">
+            <p:column headerText="Текущее время" styleClass="table-header">
                 <h:outputText value="#{point.curTime}"/>
             </p:column>
-            <p:column headerText="R" class="table-header">
+            <p:column headerText="R" styleClass="table-header">
                 <h:outputText value="#{point.r}"/>
             </p:column>
-            <p:column headerText="Время исполнения" class="table-header">
+            <p:column headerText="Время исполнения" styleClass="table-header">
                 <h:outputText value="#{point.execTime}"/>
             </p:column>
-            <p:column headerText="Результат попадания" class="table-header">
+            <p:column headerText="Результат попадания" styleClass="table-header">
                 <h:outputText value="#{point.hit}"/>
             </p:column>
         </p:dataTable>

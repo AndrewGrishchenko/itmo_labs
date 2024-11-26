@@ -5,7 +5,7 @@ import java.util.Objects;
 
 public class Point implements Serializable {
     private static final long serialVersionUID = 1;
-
+    
     private double x;
     private double y;
     private int r;

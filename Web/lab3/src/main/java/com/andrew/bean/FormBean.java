@@ -13,7 +13,6 @@ import com.andrew.model.Point;
 @ManagedBean(name = "formBean", eager = true)
 @SessionScoped
 public class FormBean implements Serializable {
-    private Point currentPoint;
     private ArrayList<Point> points = new ArrayList<>(Arrays.asList(new Point(1.1, 1.2, 2, "wefewf", 123, true)));
 
     private Double x;

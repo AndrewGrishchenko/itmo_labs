@@ -25,6 +25,12 @@ function unselectCheckboxes (selected) {
     });
 }
 
+function validateForm () {
+    if (isNaN(x) || isNaN(y) || isNaN(r)) return false;
+
+    return true;
+}
+
 document.addEventListener("DOMContentLoaded", function() {
     // document.querySelector('[id$="radioGroup"]').addEventListener("change", updateFigures);
 
