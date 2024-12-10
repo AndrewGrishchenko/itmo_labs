@@ -29,12 +29,7 @@ public class FormBean implements Serializable {
     public FormBean() {
     }
 
-    public void check(Double x, Double y, Integer r) {
-        System.out.println(x);
-        System.out.println(y);
-        System.out.println(r);
-        System.out.println();
-
+    public void check() {
         Long startTime = System.nanoTime();
         
         Point point = new Point();
@@ -54,9 +49,9 @@ public class FormBean implements Serializable {
     }
 
     private boolean isHit (Double x, Double y, Double r) {
-        return (0 <= x && x <= r && 0 <= y && y <= r/2 && x + 2 * y <= r)
-            || (0 >= x && x >= -r && 0 >= y && y >= -r)
-            || (x >= 0 && y >= 0 && x*x + y*y <= r*r);
+        return (-r <= x && x <= 0 && -r <= y && y <= 0)
+                || (x >= 0 && y >= 0 && y <= -x/2 + r/2)
+                || (x <= 0 && y >= 0 && x * x + y * y <= r * r);
     }
 
     public void clearPoints() {

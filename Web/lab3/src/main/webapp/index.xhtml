@@ -146,7 +146,6 @@
                                     <f:selectItem itemValue="3" itemLabel="3"/>
                                     <f:selectItem itemValue="4" itemLabel="4"/>
                                     <f:selectItem itemValue="5" itemLabel="5"/>
-                                    <!-- <f:ajax listener="#{figureBean.setFigs(formBean.r)}" render=":content"/> -->
                                     <f:ajax listener="#{formBean.setR(formBean.r)}" render=":content"/>
                                 </h:selectOneRadio>
                             </div>
@@ -155,9 +154,12 @@
                             <h:inputHidden id="y_hidden" value="#{formBean.y}"/>
                             <h:inputHidden id="r_hidden" value="#{formBean.r}"/>
                             <h:commandButton value="Отправить" onclick="return validateForm();" id="submitButton">
-                                <f:ajax render=":content" execute="@form" listener="#{formBean.check(formBean.x, formBean.y, formBean.r)}"/>
+                                <f:ajax event="click" render=":content" execute="@form" listener="#{formBean.check}"/>
                             </h:commandButton>
-                            <!-- <button type="submit">Отправить</button> -->
+
+                            <p:remoteCommand name="updateCoordinates" style="display: none;" update=":content" process="form:x_hidden form:y_hidden"/>
+                            <p:remoteCommand name="checkHit" actionListener="#{formBean.check}" style="display: none;" update=":content"/>
+
                             <!-- <button id="reset_button" type="reset">Очистить</button> -->
                         </h:form>
                     </td>

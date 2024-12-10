@@ -17,14 +17,6 @@ function click2point_perm (x, y) {
     return [graphX, -graphY];
 }
 
-// function unselectCheckboxes (selected) {
-//     var checked = document.querySelectorAll('[id*="x_"]:checked');
-    
-//     checked.forEach((box) => {
-//         if (box.id.split('_')[1] != selected) box.checked = false;
-//     });
-// }
-
 function validateForm () {
     var x = document.querySelector('[id$=x_hidden]').value;
     var y = document.querySelector('[id$=y_hidden]').value;
@@ -45,7 +37,6 @@ function validateForm () {
     }
 
     if (y <= -5 || y >= 3) {
-        console.log(y);
         alert("Y must be in (-5; 3)");
         return false;
     }
@@ -61,21 +52,21 @@ document.addEventListener("DOMContentLoaded", function() {
     document.addEventListener("click", (e) => {
         if (e.target.closest('svg')) {
             let [x, y] = click2point_perm(e.clientX, e.clientY);
-            console.log(x, y);
 
-            x_hidden = document.querySelector('[id$="x_hidden"]');
-            y_hidden = document.querySelector('[id$="y_hidden"]');
-
+            hiddenR = document.querySelector('[id$="r_hidden"]').value;
+            if (hiddenR == '') {
+                alert("R value must be set");
+                return;
+            }
+            
+            x_hidden = document.getElementById('form:x_hidden');
+            y_hidden = document.getElementById('form:y_hidden');
+            
             x_hidden.value = x;
             y_hidden.value = y;
 
-            hiddenR = Number(document.querySelector('[id$="r_hidden"]').value);
-            submitButton = document.querySelector('[id$="submitButton"]');
-
-            jsf.ajax.request(x_hidden, null, {execute: "form:x_hidden"});
-            jsf.ajax.request(y_hidden, null, {execute: "form:y_hidden"});
-
-            submitButton.click();
+            updateCoordinates();
+            checkHit();
         }
     });
 });
