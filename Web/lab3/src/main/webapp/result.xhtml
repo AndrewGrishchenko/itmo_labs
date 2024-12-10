@@ -7,7 +7,7 @@
     </h:head>
     <h:body>
         <div style="text-align: center">
-            <h:commandButton value="Очистить историю">
+            <h:commandButton value="Очистить историю" styleClass="button">
                 <f:ajax render=":content" listener="#{formBean.clearPoints()}"/>
             </h:commandButton>
         </div>
