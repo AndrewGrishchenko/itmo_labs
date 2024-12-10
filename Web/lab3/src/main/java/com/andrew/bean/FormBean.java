@@ -8,12 +8,14 @@ import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 
-import com.andrew.db.DBManager;
+// import com.andrew.db.DBManager;
+import com.andrew.db.PointService;
 import com.andrew.model.Point;
 
 @ManagedBean(name = "formBean", eager = true)
 @SessionScoped
 public class FormBean implements Serializable {
+    private PointService pointService = new PointService();
     private static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
     
     private Double x;
@@ -42,7 +44,7 @@ public class FormBean implements Serializable {
         Long endTime = System.nanoTime();
         point.setExecTime((endTime - startTime) / 1000);
 
-        DBManager.insertPoint(point);
+        pointService.insertPoint(point);
         tableBean.insertPoint(point);
 
         figureBean.hidePoint();
@@ -55,7 +57,7 @@ public class FormBean implements Serializable {
     }
 
     public void clearPoints() {
-        DBManager.clearPoints();
+        pointService.clearPoints();
     }
 
     public void renderPoint() {

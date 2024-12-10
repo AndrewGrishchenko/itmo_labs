@@ -3,14 +3,36 @@ package com.andrew.model;
 import java.io.Serializable;
 import java.util.Objects;
 
-public class Point implements Serializable {
-    private static final long serialVersionUID = 1;
-    
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.GeneratedValue;
+import javax.persistence.GenerationType;
+import javax.persistence.Id;
+import javax.persistence.Table;
+
+@Entity
+@Table(name = "points")
+public class Point {
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
+
+    @Column(nullable = false)
     private double x;
+
+    @Column(nullable = false)
     private double y;
+
+    @Column(nullable = false)
     private int r;
+
+    @Column(name = "cur_time", nullable = false)
     private String curTime;
+
+    @Column(name = "exec_time", nullable = false)
     private long execTime;
+
+    @Column(nullable = false)
     private boolean hit;
 
     public Point () {

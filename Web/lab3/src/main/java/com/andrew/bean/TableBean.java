@@ -5,16 +5,21 @@ import java.util.ArrayList;
 import javax.faces.bean.ApplicationScoped;
 import javax.faces.bean.ManagedBean;
 
-import com.andrew.db.DBManager;
+import com.andrew.db.PointService;
+// import com.andrew.db.DBManager;
 import com.andrew.model.Point;
 
 @ManagedBean(name = "tableBean", eager = true)
 @ApplicationScoped
 public class TableBean {
     private ArrayList<Point> points = new ArrayList<>();
+    private PointService pointService = new PointService();
+
 
     public TableBean() {
-        DBManager.init();
+        // DBManager.init();
+
+
         points = getPoints();
         System.out.println(points);
     }
@@ -51,7 +56,7 @@ public class TableBean {
     }
 
     public ArrayList<Point> getPoints() {
-        return new ArrayList<>(DBManager.getAllPoints());
+        return new ArrayList<>(pointService.getAllPoints());
     }
 
     public void setPoints(ArrayList<Point> points) {
