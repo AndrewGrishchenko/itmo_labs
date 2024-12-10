@@ -39,10 +39,11 @@ function validateForm () {
     y = Number(y);
     r = Number(r);
 
-    if (![-3, -2, -1, 0, 1, 2, 3].includes(x)) {
-        alert("X must be in {-3, -2, -1, 0, 1, 2, 3}");
+    if (x < -3 || x > 3) {
+        alert("X must be in [-3, 3]");
         return false;
     }
+
     if (y <= -5 || y >= 3) {
         console.log(y);
         alert("Y must be in (-5; 3)");
@@ -57,27 +58,24 @@ function validateForm () {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    // document.querySelector('[id$="radioGroup"]').addEventListener("change", updateFigures);
-
     document.addEventListener("click", (e) => {
         if (e.target.closest('svg')) {
             let [x, y] = click2point_perm(e.clientX, e.clientY);
             console.log(x, y);
 
-            hiddenX = document.querySelector('[id$="x_hidden"]').value;
-            hiddenY = document.querySelector('[id$="y_hidden"]').value;
-            hiddenR = document.querySelector('[id$="r_hidden"]').value;
-            submitButton = document.querySelector('[id$="submitButton"]');
-            
+            x_hidden = document.querySelector('[id$="x_hidden"]');
+            y_hidden = document.querySelector('[id$="y_hidden"]');
 
-            console.log(hiddenX, hiddenY, hiddenR);
+            x_hidden.value = x;
+            y_hidden.value = y;
+
+            hiddenR = Number(document.querySelector('[id$="r_hidden"]').value);
+            submitButton = document.querySelector('[id$="submitButton"]');
+
+            jsf.ajax.request(x_hidden, null, {execute: "form:x_hidden"});
+            jsf.ajax.request(y_hidden, null, {execute: "form:y_hidden"});
 
             submitButton.click();
         }
     });
-
-    // document.getElementById("svg").addEventListener("click", (e) => {
-    //     let [x, y] = click2point_perm(e.clientX, e.clientY);
-    //     console.log(x, y);
-    // });
 });

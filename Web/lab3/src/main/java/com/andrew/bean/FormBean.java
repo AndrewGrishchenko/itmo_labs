@@ -42,7 +42,7 @@ public class FormBean implements Serializable {
         point.setY(y);
         point.setR(r);
         point.setCurTime(dtf.format(LocalDateTime.now()));
-        point.setHit(isHit(x, y, r));
+        point.setHit(isHit(x, y, Double.valueOf(r)));
 
         Long endTime = System.nanoTime();
         point.setExecTime((endTime - startTime) / 1000);
@@ -53,7 +53,7 @@ public class FormBean implements Serializable {
         figureBean.hidePoint();
     }
 
-    private boolean isHit (double x, double y, double r) {
+    private boolean isHit (Double x, Double y, Double r) {
         return (0 <= x && x <= r && 0 <= y && y <= r/2 && x + 2 * y <= r)
             || (0 >= x && x >= -r && 0 >= y && y >= -r)
             || (x >= 0 && y >= 0 && x*x + y*y <= r*r);
