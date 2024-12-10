@@ -1,20 +1,21 @@
 package com.andrew.bean;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Arrays;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.ManagedProperty;
 import javax.faces.bean.SessionScoped;
 
+import com.andrew.db.DBManager;
 import com.andrew.model.Point;
 
 @ManagedBean(name = "formBean", eager = true)
 @SessionScoped
 public class FormBean implements Serializable {
-    private ArrayList<Point> points = new ArrayList<>(Arrays.asList(new Point(1.1, 1.2, 2, "wefewf", 123, true)));
-
+    private static DateTimeFormatter dtf = DateTimeFormatter.ofPattern("HH:mm:ss");
+    
     private Double x;
     private Double y;
     private Integer r;
@@ -22,7 +23,44 @@ public class FormBean implements Serializable {
     @ManagedProperty(value = "#{figureBean}")
     FigureBean figureBean;
     
+    @ManagedProperty(value = "#{tableBean}")
+    TableBean tableBean;
+
     public FormBean() {
+    }
+
+    public void check(Double x, Double y, Integer r) {
+        System.out.println(x);
+        System.out.println(y);
+        System.out.println(r);
+        System.out.println();
+
+        Long startTime = System.nanoTime();
+        
+        Point point = new Point();
+        point.setX(x);
+        point.setY(y);
+        point.setR(r);
+        point.setCurTime(dtf.format(LocalDateTime.now()));
+        point.setHit(isHit(x, y, r));
+
+        Long endTime = System.nanoTime();
+        point.setExecTime((endTime - startTime) / 1000);
+
+        DBManager.insertPoint(point);
+        tableBean.insertPoint(point);
+
+        figureBean.hidePoint();
+    }
+
+    private boolean isHit (double x, double y, double r) {
+        return (0 <= x && x <= r && 0 <= y && y <= r/2 && x + 2 * y <= r)
+            || (0 >= x && x >= -r && 0 >= y && y >= -r)
+            || (x >= 0 && y >= 0 && x*x + y*y <= r*r);
+    }
+
+    public void clearPoints() {
+        DBManager.clearPoints();
     }
 
     public void renderPoint() {
@@ -60,15 +98,19 @@ public class FormBean implements Serializable {
         figureBean.setFigs(r);
     }
 
-    public ArrayList<Point> getPoints() {
-        return points;
-    }
-
     public FigureBean getFigureBean() {
         return figureBean;
     }
 
     public void setFigureBean(FigureBean figureBean) {
         this.figureBean = figureBean;
+    }
+
+    public TableBean getTableBean() {
+        return tableBean;
+    }
+
+    public void setTableBean(TableBean tableBean) {
+        this.tableBean = tableBean;
     }
 }

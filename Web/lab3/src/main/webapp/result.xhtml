@@ -1,12 +1,15 @@
 <html xmlns="http://www.w3.org/1999/xhtml"
     xmlns:h="http://java.sun.com/jsf/html"
-    xmlns:p="http://primefaces.org/ui">
+    xmlns:p="http://primefaces.org/ui"
+    xmlns:f="http://java.sun.com/jsf/core">
     <h:head>
         <meta charset="UTF-8"/>
     </h:head>
     <h:body>
         <div style="text-align: center">
-            <button id="clearHistoryButton">Очистить историю</button>
+            <h:commandButton value="Очистить историю">
+                <f:ajax render=":content" listener="#{formBean.clearPoints()}"/>
+            </h:commandButton>
         </div>
 
         <p:dataTable value="#{tableBean.points}" var="point" rendered="#{not empty tableBean.points}" styleClass="records-table" id="records">

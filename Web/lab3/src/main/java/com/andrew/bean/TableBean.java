@@ -19,11 +19,42 @@ public class TableBean {
         System.out.println(points);
     }
 
-    // public void check() {
-        // points.add(new Point(formBean.getX(), formBean.getY(), formBean.getR(), LocalDateTime.now().toString(), 12, true));
+    // public void check(Double x, Double y, Integer r) {
+    //     System.out.println(x);
+    //     System.out.println(y);
+    //     System.out.println(r);
+    //     System.out.println();
+
+    //     Long startTime = System.nanoTime();
+        
+    //     Point point = new Point();
+    //     point.setX(x);
+    //     point.setY(y);
+    //     point.setR(r);
+    //     point.setCurTime(dtf.format(LocalDateTime.now()));
+    //     point.setHit(isHit(x, y, r));
+
+    //     Long endTime = System.nanoTime();
+    //     point.setExecTime((endTime - startTime) / 1000);
+
+    //     DBManager.insertPoint(point);
     // }
+
+    // private boolean isHit (double x, double y, double r) {
+    //     return (0 <= x && x <= r && 0 <= y && y <= r/2 && x + 2 * y <= r)
+    //         || (0 >= x && x >= -r && 0 >= y && y >= -r)
+    //         || (x >= 0 && y >= 0 && x*x + y*y <= r*r);
+    // }
+
+    public void insertPoint(Point point) {
+        points.add(point);
+    }
 
     public ArrayList<Point> getPoints() {
         return new ArrayList<>(DBManager.getAllPoints());
+    }
+
+    public void setPoints(ArrayList<Point> points) {
+        this.points = points;
     }
 }

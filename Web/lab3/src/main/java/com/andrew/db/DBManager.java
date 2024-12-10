@@ -64,4 +64,15 @@ public class DBManager {
             e.printStackTrace();
         }
     }
+
+    public static void clearPoints() {
+        String query = "DELETE FROM points;";
+        
+        try {
+            Statement st = conn.createStatement();
+            st.executeUpdate(query);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 }
