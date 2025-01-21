@@ -105,8 +105,35 @@ body {
     background-color: #ffd7b5;
 }
 
+.ui-datatable {
+    border: 1px solid #ccc;
+    width: 100%;
+}
+
+#records th {
+    font-weight: bold;
+    text-align: left;
+    padding: 10px;
+    background: #72a0f5;
+    border: 1px solid #143166;
+    text-shadow: none;
+    color: #f5a9f4;
+}
+
+.ui-datatable-even > td,
+.ui-datatable-odd > td {
+    font-size: 20px;
+    text-align: center;
+    font-weight: lighter;
+    max-width: 80%;
+    margin: 20px auto;
+    background-color: #72a0f5;
+    color: #f5a9f4;
+    border: 1px solid #143166;
+}
+
+
 .records-table {
-    color: white;
     max-width: 80%;
     margin: 20px auto;
     background-color: #72a0f5;

@@ -1,5 +1,7 @@
 package com.andrew.bean;
 
+import java.util.Locale;
+
 import javax.faces.bean.ManagedBean;
 import javax.faces.bean.SessionScoped;
 
@@ -15,6 +17,7 @@ public class FigureBean {
     private int pointOpacity = 0;
 
     public FigureBean() {
+        Locale.setDefault(Locale.US);
     }
 
     public void setFigs(Integer value) {

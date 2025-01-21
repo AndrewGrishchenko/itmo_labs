@@ -26,10 +26,10 @@
                 <h:outputText value="#{point.r}"/>
             </p:column>
             <p:column headerText="Время исполнения" styleClass="table-header">
-                <h:outputText value="#{point.execTime}"/>
+                <h:outputText value="#{point.execTime} мкс"/>
             </p:column>
             <p:column headerText="Результат попадания" styleClass="table-header">
-                <h:outputText value="#{point.hit}"/>
+                <h:outputText value="#{point.hit ? 'Hit' : 'Miss'}" style="#{point.hit ? 'color: green' : 'color: red'}"/>
             </p:column>
         </p:dataTable>
     </h:body>
