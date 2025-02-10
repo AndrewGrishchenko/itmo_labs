@@ -19,7 +19,7 @@ public class AreaService {
         
         long startTime = System.nanoTime();
         response.setHit(isHit(request.getX(), request.getY(), request.getR()));
-        response.setExecTime((System.nanoTime() - startTime) / 1000);
+        response.setExecTime((System.nanoTime() - startTime) / 100);
         return response;
     }
 

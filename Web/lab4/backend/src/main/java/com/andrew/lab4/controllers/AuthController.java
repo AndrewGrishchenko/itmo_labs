@@ -8,8 +8,10 @@ import com.andrew.lab4.dto.SignInDTO;
 import com.andrew.lab4.dto.SignUpDTO;
 import com.andrew.lab4.model.User;
 import com.andrew.lab4.services.AccessTokenService;
+import com.andrew.lab4.services.RefreshTokenService;
 import com.andrew.lab4.services.UserService;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -26,17 +28,17 @@ public class AuthController {
     private final UserService userService;
     private final AuthenticationManager authenticationManager;
     private final AccessTokenService accessTokenService;
+    private final RefreshTokenService refreshTokenService;
 
-    public AuthController (UserService userService, AuthenticationConfiguration authenticationConfiguration, AccessTokenService accessTokenService) throws Exception {
+    public AuthController (UserService userService, AuthenticationConfiguration authenticationConfiguration, AccessTokenService accessTokenService, RefreshTokenService refreshTokenService) throws Exception {
         this.userService = userService;
         this.authenticationManager = authenticationConfiguration.getAuthenticationManager();
         this.accessTokenService = accessTokenService;
+        this.refreshTokenService = refreshTokenService;
     }
 
     @PostMapping("/register")
     public ResponseEntity<AuthResponseDTO> register (@Validated @RequestBody SignUpDTO signUpDTO) {
-        System.out.println(userService.existsByEmail(signUpDTO.getEmail()));
-        
         AuthResponseDTO response = new AuthResponseDTO();
         if (userService.existsByUsername(signUpDTO.getUsername())) {
             response.setStatus("Error");
@@ -64,10 +66,30 @@ public class AuthController {
         AuthResponseDTO response = AuthResponseDTO.builder()
                                         .status("Ok")
                                         .message("Logged in successfully")
-                                        .token(accessTokenService.generateToken(signInDTO.getUsername()))
+                                        .accessToken(accessTokenService.generateToken(signInDTO.getUsername()))
+                                        .refreshToken(refreshTokenService.generateRefreshToken(signInDTO.getUsername()))
                                         .username(signInDTO.getUsername())
                                         .email(user.getEmail())
                                         .build();
         return ResponseEntity.ok(response);
+    }
+
+    @PostMapping("/refreshToken")
+    public ResponseEntity<AuthResponseDTO> refreshToken (@Validated @RequestBody String refreshToken) {
+        System.out.println("income: " + refreshToken);
+        String newAccessToken = refreshTokenService.refreshAccessToken(refreshToken);
+        System.out.println("new token: " + newAccessToken);
+        if (newAccessToken != null) {
+            return ResponseEntity.ok(AuthResponseDTO.builder()
+                                        .status("Ok")
+                                        .accessToken(newAccessToken)
+                                        .message("Token refreshed successfully")
+                                        .build());
+        } else {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(AuthResponseDTO.builder()
+                                        .status("Error")
+                                        .message("Invalid refresh token")
+                                        .build());
+        }
     }
 }

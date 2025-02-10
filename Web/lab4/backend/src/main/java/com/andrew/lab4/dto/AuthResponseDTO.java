@@ -17,7 +17,8 @@ public class AuthResponseDTO {
     private String status;
     
     private String message;
-    private String token;
+    private String accessToken;
+    private String refreshToken;
 
     @NotNull
     private String username;

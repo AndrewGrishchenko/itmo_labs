@@ -14,8 +14,8 @@ import axios from "axios";
 
 const ResultTable = ({ points }) => {
     return (
-    <table border={1} style={{width: '100%', borderCollapse: 'collapse'}}>
-        <thead>
+    <table border={1} style={{width: '100%', borderCollapse: 'collapse'}} className="records-table">
+        <thead className="table-header">
             <tr>
                 <th>X</th>
                 <th>Y</th>
@@ -27,7 +27,7 @@ const ResultTable = ({ points }) => {
         </thead>
         <tbody>
             {points.map((point, index) => (
-                <tr key={index}>
+                <tr key={index} className="table-row">
                 <td>{point.cx}</td>
                 <td>{point.cy}</td>
                 <td>{point.r}</td>
@@ -45,7 +45,8 @@ const Home = () => {
     const dispatch = useDispatch();
     const navigate = useNavigate();
 
-    const { token } = useSelector((state) => state.auth)
+    // const { token } = useSelector((state) => state.auth)
+    const { accessToken, refreshToken, status, error } = useSelector((state) => state.auth);
 
     const [selectedX, setX] = useState(null);
     const [selectedY, setY] = useState(0);
@@ -61,8 +62,8 @@ const Home = () => {
 
     axios.interceptors.request.use(
         (config) => {
-            if (token) {
-                config.headers['Authorization'] = `Bearer ${token}`;
+            if (accessToken) {
+                config.headers['Authorization'] = `Bearer ${accessToken}`;
             }
             return config;
         },
@@ -142,18 +143,62 @@ const Home = () => {
         setPoints([]);
     };
 
+    const handleClick = async (e) => {
+        const mouseX = e.clientX;
+        const mouseY = e.clientY;
+
+        const svg = e.target.closest('svg');
+        const svgRect = svg.getBoundingClientRect();
+
+        const svgX = mouseX - svgRect.left;
+        const svgY = mouseY - svgRect.top;
+
+        const viewBoxWidth = 14;
+        const viewBoxHeight = 14;
+        const svgWidth = svgRect.width;
+        const svgHeight = svgRect.height;
+
+        const xInViewBox = (svgX / svgWidth) * viewBoxWidth - (viewBoxWidth / 2);
+        const yInViewBox = -((svgY / svgHeight) * viewBoxHeight - (viewBoxHeight / 2));
+
+        if (selectedR == null) {
+            alert("Select R!");
+            return;
+        }
+
+        const payload = {
+            'x': xInViewBox,
+            'y': yInViewBox,
+            'r': selectedR
+        };
+
+        const response = await axios.post(API_URL + "/checkPoint", payload);
+
+        let newPoint = {
+            cx: response.data.x,
+            cy: -response.data.y,
+            r: response.data.r,
+            hit: response.data.hit,
+            curTime: response.data.curTime,
+            execTime: response.data.execTime
+        };
+
+        setPoints([...points, newPoint]);
+    };
+
     return (
-        <div>
+        <div style={{margin: 'auto', justifyContent: 'center', alignItems: 'center'}}>
             <Header />
             <div style={{textAlign: 'center'}}>
                 <button onClick={handleLogout} className="button">Log out</button>
             </div>
-            
+
+            <div className="tableContainer">
             <table className="pointTable">
                 <tbody>
                     <tr>
                         <td scope="col" className="graphContainer">
-                            <svg id="svg" width="600" height="600" viewBox="-7 -7 14 14">
+                            <svg id="svg" width="600" height="600" viewBox="-7 -7 14 14" onClick={handleClick}>
                                 <polygon fill="#F2476A" points={`0,0 0,${-selectedR} ${selectedR},${-selectedR} ${selectedR},0`}/>
                                 <polygon fill="#F2476A" points={`0,0 ${-selectedR/2},0 0,${-selectedR}`}/>
                                 <path fill="#F2476A" d={`M 0 0 L ${selectedR} 0 A ${selectedR} ${selectedR} 0 0 1 0 ${selectedR} Z`}/>
@@ -280,7 +325,7 @@ const Home = () => {
                         </td>
                     </tr>
                 </tbody>
-            </table>
+            </table></div>
             <div style={{textAlign: 'center'}}>
                 <button onClick={handleClear} className="button">Clear points</button>
             </div>

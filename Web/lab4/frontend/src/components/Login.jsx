@@ -28,10 +28,12 @@ const Login = () => {
     };
     
     return (
-        <div className="auth-form">
+        <div>
             <Header/>
             <h2>Login</h2>
-            <form onSubmit={handleSubmit} className="loginBox">
+            {/* <div style={{textAlign: 'center'}}> */}
+            <div className="auth-form">
+            <form onSubmit={handleSubmit}>
                 <input
                     type="login"
                     placeholder="Username"
@@ -45,7 +47,8 @@ const Login = () => {
                     onChange={(e) => setPassword(e.target.value)}
                 />
                 <button type="submit" className="button">Login</button>
-            </form>
+            </form></div>
+            {/* </div> */}
             {status === 'loading' && <p>Loading...</p>}
             {error && <p>Error: {error}</p>}
             <Link to="/register">Sign up</Link>
