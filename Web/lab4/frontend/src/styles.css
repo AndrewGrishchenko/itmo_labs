@@ -72,7 +72,8 @@ body {
   max-width: 80%;
   margin: 20px auto;
   background-color: #72a0f5;
-  color: #f5a9f4;
+  /* color: #f5a9f4; */
+  color: black;
   border: 1px solid #143166;
 }
 
