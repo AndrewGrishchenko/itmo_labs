@@ -1,6 +1,6 @@
 .gitignore
 .idea
-.vscode
+**/.vscode/*
 *.class
 **/target/*
 Prog/lab5/count.py
@@ -12,3 +12,9 @@ Prog/lab7/count.py
 
 **/*.o
 **/*.out
+
+/AiSD/*
+!/AiSD/**/*.*
+/AiSD/.vscode/
+/AiSD/*.txt
+/AiSD/**/*.txt
