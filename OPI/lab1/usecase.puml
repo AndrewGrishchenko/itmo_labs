@@ -1,0 +1,63 @@
+@startuml usecase
+left to right direction
+skinparam packageStyle rectangle
+skinparam actorStyle awesome
+
+actor "Неавторизованный пользователь" as Guest
+actor "Пользователь" as User
+actor "Пользователь с подпиской" as PaidUser
+actor "Администратор" as Admin
+
+package "zaycev.net" {
+    rectangle "Администрирование" {
+        usecase "Доступ к административной панели" as UC6
+    }
+
+    rectangle "Аутентификация и личный кабинет" {
+        usecase "Регистрация и вход" as UC4
+        usecase "Восстановление пароля" as UC5
+        usecase "Изменение данных в личном кабинете" as UC17
+        usecase "Просмотр истории прослушиваний" as UC7
+        usecase "Оформление платной подписки" as UC8
+        usecase "Управление своей подпиской" as UC9
+        usecase "Покупка аудиокниги" as UC15
+        usecase "Просмотр купленных аудиокниг" as UC16
+    }
+
+    rectangle "Основные функции" {
+        usecase "Скрытие рекламы" as UC10
+        usecase "Получение уведомлений о скором окончании подписки" as UC11
+        usecase "Переход на связанный ресурс (zaycev.fm)" as UC12
+        usecase "Просмотр новостей музыки" as UC13
+        usecase "Прослушивание фрагмента аудиокниги" as UC14
+        usecase "Поиск музыки по ключевым словам" as UC1
+        usecase "Воспроизведение трека" as UC2
+        usecase "Скачивание трека (если доступно)" as UC3
+    }
+}
+
+Admin --> PaidUser
+PaidUser --> User
+User --> Guest
+
+Admin --> UC6
+
+Guest --> UC4
+Guest --> UC5
+User --> UC17
+User --> UC7
+User --> UC8
+PaidUser --> UC9
+User --> UC15
+User --> UC16
+
+PaidUser --> UC10
+PaidUser --> UC11
+Guest --> UC12
+Guest --> UC13
+Guest --> UC14
+Guest --> UC1
+Guest --> UC2
+Guest --> UC3
+
+@enduml
