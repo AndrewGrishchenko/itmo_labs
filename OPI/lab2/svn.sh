@@ -1,39 +1,8 @@
 #!/bin/bash
 
-# merge() {
-#     svn merge $REPO_URL/branches/$1 --accept "mine-full" || true
-#     svn status | grep ' *C' | awk '{print $2}' | while read path; do
-#         rm -f "$path"
-#         svn revert "$path"
-#         svn resolve --accept working "$path" 
-#     done
-# }
-
-# merge () {
-#     svn merge $REPO_URL/branches/$1 --accept "mine-full" || true
-#     svn status | grep '^ *C' | awk '{print $2}' | while read path; do
-#         echo "Resolving conflict: $path"
-
-#         # Если файл существует — удаляем его
-#         [ -e "$path" ] && rm -f "$path"
-
-#         # Отменяем изменения если под контролем версий
-#         svn info "$path" &>/dev/null && svn revert "$path"
-
-#         # Разрешаем конфликт как "working"
-#         svn resolve --accept working "$path"
-#     done
-# }
-
-status() {
-    echo -e "\n\n\n"
-    svn status
-}
-
 revert() {
     svn status | grep '^ *C' | awk '{print $2}' | while read path; do
         svn revert "$path"
-        #rm
         svn resolve --accept working "$path"
     done
 }
