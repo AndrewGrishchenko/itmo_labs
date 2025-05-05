@@ -1,5 +1,56 @@
 #!/bin/bash
 
+# merge() {
+#     svn merge $REPO_URL/branches/$1 --accept "mine-full" || true
+#     svn status | grep ' *C' | awk '{print $2}' | while read path; do
+#         rm -f "$path"
+#         svn revert "$path"
+#         svn resolve --accept working "$path" 
+#     done
+# }
+
+# merge () {
+#     svn merge $REPO_URL/branches/$1 --accept "mine-full" || true
+#     svn status | grep '^ *C' | awk '{print $2}' | while read path; do
+#         echo "Resolving conflict: $path"
+
+#         # Если файл существует — удаляем его
+#         [ -e "$path" ] && rm -f "$path"
+
+#         # Отменяем изменения если под контролем версий
+#         svn info "$path" &>/dev/null && svn revert "$path"
+
+#         # Разрешаем конфликт как "working"
+#         svn resolve --accept working "$path"
+#     done
+# }
+
+status() {
+    echo -e "\n\n\n"
+    svn status
+}
+
+revert() {
+    svn status | grep '^ *C' | awk '{print $2}' | while read path; do
+        svn revert "$path"
+        #rm
+        svn resolve --accept working "$path"
+    done
+}
+
+rename() {
+    svn status | grep '^ *R *\+' | awk '{print $3}' | while read path; do
+        svn resolve --accept theirs-full "$path"
+    done
+}
+
+deleted() {
+    svn status | grep '^ *\!' | awk '{print $3}' | while read path; do
+        svn revert "$path"
+        rm $path
+    done
+}
+
 svnadmin create repo
 REPO_URL="file://$(pwd)/repo"
 
@@ -33,7 +84,7 @@ svn update
 
 svn copy $REPO_URL/branches/branch4 $REPO_URL/branches/branch2 -m "create branch2"
 svn switch $REPO_URL/branches/branch2
-snv rm *
+svn rm *
 unzip -o ../commits/commit3.zip -d .
 svn add *
 svn commit -m "r3" --username=blue
@@ -270,7 +321,9 @@ svn commit -m "r36" --username=red
 svn update
 
 svn switch $REPO_URL/branches/branch2
-svn merge $REPO_URL/branches/branch6
+svn merge --non-interactive $REPO_URL/branches/branch6
+revert
+rename
 svn rm *
 unzip -o ../commits/commit37.zip -d .
 svn add *
@@ -278,21 +331,30 @@ svn commit -m "r37" --username=blue
 svn update
 
 svn switch $REPO_URL/branches/branch4
-svn merge $REPO_URL/branches/branch2
+svn merge --non-interactive $REPO_URL/branches/branch2
+revert
+rename
 svn rm *
 unzip -o ../commits/commit38.zip -d .
+svn add *
 svn commit -m "r38" --username=blue
 svn update
 
 svn switch $REPO_URL/branches/branch3
-svn merge $REPO_URL/branches/branch4
+svn merge --non-interactive $REPO_URL/branches/branch4
+revert
+rename
 svn rm *
 unzip -o ../commits/commit39.zip -d .
+svn add *
 svn commit -m "r39" --username=red
 svn update
 
 svn switch $REPO_URL/branches/branch5
-svn merge $REPO_URL/branches/branch3
+svn merge --non-interactive $REPO_URL/branches/branch3
+revert
+rename
+deleted
 svn rm *
 unzip -o ../commits/commit40.zip -d .
 svn add *
@@ -312,7 +374,10 @@ svn commit -m "r42" --username=red
 svn update
 
 svn switch $REPO_URL/branches/branch7
-svn merge $REPO_URL/branches/branch5
+svn merge --non-interactive $REPO_URL/branches/branch5
+revert
+rename
+deleted
 svn rm *
 unzip -o ../commits/commit43.zip -d .
 svn add *
@@ -326,7 +391,9 @@ svn commit -m "r44" --username=red
 svn update
 
 svn switch $REPO_URL/trunk
-svn merge $REPO_URL/branches/branch7
+svn merge --non-interactive $REPO_URL/branches/branch7
+revert
+rename
 svn rm *
 unzip -o ../commits/commit45.zip -d .
 svn add *
