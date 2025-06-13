@@ -1,0 +1,119 @@
+#ifndef _TRANSLATOR_H
+#define _TRANSLATOR_H
+
+#include <string>
+#include <sstream>
+#include <vector>
+
+#include <iostream>
+
+#include "ASTNode.h"
+
+enum class TokenType {
+    // Keywords
+    KeywordVar,
+    KeywordIf,
+    KeywordElse,
+    KeywordWhile,
+
+    // Data types
+    KeywordInt,
+    KeywordString,
+    KeywordBool,
+
+    // Utility
+    Identifier,
+    Equals,
+    Number,
+    String,
+    Boolean,
+
+    // Delimeters
+    LParen,
+    RParen,
+    LBrace,
+    RBrace,
+    Semicolon,
+    Comma,
+
+    // Logic operators
+    LogicNot,
+    LogicAnd,
+    LogicOr,
+    LogicEqual,
+    LogicNotEqual,
+    LogicGreater,
+    LogicGreaterEqual,
+    LogicLess,
+    LogicLessEqual,
+    
+    // Operators
+    Plus,
+    Minus,
+    Multiply,
+    Divide,
+    
+    // Utility
+    EndOfFile,
+    Unknown
+};
+
+struct Token {
+    TokenType type;
+    std::string value;
+
+    Token(TokenType type, std::string value)
+        : type(type), value(value) { }
+};
+
+class Translator {
+    public:
+        Translator();
+        ~Translator();
+
+        ASTNode* translate(std::string data);
+
+    private:
+        std::vector<Token> tokenize(const std::string& input);
+
+        ASTNode* parseVarStatement(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseAssignStatement(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseBlock(std::vector<Token> tokens, size_t& pos);
+
+        ASTNode* parseStatement(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseIf(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseWhile(std::vector<Token> tokens, size_t& pos);
+
+        ASTNode* parseParameter(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseFunction(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseCallParameter(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseFunctionCall(std::vector<Token> tokens, size_t& pos);
+
+        ASTNode* parseExpression(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseTerm(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseFactor(std::vector<Token> tokens, size_t& pos);
+
+        ASTNode* parseLogicOr(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseLogicAnd(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseEquality(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseComparsion(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseUnary(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parsePrimary(std::vector<Token> tokens, size_t& pos);
+
+        void printTree(ASTNode* root);
+        std::string tokenStr(Token token);
+
+        bool isAlpha(char c) {
+            return std::isalpha(static_cast<unsigned char>(c)) || c == '_';
+        }
+
+        bool isDigit(char c) {
+            return std::isdigit(static_cast<unsigned char>(c));
+        }
+
+        bool isAlnum(char c) {
+            return isAlpha(c) || isDigit(c);
+        }
+};
+
+#endif
