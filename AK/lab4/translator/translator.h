@@ -8,6 +8,7 @@
 #include <iostream>
 
 #include "ASTNode.h"
+#include "semanticAnalyzer.h"
 
 enum class TokenType {
     // Keywords
@@ -15,6 +16,7 @@ enum class TokenType {
     KeywordIf,
     KeywordElse,
     KeywordWhile,
+    KeywordReturn,
 
     // Data types
     KeywordInt,
@@ -88,6 +90,7 @@ class Translator {
         ASTNode* parseFunction(std::vector<Token> tokens, size_t& pos);
         ASTNode* parseCallParameter(std::vector<Token> tokens, size_t& pos);
         ASTNode* parseFunctionCall(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseReturn(std::vector<Token> tokens, size_t& pos);
 
         ASTNode* parseExpression(std::vector<Token> tokens, size_t& pos);
         ASTNode* parseTerm(std::vector<Token> tokens, size_t& pos);

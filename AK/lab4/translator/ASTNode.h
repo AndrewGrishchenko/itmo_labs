@@ -20,7 +20,9 @@ enum class ASTNodeType {
     Parameter,
     Function,
     CallParameter,
-    FunctionCall
+    FunctionCall,
+    Expression,
+    Return
 };
 
 inline void printIndent(int indent) {
@@ -47,22 +49,35 @@ struct ASTNode {
 
 struct RootNode : ASTNode {
     //TODO: maybe make root as block
-    
+    std::vector<ASTNode*> children;
+
+    void addChild(ASTNode* child) {
+        if (child == nullptr) return;
+        child->parent = this;
+        children.push_back(child);
+    }
+
     RootNode()
         : ASTNode(ASTNodeType::Root) { }
 
     void print(int indent = 0) const override {
         printIndent(indent);
-        std::cout << "RootNode\n";
+        std::cout << "Root\n";
+        for (auto child : children) {
+            if (child != nullptr) {
+                child->print(indent + 1);
+            }
+        }
     }
 };
 
 struct VarDeclNode : ASTNode {
+    std::string type;
     std::string name;
     ASTNode* value;
 
-    VarDeclNode(const std::string& name, ASTNode* value)
-        : ASTNode(ASTNodeType::VarDecl), name(name), value(value) { }
+    VarDeclNode(const std::string& type, const std::string& name, ASTNode* value)
+        : ASTNode(ASTNodeType::VarDecl), type(type), name(name), value(value) { }
 
     void print(int indent = 0) const override {
         printIndent(indent);
@@ -200,6 +215,7 @@ struct BlockNode : ASTNode {
     std::vector<ASTNode*> children;
 
     void addChild(ASTNode* child) {
+        if (child == nullptr) return;
         child->parent = this;
         children.push_back(child);
     }
@@ -301,6 +317,34 @@ struct FunctionCallNode : ASTNode {
         std::cout << "parameters:\n";
 
         for (auto parameter : parameters) parameter->print(indent + 2);
+    }
+};
+
+struct ExpressionNode : ASTNode {
+    ASTNode* expression;
+
+    ExpressionNode(ASTNode* expression)
+        : ASTNode(ASTNodeType::Expression), expression(expression) { }
+
+    void print(int indent = 0) const override {
+        expression->print(indent);
+    }
+};
+
+struct ReturnNode : ASTNode {
+    ASTNode* returnValue;
+
+    ReturnNode(ASTNode* returnValue)
+        : ASTNode(ASTNodeType::Return), returnValue(returnValue) { }
+    
+    void print(int indent = 0) const override {
+        printIndent(indent);
+        std::cout << "ReturnNode\n";
+
+        printIndent(indent + 1);
+        std::cout << "returnValue:\n";
+
+        returnValue->print(indent + 2);
     }
 };
 
