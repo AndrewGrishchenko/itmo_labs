@@ -17,6 +17,7 @@ enum class TokenType {
     KeywordElse,
     KeywordWhile,
     KeywordReturn,
+    KeywordVoid,
 
     // Data types
     KeywordInt,
@@ -73,7 +74,7 @@ class Translator {
         Translator();
         ~Translator();
 
-        ASTNode* translate(std::string data);
+        ASTNode* makeTree(std::string data);
 
     private:
         std::vector<Token> tokenize(const std::string& input);

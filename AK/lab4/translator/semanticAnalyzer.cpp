@@ -5,6 +5,7 @@ SemanticAnalyzer::SemanticAnalyzer() { }
 SemanticAnalyzer::~SemanticAnalyzer() { }
 
 void SemanticAnalyzer::analyze(ASTNode* node) {
+    enterScope();
     if (node->nodeType == ASTNodeType::Root) {
         auto root = static_cast<RootNode*>(node);
         for (auto stmt : root->children) {
@@ -17,6 +18,7 @@ void SemanticAnalyzer::analyze(ASTNode* node) {
     } else {
         analyzeStatement(node);
     }
+    exitScope();
 }
 
 void SemanticAnalyzer::enterScope() {
@@ -27,9 +29,10 @@ void SemanticAnalyzer::exitScope() {
     scopes.pop_back();
 }
 
-void SemanticAnalyzer::declareVariable(const std::string& type, const std::string& name) {
-    // scopes.back()[name] = type;
-    scopes.back()[type] = name;
+void SemanticAnalyzer::declareVariable(const std::string& name, const std::string& type) {
+    scopes.back()[name] = type;
+    
+    // scopes.back()[type] = name;
 }
 
 std::string SemanticAnalyzer::lookupVariable(const std::string& name) {
@@ -38,13 +41,13 @@ std::string SemanticAnalyzer::lookupVariable(const std::string& name) {
             return scopes[i][name];
     }
 
-    for (size_t i = 0; i < scopes.size(); i++) {
-        std::cout << "Map#" << i << std::endl;
-        for (const auto& pair : scopes[i]) {
-            std::cout << pair.first << ": " << pair.second << "\n";
-        }
-        std::cout << scopes[i].count("string") << std::endl;
-    }
+    // for (size_t i = 0; i < scopes.size(); i++) {
+    //     std::cout << "Map#" << i << std::endl;
+    //     for (const auto& pair : scopes[i]) {
+    //         std::cout << pair.first << ": " << pair.second << "\n";
+    //     }
+    //     std::cout << scopes[i].count("int") << std::endl;
+    // }
 
     throw std::runtime_error("Undeclared variable: " + name);
 }
@@ -72,6 +75,9 @@ void SemanticAnalyzer::analyzeStatement(ASTNode* node) {
             std::string exprType = analyzeExpression(var->value);
             if (exprType != var->type && var->type != "var")
                 throw std::runtime_error("Type mismatch in variable declaration: " + var->name);
+            else if (exprType == "void") {
+                throw std::runtime_error("Can't assign void");
+            }
             declareVariable(var->name, exprType);
             break;
         }
@@ -125,8 +131,8 @@ void SemanticAnalyzer::analyzeStatement(ASTNode* node) {
         case ASTNodeType::Return: {
             auto ret = static_cast<ReturnNode*>(node);
             std::string returnType = analyzeExpression(ret->returnValue);
-            if (returnType != currentReturnType)
-                throw std::runtime_error("Return type mismatch function signature");
+            if (returnType != currentReturnType && returnType != "var")
+                throw std::runtime_error("Return type mismatch function signature " + returnType);
             break;
         }
 
@@ -143,6 +149,8 @@ std::string SemanticAnalyzer::analyzeExpression(ASTNode* node) {
             return "string";
         case ASTNodeType::BooleanLiteral:
             return "bool";
+        case ASTNodeType::VoidLiteral:
+            return "void";
         
         case ASTNodeType::Identifier: {
             auto id = static_cast<IdentifierNode*>(node);
@@ -259,6 +267,6 @@ std::string SemanticAnalyzer::nodeStr(ASTNode* node) {
         case ASTNodeType::Return:
             return "Return";
         default:
-            return "hui";
+            return "Unknown";
     }
 }

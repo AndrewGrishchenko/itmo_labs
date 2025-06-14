@@ -14,7 +14,7 @@ int main() {
     std::string data = buffer.str();
 
     Translator translator;
-    translator.translate(data);
+    translator.makeTree(data);
 
     
 }

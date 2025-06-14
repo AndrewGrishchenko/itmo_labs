@@ -10,6 +10,7 @@ enum class ASTNodeType {
     NumberLiteral,
     StringLiteral,
     BooleanLiteral,
+    VoidLiteral,
     Identifier,
     Assignment,
     BinaryOp,
@@ -31,24 +32,16 @@ inline void printIndent(int indent) {
 
 struct ASTNode {
     ASTNodeType nodeType;
-    
     ASTNode* parent = nullptr;
-    // std::vector<ASTNode*> children;
-    
-    std::vector<std::string> identifiers;
 
     ASTNode(ASTNodeType nodeType)
         : nodeType(nodeType) { }
 
-    // void addChild(ASTNode* node) {
-    //     node->parent = this;
-    //     children.push_back(node);
-    // }
     virtual void print(int indent = 0) const = 0;
 };
 
 struct RootNode : ASTNode {
-    //TODO: maybe make root as block
+    //TODO: think about root & block nodes
     std::vector<ASTNode*> children;
 
     void addChild(ASTNode* child) {
@@ -119,6 +112,16 @@ struct BooleanLiteralNode : ASTNode {
     void print(int indent = 0) const override {
         printIndent(indent);
         std::cout << "Boolean: " << (value ? "true" : "false") << " \n";
+    }
+};
+
+struct VoidLiteralNode : ASTNode {
+    VoidLiteralNode()
+        : ASTNode(ASTNodeType::VoidLiteral) { }
+    
+    void print(int indent = 0) const override {
+        printIndent(indent);
+        std::cout << "VoidLiteral\n";
     }
 };
 

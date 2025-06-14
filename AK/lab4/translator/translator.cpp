@@ -4,16 +4,7 @@ Translator::Translator() { }
 
 Translator::~Translator() { }
 
-void Translator::printTree(ASTNode* root) {
-    // if (root->children.empty()) {
-    //     root->print();
-    //     std::cout << "\n";
-    // }
-
-    // for (auto child : root->children) {
-    //     printTree(child);
-    // }
-    
+void Translator::printTree(ASTNode* root) {    
     root->print();
 }
 
@@ -81,13 +72,15 @@ std::string Translator::tokenStr(Token token) {
             return "Comma\n";
         case TokenType::KeywordReturn:
             return "Return\n";
+        case TokenType::KeywordVoid:
+            return "Void\n";
         default:
             return "Unknown\n";
     }
 }
 
 //TODO: rename to makeTree
-ASTNode* Translator::translate(std::string data) {
+ASTNode* Translator::makeTree(std::string data) {
     RootNode* root = new RootNode();
 
     std::vector<Token> tokens = tokenize(data);
@@ -99,7 +92,6 @@ ASTNode* Translator::translate(std::string data) {
     std::cout << "\n\n";
 
     size_t pos = 0;
-    // root->addChild(parseStatement(tokens, pos));
 
     while (pos < tokens.size()) {
         root->addChild(parseStatement(tokens, pos));
@@ -107,33 +99,12 @@ ASTNode* Translator::translate(std::string data) {
 
     std::cout << "parse success\n\n";
 
-
-    // std::stringstream data_ss(data);
-    // std::string line;
-    // while (getline(data_ss, line)) {
-    //     std::vector<Token> tokens = tokenize(line);
-
-    //     // std::cout << "TOKENS:\n";
-    //     // for (auto token : tokens) {
-    //     //     std::cout << tokenStr(token);
-    //     // }
-    //     // std::cout << "\n\n";
-
-    //     size_t pos = 0;
-
-    //     root->addChild(parseStatement(tokens, pos));
-
-    //     // if (tokens[0].type == TokenType::KeywordVar) {
-    //     //     root->addChild(parseVarStatement(tokens, pos));
-    //     // } else if (tokens[0].type == TokenType::Identifier) {
-    //     //     root->addChild(parseAssignStatement(tokens, pos));
-    //     // }
-    // }
-
     printTree(root);
 
     SemanticAnalyzer analyzer;
     analyzer.analyze(root);
+
+    std::cout << "semantic analyze success\n\n";
 
     return root;
 }
@@ -195,7 +166,8 @@ ASTNode* Translator::parseStatement(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type == TokenType::KeywordInt ||
         tokens[pos].type == TokenType::KeywordString ||
         tokens[pos].type == TokenType::KeywordBool || 
-        tokens[pos].type == TokenType::KeywordVar) {
+        tokens[pos].type == TokenType::KeywordVar ||
+        tokens[pos].type == TokenType::KeywordVoid) {
         if (pos + 2 < tokens.size() &&
             tokens[pos + 1].type == TokenType::Identifier &&
             tokens[pos + 2].type == TokenType::LParen) {
@@ -212,7 +184,13 @@ ASTNode* Translator::parseStatement(std::vector<Token> tokens, size_t& pos) {
     } else if (tokens[pos].type == TokenType::Identifier) {
         if (pos + 1 < tokens.size() &&
             tokens[pos + 1].type == TokenType::LParen) {
-            return new ExpressionNode(parseFunctionCall(tokens, pos));
+            ASTNode* node = new ExpressionNode(parseFunctionCall(tokens, pos));
+
+            if (tokens[pos].type != TokenType::Semicolon)
+                throw std::runtime_error("Expected ';'");
+            pos++;
+            
+            return node; //TODO: function call expression / statement not good
         } else {
             return parseAssignStatement(tokens, pos);
         }
@@ -309,7 +287,8 @@ ASTNode* Translator::parseFunction(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::KeywordInt &&
         tokens[pos].type != TokenType::KeywordString &&
         tokens[pos].type != TokenType::KeywordBool &&
-        tokens[pos].type != TokenType::KeywordVar)
+        tokens[pos].type != TokenType::KeywordVar &&
+        tokens[pos].type != TokenType::KeywordVoid)
         throw std::runtime_error("Expected data type");
     std::string returnType = tokens[pos].value;
     pos++;
@@ -359,7 +338,7 @@ ASTNode* Translator::parseFunctionCall(std::vector<Token> tokens, size_t& pos) {
     std::vector<ASTNode*> parameters;
     while (pos < tokens.size() && tokens[pos].type != TokenType::RParen) {
         parameters.push_back(parseCallParameter(tokens, pos));
-
+        
         if (tokens[pos].type == TokenType::Comma) {
             pos++;
         } else if (tokens[pos].type != TokenType::RParen)
@@ -370,10 +349,6 @@ ASTNode* Translator::parseFunctionCall(std::vector<Token> tokens, size_t& pos) {
         throw std::runtime_error("Expected ')'");
     pos++;
 
-    if (tokens[pos].type != TokenType::Semicolon)
-        throw std::runtime_error("Expected ';'");
-    pos++;
-
     return new FunctionCallNode(name, parameters);
 }
 
@@ -382,41 +357,32 @@ ASTNode* Translator::parseReturn(std::vector<Token> tokens, size_t& pos) {
         throw std::runtime_error("Expected 'return'");
     pos++;
 
-    ASTNode* node = parseExpression(tokens, pos);
+    if (tokens[pos].type == TokenType::Semicolon) {
+        pos++;
+        return new ReturnNode(new VoidLiteralNode());
+    } else {
+        ASTNode* node = parseExpression(tokens, pos);
 
-    if (tokens[pos].type != TokenType::Semicolon)
-        throw std::runtime_error("Expected ';'");
-    pos++;
+        if (tokens[pos].type != TokenType::Semicolon)
+            throw std::runtime_error("Expected ';'");
+        pos++;
 
-    return new ReturnNode(node);
+        return new ReturnNode(node);
+    }
 }
 
 ASTNode* Translator::parseExpression(std::vector<Token> tokens, size_t& pos) {
-    // ASTNode* node = parseLogicAnd(tokens, pos); //parseTerm
-
-    // while (pos < tokens.size() && tokens[pos].value == "||") {
-    //     //   (tokens[pos].value == "+" || tokens[pos].value == "-")) {
-    //     std::string op = tokens[pos].value;
-    //     pos++;
-    //     ASTNode* right = parseLogicAnd(tokens, pos); //parseTerm
-    //     node = new BinaryOpNode(op, node, right);
-    // }
-
-    // return node;
-
     return new ExpressionNode(parseLogicOr(tokens, pos));
-    // return parseLogicOr(tokens, pos);
 }
 
 ASTNode* Translator::parseTerm(std::vector<Token> tokens, size_t& pos) {
-    ASTNode* node = parseFactor(tokens, pos); //parseFactor
+    ASTNode* node = parseFactor(tokens, pos);
 
     while (pos < tokens.size() &&
-        //   (tokens[pos].value == "+" || tokens[pos].value == "-")) { //* /
           (tokens[pos].type == TokenType::Plus || tokens[pos].type == TokenType::Minus)) {
         std::string op = tokens[pos].value;
         pos++;
-        ASTNode* right = parseFactor(tokens, pos); //parseFactor
+        ASTNode* right = parseFactor(tokens, pos);
         node = new BinaryOpNode(op, node, right);
     }
 
@@ -427,7 +393,6 @@ ASTNode* Translator::parseFactor(std::vector<Token> tokens, size_t& pos) {
     ASTNode* node = parseUnary(tokens, pos);
     
     while (pos < tokens.size() &&
-        //   (tokens[pos].value == "*" || tokens[pos].value == "/")) {
           (tokens[pos].type == TokenType::Multiply || tokens[pos].type == TokenType::Divide)) {
         std::string op = tokens[pos].value;
         pos++;
@@ -436,38 +401,11 @@ ASTNode* Translator::parseFactor(std::vector<Token> tokens, size_t& pos) {
     }
 
     return node;
-
-    // if (tokens[pos].type == TokenType::Number) {
-    //     int value = std::stoi(tokens[pos].value);
-    //     pos++;
-    //     return new NumberLiteralNode(value);
-    // } else if (tokens[pos].type == TokenType::String) {
-    //     std::string value = tokens[pos].value;
-    //     pos++;
-    //     return new StringLiteralNode(value);
-    // } else if (tokens[pos].type == TokenType::Boolean) {
-    //     bool value = tokens[pos].value == "true" ? true : false;
-    //     pos++;
-    //     return new BooleanLiteralNode(value);
-    // } else if (tokens[pos].type == TokenType::Identifier) {
-    //     std::string name = tokens[pos].value;
-    //     pos++;
-    //     return new IdentifierNode(name);
-    // } else if (tokens[pos].type == TokenType::LParen) {
-    //     pos++;
-    //     ASTNode* expr = parseExpression(tokens, pos);
-    //     if (tokens[pos].type != TokenType::RParen)
-    //         throw std::runtime_error("Expected '('");
-    //     pos++;
-    //     return expr;
-    // }
-
-    // throw std::runtime_error("Unexpected token in factor");
 }
 
 ASTNode* Translator::parseLogicOr(std::vector<Token> tokens, size_t& pos) {
     ASTNode* node = parseLogicAnd(tokens, pos);
-    while (pos < tokens.size() && tokens[pos].type == TokenType::LogicOr) { // value == "||"
+    while (pos < tokens.size() && tokens[pos].type == TokenType::LogicOr) {
         std::string op = tokens[pos].value;
         pos++;
         ASTNode* right = parseLogicAnd(tokens, pos);
@@ -479,7 +417,7 @@ ASTNode* Translator::parseLogicOr(std::vector<Token> tokens, size_t& pos) {
 
 ASTNode* Translator::parseLogicAnd(std::vector<Token> tokens, size_t& pos) {
     ASTNode* node = parseEquality(tokens, pos);
-    while (pos < tokens.size() && tokens[pos].type == TokenType::LogicAnd) { // value == "&&"
+    while (pos < tokens.size() && tokens[pos].type == TokenType::LogicAnd) {
         std::string op = tokens[pos].value;
         pos++;
         ASTNode* right = parseEquality(tokens, pos);
@@ -492,7 +430,6 @@ ASTNode* Translator::parseLogicAnd(std::vector<Token> tokens, size_t& pos) {
 ASTNode* Translator::parseEquality(std::vector<Token> tokens, size_t& pos) {
     ASTNode* node = parseComparsion(tokens, pos);
     while (pos < tokens.size() && 
-        //   (tokens[pos].value == "==" || tokens[pos].value == "!=")) {
           (tokens[pos].type == TokenType::LogicEqual || tokens[pos].type == TokenType::LogicNotEqual)) {
         std::string op = tokens[pos].value;
         pos++;
@@ -507,8 +444,6 @@ ASTNode* Translator::parseComparsion(std::vector<Token> tokens, size_t& pos) {
     ASTNode* node = parseTerm(tokens, pos);
 
     while (pos < tokens.size() && 
-        //   (tokens[pos].value == ">" || tokens[pos].value == "<" ||
-        //    tokens[pos].value == ">=" || tokens[pos].value == "<=")) {
           (tokens[pos].type == TokenType::LogicGreater || tokens[pos].type == TokenType::LogicGreaterEqual ||
            tokens[pos].type == TokenType::LogicLess || tokens[pos].type == TokenType::LogicLessEqual)) {
         std::string op = tokens[pos].value;
@@ -522,7 +457,6 @@ ASTNode* Translator::parseComparsion(std::vector<Token> tokens, size_t& pos) {
 
 ASTNode* Translator::parseUnary(std::vector<Token> tokens, size_t& pos) {
     if (pos < tokens.size() && 
-    //    (tokens[pos].value == "!" || tokens[pos].value == "-")) {
        (tokens[pos].type == TokenType::LogicNot || tokens[pos].type == TokenType::Minus)) {
         std::string op = tokens[pos].value;
         pos++;
@@ -546,9 +480,13 @@ ASTNode* Translator::parsePrimary(std::vector<Token> tokens, size_t& pos) {
         pos++;
         return new BooleanLiteralNode(value);
     } else if (tokens[pos].type == TokenType::Identifier) {
-        std::string name = tokens[pos].value;
-        pos++;
-        return new IdentifierNode(name);
+        if (pos + 1 < tokens.size() && tokens[pos + 1].type == TokenType::LParen) {
+            return parseFunctionCall(tokens, pos);
+        } else {
+            std::string name = tokens[pos].value;
+            pos++;
+            return new IdentifierNode(name);
+        }
     } else if (tokens[pos].type == TokenType::LParen) {
         pos++;
         ASTNode* expr = parseExpression(tokens, pos);
@@ -556,12 +494,15 @@ ASTNode* Translator::parsePrimary(std::vector<Token> tokens, size_t& pos) {
             throw std::runtime_error("Expected ')'");    
         pos++;
         return expr;
-    } else if (tokens[pos-1].type == TokenType::LBrace) {
-        pos++;
+    } else if (tokens[pos].type == TokenType::RParen) {
         return nullptr;
     }
+    // else if (tokens[pos-1].type == TokenType::LBrace) {
+    //     pos++;
+    //     return nullptr;
+    // }
 
-    throw std::runtime_error("Unexpected token in factor: " + tokens[pos-1].value);
+    throw std::runtime_error("Unexpected token in factor: " + tokenStr(tokens[pos]));
 }
 
 std::vector<Token> Translator::tokenize(const std::string& input) {
@@ -596,6 +537,8 @@ std::vector<Token> Translator::tokenize(const std::string& input) {
                 tokens.push_back({TokenType::KeywordWhile, word});
             } else if (word == "true" || word == "false") {
                 tokens.push_back({TokenType::Boolean, word});
+            } else if (word == "void") {
+                tokens.push_back({TokenType::KeywordVoid, word});
             } else if (word == "int") {
                 tokens.push_back({TokenType::KeywordInt, word});
             } else if (word == "string") {

@@ -26,7 +26,7 @@ class SemanticAnalyzer {
         void enterScope();
         void exitScope();
 
-        void declareVariable(const std::string& type, const std::string& name);
+        void declareVariable(const std::string& name, const std::string& type);
         std::string lookupVariable(const std::string& name);
 
         std::string analyzeExpression(ASTNode* node);
