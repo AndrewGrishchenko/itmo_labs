@@ -12,7 +12,6 @@
 
 enum class TokenType {
     // Keywords
-    KeywordVar,
     KeywordIf,
     KeywordElse,
     KeywordWhile,

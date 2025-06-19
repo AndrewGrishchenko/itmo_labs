@@ -3,20 +3,26 @@
 
 #include <vector>
 #include <string>
+#include <iostream>
 
 enum class ASTNodeType {
     Root,
     VarDecl,
+    
     NumberLiteral,
     StringLiteral,
     BooleanLiteral,
     VoidLiteral,
+    
     Identifier,
     Assignment,
+    
     BinaryOp,
     UnaryOp,
+    
     If,
     While,
+    
     Block,
     Parameter,
     Function,
@@ -36,6 +42,10 @@ struct ASTNode {
 
     ASTNode(ASTNodeType nodeType)
         : nodeType(nodeType) { }
+
+    void printNode(int indent = 0) const {
+        std::cout << "abstract astnode\n";
+    }
 
     virtual void print(int indent = 0) const = 0;
 };
@@ -330,6 +340,7 @@ struct ExpressionNode : ASTNode {
         : ASTNode(ASTNodeType::Expression), expression(expression) { }
 
     void print(int indent = 0) const override {
+        std::cout << "{Expression}\n";
         expression->print(indent);
     }
 };

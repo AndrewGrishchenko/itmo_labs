@@ -46,7 +46,7 @@ std::string SemanticAnalyzer::lookupVariable(const std::string& name) {
     //     for (const auto& pair : scopes[i]) {
     //         std::cout << pair.first << ": " << pair.second << "\n";
     //     }
-    //     std::cout << scopes[i].count("int") << std::endl;
+    //     std::cout << scopes[i].count("x") << std::endl;
     // }
 
     throw std::runtime_error("Undeclared variable: " + name);
@@ -63,7 +63,7 @@ void SemanticAnalyzer::analyzeFunction(ASTNode* node) {
 
     enterScope();
     for (const auto& param : fn->parameters)
-        declareVariable(static_cast<FunctionNode*>(param)->name, static_cast<FunctionNode*>(param)->returnType);
+        declareVariable(static_cast<ParameterNode*>(param)->name, static_cast<ParameterNode*>(param)->type);
     analyzeStatement(fn->body);
     exitScope();
 }
@@ -72,8 +72,13 @@ void SemanticAnalyzer::analyzeStatement(ASTNode* node) {
     switch (node->nodeType) {
         case ASTNodeType::VarDecl: {
             auto var = static_cast<VarDeclNode*>(node);
+
+            if (functions.find(var->name) != functions.end())
+                throw std::runtime_error("Already function named " + var->name);
+                
+
             std::string exprType = analyzeExpression(var->value);
-            if (exprType != var->type && var->type != "var")
+            if (exprType != var->type)
                 throw std::runtime_error("Type mismatch in variable declaration: " + var->name);
             else if (exprType == "void") {
                 throw std::runtime_error("Can't assign void");
@@ -117,6 +122,7 @@ void SemanticAnalyzer::analyzeStatement(ASTNode* node) {
             enterScope();
             analyzeStatement(wh->body);
             exitScope();
+            break;
         }
 
         case ASTNodeType::Block: {
@@ -131,7 +137,7 @@ void SemanticAnalyzer::analyzeStatement(ASTNode* node) {
         case ASTNodeType::Return: {
             auto ret = static_cast<ReturnNode*>(node);
             std::string returnType = analyzeExpression(ret->returnValue);
-            if (returnType != currentReturnType && returnType != "var")
+            if (returnType != currentReturnType)
                 throw std::runtime_error("Return type mismatch function signature " + returnType);
             break;
         }
@@ -215,7 +221,7 @@ std::string SemanticAnalyzer::analyzeExpression(ASTNode* node) {
                 throw std::runtime_error("Incorrect number of arguments to function: " + call->name);
             for (size_t i = 0; i < sig.paramTypes.size(); i++) {
                 std::string actual = analyzeExpression(call->parameters[i]);
-                if (actual != sig.paramTypes[i] && sig.paramTypes[i] != "var")
+                if (actual != sig.paramTypes[i])
                     throw std::runtime_error("Argument type mismatch in function: " + call->name);
             }
             return sig.returnType;

@@ -10,8 +10,6 @@ void Translator::printTree(ASTNode* root) {
 
 std::string Translator::tokenStr(Token token) {
     switch (token.type) {
-        case TokenType::KeywordVar:
-            return "KeywordVar\n";
         case TokenType::KeywordIf:
             return "KeywordIf\n";
         case TokenType::KeywordElse:
@@ -93,14 +91,14 @@ ASTNode* Translator::makeTree(std::string data) {
 
     size_t pos = 0;
 
-    while (pos < tokens.size()) {
+    while (pos < tokens.size() && tokens[pos].type != TokenType::EndOfFile) {
         root->addChild(parseStatement(tokens, pos));
     }
 
     std::cout << "parse success\n\n";
 
     printTree(root);
-
+    
     SemanticAnalyzer analyzer;
     analyzer.analyze(root);
 
@@ -136,8 +134,6 @@ ASTNode* Translator::parseVarStatement(std::vector<Token> tokens, size_t& pos) {
         type = "string";
     else if (tokens[pos].type == TokenType::KeywordBool)
         type = "bool";
-    else if (tokens[pos].type == TokenType::KeywordVar)
-        type = "var";
     else
         throw std::runtime_error("Expected data type");
     pos++;
@@ -166,7 +162,6 @@ ASTNode* Translator::parseStatement(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type == TokenType::KeywordInt ||
         tokens[pos].type == TokenType::KeywordString ||
         tokens[pos].type == TokenType::KeywordBool || 
-        tokens[pos].type == TokenType::KeywordVar ||
         tokens[pos].type == TokenType::KeywordVoid) {
         if (pos + 2 < tokens.size() &&
             tokens[pos + 1].type == TokenType::Identifier &&
@@ -194,9 +189,10 @@ ASTNode* Translator::parseStatement(std::vector<Token> tokens, size_t& pos) {
         } else {
             return parseAssignStatement(tokens, pos);
         }
-    } else if (tokens[pos].type == TokenType::EndOfFile) {
-        pos++;
-        return nullptr;
+    // } else if (tokens[pos].type == TokenType::EndOfFile) {
+    //     pos++;
+    //     return nullptr; //REMOVED
+
     } else {
         return parseExpression(tokens, pos);
     }
@@ -269,8 +265,7 @@ ASTNode* Translator::parseBlock(std::vector<Token> tokens, size_t& pos) {
 ASTNode* Translator::parseParameter(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::KeywordInt &&
         tokens[pos].type != TokenType::KeywordString &&
-        tokens[pos].type != TokenType::KeywordBool &&
-        tokens[pos].type != TokenType::KeywordVar)
+        tokens[pos].type != TokenType::KeywordBool)
         throw std::runtime_error("Expected data type");
     std::string type = tokens[pos].value;
     pos++;
@@ -287,7 +282,6 @@ ASTNode* Translator::parseFunction(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::KeywordInt &&
         tokens[pos].type != TokenType::KeywordString &&
         tokens[pos].type != TokenType::KeywordBool &&
-        tokens[pos].type != TokenType::KeywordVar &&
         tokens[pos].type != TokenType::KeywordVoid)
         throw std::runtime_error("Expected data type");
     std::string returnType = tokens[pos].value;
@@ -371,6 +365,7 @@ ASTNode* Translator::parseReturn(std::vector<Token> tokens, size_t& pos) {
     }
 }
 
+//TODO: remove expression nodes AT ALL!
 ASTNode* Translator::parseExpression(std::vector<Token> tokens, size_t& pos) {
     return new ExpressionNode(parseLogicOr(tokens, pos));
 }
@@ -494,9 +489,12 @@ ASTNode* Translator::parsePrimary(std::vector<Token> tokens, size_t& pos) {
             throw std::runtime_error("Expected ')'");    
         pos++;
         return expr;
-    } else if (tokens[pos].type == TokenType::RParen) {
-        return nullptr;
     }
+    // } else if (tokens[pos].type == TokenType::RParen) {
+    //     return nullptr;
+    // } //REMOVED
+
+
     // else if (tokens[pos-1].type == TokenType::LBrace) {
     //     pos++;
     //     return nullptr;
@@ -527,9 +525,7 @@ std::vector<Token> Translator::tokenize(const std::string& input) {
             while (pos < input.size() && isAlnum(input[pos])) pos++;
 
             std::string word = input.substr(start, pos - start);
-            if (word == "var") {
-                tokens.push_back({TokenType::KeywordVar, word});
-            } else if (word == "if") {
+            if (word == "if") {
                 tokens.push_back({TokenType::KeywordIf, word});
             } else if (word == "else") {
                 tokens.push_back({TokenType::KeywordElse, word});
