@@ -6,7 +6,6 @@
 #include <iostream>
 
 enum class ASTNodeType {
-    Root,
     VarDecl,
     
     NumberLiteral,
@@ -48,30 +47,6 @@ struct ASTNode {
     }
 
     virtual void print(int indent = 0) const = 0;
-};
-
-struct RootNode : ASTNode {
-    //TODO: think about root & block nodes
-    std::vector<ASTNode*> children;
-
-    void addChild(ASTNode* child) {
-        if (child == nullptr) return;
-        child->parent = this;
-        children.push_back(child);
-    }
-
-    RootNode()
-        : ASTNode(ASTNodeType::Root) { }
-
-    void print(int indent = 0) const override {
-        printIndent(indent);
-        std::cout << "Root\n";
-        for (auto child : children) {
-            if (child != nullptr) {
-                child->print(indent + 1);
-            }
-        }
-    }
 };
 
 struct VarDeclNode : ASTNode {
@@ -340,7 +315,7 @@ struct ExpressionNode : ASTNode {
         : ASTNode(ASTNodeType::Expression), expression(expression) { }
 
     void print(int indent = 0) const override {
-        std::cout << "{Expression}\n";
+        // std::cout << "{Expression}\n";
         expression->print(indent);
     }
 };

@@ -72,19 +72,6 @@ class TreeVisualizer {
 
         std::string processNode(ASTNode* node) {
             switch(node->nodeType) {
-                case ASTNodeType::Root: {
-                    RootNode* rootNode = static_cast<RootNode*>(node);
-                    std::string objName = "Root" + std::to_string(labelCount(node->nodeType));
-
-                    emitObject(objName);
-                    
-                    for (auto* child : rootNode->children) {
-                        std::string childName = processNode(child);
-                        emitObjectAssociation(objName, childName);
-                    }
-
-                    return objName;
-                }
                 case ASTNodeType::VarDecl: {
                     VarDeclNode* varDeclNode = static_cast<VarDeclNode*>(node);
                     std::string objName = "VarDecl" + std::to_string(labelCount(node->nodeType));

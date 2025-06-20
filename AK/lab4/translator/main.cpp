@@ -23,9 +23,9 @@ int main() {
     std::ofstream file_o("output.puml");
     file_o << puml_str;
 
-    // CodeGenerator cg;
-    // std::string code = cg.generateCode(tree);
+    CodeGenerator cg;
+    std::string code = cg.generateCode(tree);
 
-    // std::cout << "CODE:\n";
-    // std::cout << code;
+    std::cout << "CODE:\n";
+    std::cout << code;
 }

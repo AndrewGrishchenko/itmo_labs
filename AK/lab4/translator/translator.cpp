@@ -81,7 +81,7 @@ std::string Translator::tokenStr(Token token) {
 
 //TODO: rename to makeTree
 ASTNode* Translator::makeTree(std::string data) {
-    RootNode* root = new RootNode();
+    BlockNode* root = new BlockNode();
 
     std::vector<Token> tokens = tokenize(data);
 

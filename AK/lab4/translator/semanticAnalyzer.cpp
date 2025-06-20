@@ -6,17 +6,16 @@ SemanticAnalyzer::~SemanticAnalyzer() { }
 
 void SemanticAnalyzer::analyze(ASTNode* node) {
     enterScope();
-    if (node->nodeType == ASTNodeType::Root) {
-        auto root = static_cast<RootNode*>(node);
+    if (!node || node->nodeType == ASTNodeType::Block) {
+        auto root = static_cast<BlockNode*>(node);
         for (auto stmt : root->children) {
-            // auto statement = static_cast<StatementNode*>(stmt);
             if (stmt->nodeType == ASTNodeType::Function)
                 analyzeFunction(stmt);
             else
                 analyzeStatement(stmt);
         }
     } else {
-        analyzeStatement(node);
+        throw std::runtime_error("Root node must be block");
     }
     exitScope();
 }
@@ -236,8 +235,6 @@ std::string SemanticAnalyzer::analyzeExpression(ASTNode* node) {
 
 std::string SemanticAnalyzer::nodeStr(ASTNode* node) {
     switch (node->nodeType) {
-        case ASTNodeType::Root:
-            return "Root";
         case ASTNodeType::VarDecl:
             return "VarDecl";
         case ASTNodeType::NumberLiteral:

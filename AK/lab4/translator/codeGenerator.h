@@ -6,6 +6,7 @@
 #include <unordered_map>
 #include <vector>
 #include <sstream>
+#include <algorithm>
 
 class CodeGenerator {
     public:
@@ -13,11 +14,12 @@ class CodeGenerator {
         ~CodeGenerator() {}
 
         std::string generateCode(ASTNode* root) {
-            if (!root || root->nodeType != ASTNodeType::Root)
-                return ""; //HM?
+            if (!root || root->nodeType != ASTNodeType::Block)
+                throw std::runtime_error("Root node must be block");
 
             dataSection.clear();
             codeSection.clear();
+            funcSection.clear();
             variables.clear();
             functionLabels.clear();
             functionParams.clear();
@@ -26,7 +28,7 @@ class CodeGenerator {
             tempVarCounter = 0;
             stackOffset = 0;
 
-            processNode(root);
+            processRoot(root);
 
             return assembleCode();
         }
@@ -34,6 +36,7 @@ class CodeGenerator {
     private:
         std::vector<std::string> dataSection;
         std::vector<std::string> codeSection;
+        std::vector<std::string> funcSection;
         std::unordered_map<std::string, std::string> variables;
         std::unordered_map<std::string, int> functionLabels;
         std::unordered_map<std::string, std::vector<std::pair<std::string, std::string>>> functionParams;
@@ -52,19 +55,54 @@ class CodeGenerator {
             return "temp" + std::to_string(tempVarCounter++);
         }
 
+        std::string nodeStr(ASTNode* node) {
+            switch (node->nodeType) {
+                case ASTNodeType::VarDecl:
+                    return "VarDecl";
+                case ASTNodeType::NumberLiteral:
+                    return "NumberLiteral";
+                case ASTNodeType::StringLiteral:
+                    return "StringLiteral";
+                case ASTNodeType::BooleanLiteral:
+                    return "BooelanLiteral";
+                case ASTNodeType::Identifier:
+                    return "Identifier";
+                case ASTNodeType::Assignment:
+                    return "Assignment";
+                case ASTNodeType::BinaryOp:
+                    return "BinaryOp";
+                case ASTNodeType::UnaryOp:
+                    return "UnaryOp";
+                case ASTNodeType::If:
+                    return "If";
+                case ASTNodeType::While:
+                    return "While";
+                case ASTNodeType::Block:
+                    return "Block";
+                case ASTNodeType::Parameter:
+                    return "Parameter";
+                case ASTNodeType::Function:
+                    return "Function";
+                case ASTNodeType::CallParameter:
+                    return "CallParameter";
+                case ASTNodeType::FunctionCall:
+                    return "FunctionCall";
+                case ASTNodeType::Expression:
+                    return "Expression";
+                case ASTNodeType::Return:
+                    return "Return";
+                default:
+                    return "Unknown";
+            }
+        }
+
         void processNode(ASTNode* node) {
             if (!node) return;
 
             switch(node->nodeType) {
-                case ASTNodeType::Root:
-                    processRoot(node);
-                    break;
                 case ASTNodeType::Function:
                     processFunction(node);
                     break;
-                // case ASTNodeType::Parameter:
-                //     processParameter(node);
-                //     break;
                 case ASTNodeType::VarDecl:
                     processVarDecl(node);
                     break;
@@ -114,16 +152,22 @@ class CodeGenerator {
                     processExpression(node);
                     break;
                 default:
-                    throw std::runtime_error("Unknown node: " + nodeStr(node));
+                    throw std::runtime_error("Unknown node");
             }
         }
 
         void emitCode(const std::string& line, int indent = 0) {
-            codeSection.push_back("  " + line);
+            if (currentFunction.empty())
+                codeSection.push_back("  " + line);
+            else
+                funcSection.push_back("  " + line);
         }
 
         void emitCodeLabel(const std::string& label) {
-            codeSection.push_back(label + ":");
+            if (currentFunction.empty())
+                codeSection.push_back(label + ":");
+            else
+                funcSection.push_back(label + ":");
         }
 
         void emitData(const std::string& line) {
@@ -131,12 +175,7 @@ class CodeGenerator {
         }
 
         void processRoot(ASTNode* node) {
-            RootNode* rootNode = static_cast<RootNode*>(node);
-
-            for (auto child : rootNode->children) {
-                if (child->nodeType == ASTNodeType::Function)
-                    processFunction(child);
-            }
+            BlockNode* root = static_cast<BlockNode*>(node);
 
             emitCodeLabel("_start");
 
@@ -144,10 +183,8 @@ class CodeGenerator {
             emitCode("st sp");
             emitCode("");
 
-            for (auto child : rootNode->children) {
-                if (child->nodeType != ASTNodeType::Function)
-                    processNode(child);
-                    
+            for (auto* child : root->children) {
+                processNode(child);
             }
 
             emitCode("halt");
@@ -161,10 +198,8 @@ class CodeGenerator {
             functionLabels[currentFunction] = labelCounter++;
             emitCodeLabel(funcLabel);
 
-            // std::vector<std::string> funcParams;
             for (auto param : functionNode->parameters) {
                 ParameterNode* paramNode = static_cast<ParameterNode*>(param);
-                // funcParams.push_back()
                 functionParams[currentFunction].push_back({paramNode->type, paramNode->name});
                 emitData("arg_" + currentFunction + "_" + paramNode->name + ": 0");
             }
@@ -172,6 +207,7 @@ class CodeGenerator {
             // emitCode("ld sp");
             // emitCode("st temp_sp");
             //TODO: have i to save sp?
+            //TODO: redo parameters as field ParametersNode, containing vector of nodes
 
             processNode(functionNode->body);
 
@@ -181,18 +217,13 @@ class CodeGenerator {
         void processVarDecl(ASTNode* node) {
             VarDeclNode* varDeclNode = static_cast<VarDeclNode*>(node);
             
-            //TODO: doublecheck arg_ prefix in function variables
             std::string varName = varDeclNode->name;
             std::string varLabel = "var_";
 
-            if (currentFunction == "") {
-                varLabel += varName;
-            } else {
-                varLabel += currentFunction + "_" + varName;
-            }
+            varLabel = getVarLabel(varName);
 
             emitData(varLabel + ": 0");
-            variables[varName] = varLabel;
+            variables[varLabel] = varDeclNode->type;
 
             processNode(varDeclNode->value);
             emitCode("st " + varLabel);
@@ -203,12 +234,14 @@ class CodeGenerator {
             IdentifierNode* var1Node = static_cast<IdentifierNode*>(assignNode->var1);
 
             std::string varName = var1Node->name;
+            std::string varLabel = getVarLabel(varName);
 
             processNode(assignNode->var2);
 
-            if (variables.find(varName) != variables.end()) {
-                emitCode("st " + variables[varName]);
-            } //TODO: what else?
+            if (variables.find(varLabel) != variables.end())
+                emitCode("st " + varLabel);
+            else
+                throw std::runtime_error("Could not find variable " + varName);
         }
 
         void processBinaryOp(ASTNode* node) {
@@ -228,60 +261,25 @@ class CodeGenerator {
 
             popFromStack();
 
-            if (op == "+") {
+            if (op == "+")
                 emitCode("add temp_right");
-            } else if (op == "-") {
-                emitCode("sub temp_right");
-            } else if (op == "*") {
+            else if (op == "*")
                 emitCode("mul temp_right");
-            } else if (op == "/") {
+            else if (op == "/")
                 emitCode("div temp_right");
-            } else if (op == "%") {
-                emitCode("rem temp_right"); //TODO
-            } else if (op == "<=") {
+            else if (op == "%")
+                emitCode("rem temp_right");
+            else if (op == "-" || op == ">" || op == ">=" || op == "<" ||
+                       op == "<=" || op == "==" || op == "!=")
                 emitCode("sub temp_right");
-                //TODO
-            } else if (op == ">=") {
-                emitCode("sub temp_right");
-                //TODO
-            } else if (op == "<") {
-                emitCode("sub temp_right");
-                //TODO
-            } else if (op == ">") {
-                emitCode("sub temp_right");
-                //TODO
-            } else if (op == "==") {
-                emitCode("sub temp_right");
-                //TODO
-            } else if (op == "!=") {
-                emitCode("sub temp_right");
-                //TODO
-            }
         }
 
         void pushToStack() {
-            // emitCode("ld sp");
-            // emitCode("dec");
-            // emitCode("st sp");
-            // emitCode("ld sp");
-            // emitCode("st temp_addr");
-            // emitCode("ld AC");
-            // emitCode("st temp_addr");
-            // emitCode("STACK PUSH");
             emitCode("push");
-            //TODO wtf is goin here
         }
 
         void popFromStack() {
-            // emitCode("ld sp");
-            // emitCode("st temp_addr");
-            // emitCode("ld temp_addr");
-            // emitCode("ld sp");
-            // emitCode("inc");
-            // emitCode("st sp");
-            // emitCode("STACK POP");
             emitCode("pop");
-            //TODO wtf is goin here
         }
 
         void processUnaryOp(ASTNode* node) {
@@ -298,20 +296,6 @@ class CodeGenerator {
             } else if (op == "-") {
                 emitCode("not");
             }
-
-            // if (op == "!") {
-            //     std::string falseLabel = getNewLabel();
-            //     std::string endLabel = getNewLabel(); //TODO wtf here
-                
-            //     emitCode("jne " + falseLabel);
-            //     emitCode("ldi 1");
-            //     emitCode("jmp " + endLabel);
-            //     codeSection.push_back(falseLabel + ":");
-            //     emitCode("ldi 0");
-            //     codeSection.push_back(endLabel + ":");
-            // } else if (op == "-") {
-            //     emitCode("not");
-            // }
         }
 
         void processIf(ASTNode* node) {
@@ -347,7 +331,6 @@ class CodeGenerator {
                 ExpressionNode* expressionNode = static_cast<ExpressionNode*>(node);
                 node = expressionNode->expression;
             }
-
             
             if (node->nodeType == ASTNodeType::BinaryOp) {
                 BinaryOpNode* binaryOpNode = static_cast<BinaryOpNode*>(node);
@@ -423,19 +406,14 @@ class CodeGenerator {
             for (size_t i = 0; i < functionCallNode->parameters.size(); i++) {
                 CallParameter* callParameter = static_cast<CallParameter*>(functionCallNode->parameters[i]);
                 processNode(callParameter->parameter);
-
-
-                // processNode(functionCallNode->parameters[i]);
-
                 emitCode("st arg_" + funcName + "_" + functionParams[funcName][i].second);
-                // emitCode("st ")
             }
 
             //TODO: add semantic check of at least one return in funcs
-            //TODO: add rem
-            if (functionLabels.find(funcName) != functionLabels.end()) {
+            if (functionLabels.find(funcName) != functionLabels.end())
                 emitCode("call func_" + funcName);
-            } //TODO what else?
+            else
+                throw std::runtime_error("Could not find function " + funcName);
         }
 
         void processCallParameter(ASTNode* node) {
@@ -455,18 +433,32 @@ class CodeGenerator {
             emitCode("ret");
         }
 
+        std::string getVarLabel(const std::string& varName) {
+            if (!currentFunction.empty()) {
+                auto& vecPair = functionParams[currentFunction];
+                auto it = std::find_if(vecPair.begin(), vecPair.end(),
+                [&varName](const auto& elem){ return elem.second == varName; });
+                
+                if (it != vecPair.end()) {
+                    return "arg_" + currentFunction + "_" + varName;
+                } else {
+                    if (variables.find("var_" + varName) != variables.end()) {
+                        return "var_" + varName;
+                    } else {
+                        return "var_" + currentFunction + "_" + varName;
+                    }
+                }
+            } else {
+                return "var_" + varName;
+            }
+        }
+
         void processIdentifier(ASTNode* node) {
             IdentifierNode* identifierNode = static_cast<IdentifierNode*>(node);
 
             std::string varName = identifierNode->name;
-            
-            if (currentFunction.empty()) {
-                if (variables.find(varName) != variables.end()) {
-                    emitCode("ld " + variables[varName]);
-                } // TODO: what else?
-            } else {
-                emitCode("ld arg_" + currentFunction + "_" + varName);
-            }
+            emitCode("ld " + getVarLabel(varName));
+            //TODO: double check arg_ var_ labels everywhere im so cooked rn
         }
 
         void processNumberLiteral(ASTNode* node) {
@@ -512,6 +504,10 @@ class CodeGenerator {
 
             result << "\n.text\n";
 
+            for (const auto& line : funcSection) {
+                result << line << "\n";
+            }
+
             for (const auto& line : codeSection) {
                 result << line << "\n";
             }
@@ -523,53 +519,6 @@ class CodeGenerator {
             ExpressionNode* expressionNode = static_cast<ExpressionNode*>(node);
             processNode(expressionNode->expression);
         }
-
-        std::string nodeStr(ASTNode* node) {
-            switch (node->nodeType) {
-                case ASTNodeType::Root:
-                    return "Root";
-                case ASTNodeType::VarDecl:
-                    return "VarDecl";
-                case ASTNodeType::NumberLiteral:
-                    return "NumberLiteral";
-                case ASTNodeType::StringLiteral:
-                    return "StringLiteral";
-                case ASTNodeType::BooleanLiteral:
-                    return "BooelanLiteral";
-                case ASTNodeType::VoidLiteral:
-                    return "VoidLiteral";
-                case ASTNodeType::Identifier:
-                    return "Indetifier";
-                case ASTNodeType::Assignment:
-                    return "Assignment";
-                case ASTNodeType::BinaryOp:
-                    return "BinaryOp";
-                case ASTNodeType::UnaryOp:
-                    return "UnaryOp";
-                case ASTNodeType::If:
-                    return "If";
-                case ASTNodeType::While:
-                    return "While";
-                case ASTNodeType::Block:
-                    return "Block";
-                case ASTNodeType::Parameter:
-                    return "Parameter";
-                case ASTNodeType::Function:
-                    return "Function";
-                case ASTNodeType::CallParameter:
-                    return "CallParameter";
-                case ASTNodeType::FunctionCall:
-                    return "FunctionCall";
-                case ASTNodeType::Expression:
-                    return "Expression";
-                case ASTNodeType::Return:
-                    return "Return";
-                default:
-                    return "Unknown";
-            }
-        }
 };
-
-
 
 #endif
