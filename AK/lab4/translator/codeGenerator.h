@@ -119,12 +119,14 @@ class CodeGenerator {
         }
 
         void emitCode(const std::string& line, int indent = 0) {
-            //TODO
             codeSection.push_back("  " + line);
         }
 
+        void emitCodeLabel(const std::string& label) {
+            codeSection.push_back(label + ":");
+        }
+
         void emitData(const std::string& line) {
-            //TODO
             dataSection.push_back("  " + line);
         }
 
@@ -136,7 +138,7 @@ class CodeGenerator {
                     processFunction(child);
             }
 
-            codeSection.push_back("_start:");
+            emitCodeLabel("_start");
 
             emitCode("ldi 1000");
             emitCode("st sp");
@@ -157,7 +159,7 @@ class CodeGenerator {
 
             std::string funcLabel = "func_" + currentFunction;
             functionLabels[currentFunction] = labelCounter++;
-            codeSection.push_back(funcLabel + ":");
+            emitCodeLabel(funcLabel);
 
             // std::vector<std::string> funcParams;
             for (auto param : functionNode->parameters) {
@@ -265,7 +267,8 @@ class CodeGenerator {
             // emitCode("st temp_addr");
             // emitCode("ld AC");
             // emitCode("st temp_addr");
-            emitCode("STACK PUSH");
+            // emitCode("STACK PUSH");
+            emitCode("push");
             //TODO wtf is goin here
         }
 
@@ -276,7 +279,8 @@ class CodeGenerator {
             // emitCode("ld sp");
             // emitCode("inc");
             // emitCode("st sp");
-            emitCode("STACK POP");
+            // emitCode("STACK POP");
+            emitCode("pop");
             //TODO wtf is goin here
         }
 
@@ -331,11 +335,11 @@ class CodeGenerator {
             emitCode("jmp " + endLabel);
 
             if (elseBlock) {
-                codeSection.push_back(elseLabel + ":");
+                emitCodeLabel(elseLabel);
                 processNode(elseBlock);
             }
 
-            codeSection.push_back(endLabel + ":");
+            emitCodeLabel(endLabel);
         }
 
         std::string getNotConditionJump(ASTNode* node) {
@@ -390,7 +394,7 @@ class CodeGenerator {
             std::string startLabel = getNewLabel();
             std::string endLabel = getNewLabel();
 
-            codeSection.push_back(startLabel + ":");
+            emitCodeLabel(startLabel);
 
             processNode(condition);
             std::string notCondJmp = getNotConditionJump(condition);
@@ -400,7 +404,7 @@ class CodeGenerator {
             processNode(body);
 
             emitCode("jmp " + startLabel);
-            codeSection.push_back(endLabel + ":");
+            emitCodeLabel(endLabel);
         }
 
         void processBlock(ASTNode* node) {

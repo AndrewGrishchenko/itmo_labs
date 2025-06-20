@@ -173,7 +173,7 @@ std::string SemanticAnalyzer::analyzeExpression(ASTNode* node) {
             std::string left = analyzeExpression(bin->left);
             std::string right = analyzeExpression(bin->right);
 
-            if (bin->op == "+" || bin->op == "-" || bin->op == "*" || bin->op == "/") {
+            if (bin->op == "+" || bin->op == "-" || bin->op == "*" || bin->op == "/" || bin->op == "%") {
                 if (left != "int" || right != "int")
                     throw std::runtime_error("Arithmetic operations require int operands");
                 return "int";

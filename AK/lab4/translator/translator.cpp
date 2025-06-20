@@ -60,6 +60,8 @@ std::string Translator::tokenStr(Token token) {
             return "Multiply\n";
         case TokenType::Divide:
             return "Divide\n";
+        case TokenType::Rem:
+            return "Rem\n";
         case TokenType::KeywordInt:
             return "KeywordInt\n";
         case TokenType::KeywordString:
@@ -388,7 +390,9 @@ ASTNode* Translator::parseFactor(std::vector<Token> tokens, size_t& pos) {
     ASTNode* node = parseUnary(tokens, pos);
     
     while (pos < tokens.size() &&
-          (tokens[pos].type == TokenType::Multiply || tokens[pos].type == TokenType::Divide)) {
+          (tokens[pos].type == TokenType::Multiply || 
+           tokens[pos].type == TokenType::Divide ||
+           tokens[pos].type == TokenType::Rem)) {
         std::string op = tokens[pos].value;
         pos++;
         ASTNode* right = parseUnary(tokens, pos);
@@ -630,6 +634,10 @@ std::vector<Token> Translator::tokenize(const std::string& input) {
                 break;
             case '/':
                 tokens.push_back({TokenType::Divide, "/"});
+                pos++;
+                break;
+            case '%':
+                tokens.push_back({TokenType::Rem, "%"});
                 pos++;
                 break;
             case '&':

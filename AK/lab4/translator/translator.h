@@ -54,6 +54,7 @@ enum class TokenType {
     Minus,
     Multiply,
     Divide,
+    Rem,
     
     // Utility
     EndOfFile,

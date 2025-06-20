@@ -7,6 +7,8 @@
 #include "translator.h"
 #include "codeGenerator.h"
 
+#include "treeVisualizer.h"
+
 int main() {
     std::ifstream file("input.txt");
     std::stringstream buffer;
@@ -16,9 +18,14 @@ int main() {
     Translator translator;
     ASTNode* tree = translator.makeTree(data);
 
-    CodeGenerator cg;
-    std::string code = cg.generateCode(tree);
+    TreeVisualizer tv;
+    std::string puml_str = tv.makeUML(tree); 
+    std::ofstream file_o("output.puml");
+    file_o << puml_str;
 
-    std::cout << "CODE:\n";
-    std::cout << code;
+    // CodeGenerator cg;
+    // std::string code = cg.generateCode(tree);
+
+    // std::cout << "CODE:\n";
+    // std::cout << code;
 }
