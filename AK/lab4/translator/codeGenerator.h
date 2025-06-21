@@ -345,9 +345,9 @@ class CodeGenerator {
                 } else if (op == "<=") {
                     return "jg";
                 } else if (op == "==") {
-                    return "jne";
+                    return "jnz";
                 } else if (op == "!=") {
-                    return "je";
+                    return "jz";
                 } else {
                     throw std::runtime_error("Condition must be logical binary op");
                 }
@@ -356,13 +356,12 @@ class CodeGenerator {
                 std::string op = unaryOpNode->op;
 
                 if (op == "!") {
-                    return "je"; //JE MEANING HERE: i.e. z = 0
+                    return "jz"; //jz MEANING HERE: i.e. z = 0
                 } else {
                     throw std::runtime_error("Unary condition must be logical op");
                 }
             } else if (node->nodeType == ASTNodeType::Identifier) {
-                return "jne";
-                //TODO: think renaming jn jne to jz jnz
+                return "jnz";
                 //TODO: codeGen: make commands as enum
             } else
                 throw std::runtime_error("Condition must be binary op");
@@ -404,12 +403,11 @@ class CodeGenerator {
             std::string funcName = functionCallNode->name;
             
             for (size_t i = 0; i < functionCallNode->parameters.size(); i++) {
-                CallParameter* callParameter = static_cast<CallParameter*>(functionCallNode->parameters[i]);
-                processNode(callParameter->parameter);
+                CallParameterNode* callParameterNode = static_cast<CallParameterNode*>(functionCallNode->parameters[i]);
+                processNode(callParameterNode->parameter);
                 emitCode("st arg_" + funcName + "_" + functionParams[funcName][i].second);
             }
 
-            //TODO: add semantic check of at least one return in funcs
             if (functionLabels.find(funcName) != functionLabels.end())
                 emitCode("call func_" + funcName);
             else
@@ -417,10 +415,10 @@ class CodeGenerator {
         }
 
         void processCallParameter(ASTNode* node) {
-            CallParameter* callParameter = static_cast<CallParameter*>(node);
+            CallParameterNode* callParameterNode = static_cast<CallParameterNode*>(node);
             //TODO: rename to CallParameterNode to meet standard
 
-            processNode(callParameter->parameter);
+            processNode(callParameterNode->parameter);
         }
 
         void processReturn(ASTNode* node) {

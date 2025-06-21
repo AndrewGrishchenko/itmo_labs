@@ -270,10 +270,10 @@ struct FunctionNode : ASTNode {
     }
 };
 
-struct CallParameter : ASTNode {
+struct CallParameterNode : ASTNode {
     ASTNode* parameter;
 
-    CallParameter(ASTNode* parameter)
+    CallParameterNode(ASTNode* parameter)
         : ASTNode(ASTNodeType::CallParameter), parameter(parameter) { }
 
     void print(int indent = 0) const override {

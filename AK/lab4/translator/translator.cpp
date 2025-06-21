@@ -79,7 +79,6 @@ std::string Translator::tokenStr(Token token) {
     }
 }
 
-//TODO: rename to makeTree
 ASTNode* Translator::makeTree(std::string data) {
     BlockNode* root = new BlockNode();
 
@@ -187,13 +186,10 @@ ASTNode* Translator::parseStatement(std::vector<Token> tokens, size_t& pos) {
                 throw std::runtime_error("Expected ';'");
             pos++;
             
-            return node; //TODO: function call expression / statement not good
+            return node;
         } else {
             return parseAssignStatement(tokens, pos);
         }
-    // } else if (tokens[pos].type == TokenType::EndOfFile) {
-    //     pos++;
-    //     return nullptr; //REMOVED
 
     } else {
         return parseExpression(tokens, pos);
@@ -318,7 +314,7 @@ ASTNode* Translator::parseFunction(std::vector<Token> tokens, size_t& pos) {
 }
 
 ASTNode* Translator::parseCallParameter(std::vector<Token> tokens, size_t& pos) {
-    return new CallParameter(parseExpression(tokens, pos));
+    return new CallParameterNode(parseExpression(tokens, pos));
 }
 
 ASTNode* Translator::parseFunctionCall(std::vector<Token> tokens, size_t& pos) {
@@ -333,7 +329,7 @@ ASTNode* Translator::parseFunctionCall(std::vector<Token> tokens, size_t& pos) {
 
     std::vector<ASTNode*> parameters;
     while (pos < tokens.size() && tokens[pos].type != TokenType::RParen) {
-        parameters.push_back(parseCallParameter(tokens, pos));
+        parameters.push_back(parseExpression(tokens, pos));
         
         if (tokens[pos].type == TokenType::Comma) {
             pos++;
@@ -494,15 +490,6 @@ ASTNode* Translator::parsePrimary(std::vector<Token> tokens, size_t& pos) {
         pos++;
         return expr;
     }
-    // } else if (tokens[pos].type == TokenType::RParen) {
-    //     return nullptr;
-    // } //REMOVED
-
-
-    // else if (tokens[pos-1].type == TokenType::LBrace) {
-    //     pos++;
-    //     return nullptr;
-    // }
 
     throw std::runtime_error("Unexpected token in factor: " + tokenStr(tokens[pos]));
 }

@@ -243,13 +243,13 @@ class TreeVisualizer {
                     return objName;
                 }
                 case ASTNodeType::CallParameter: {
-                    CallParameter* callParameter = static_cast<CallParameter*>(node);
+                    CallParameterNode* callParameterNode = static_cast<CallParameterNode*>(node);
                     std::string objName = "CallParameter" + std::to_string(labelCount(node->nodeType));
                     //TODO: redo call parameter node & vector
 
                     emitObject(objName);
 
-                    std::string parameterName = processNode(callParameter->parameter);
+                    std::string parameterName = processNode(callParameterNode->parameter);
                     emitObjectAssociation(objName, parameterName, "parameter");
 
                     return objName;

@@ -58,6 +58,7 @@ void SemanticAnalyzer::analyzeFunction(ASTNode* node) {
     for (const auto& param : fn->parameters)
         sig.paramTypes.push_back(static_cast<ParameterNode*>(param)->type);
     functions[fn->name] = sig;
+    hasReturn = false;
     currentReturnType = fn->returnType;
 
     enterScope();
@@ -65,6 +66,11 @@ void SemanticAnalyzer::analyzeFunction(ASTNode* node) {
         declareVariable(static_cast<ParameterNode*>(param)->name, static_cast<ParameterNode*>(param)->type);
     analyzeStatement(fn->body);
     exitScope();
+
+    if (!hasReturn)
+        throw std::runtime_error("Function must contain at least 1 return");
+    else
+        hasReturn = false;
 }
 
 void SemanticAnalyzer::analyzeStatement(ASTNode* node) {
@@ -89,7 +95,7 @@ void SemanticAnalyzer::analyzeStatement(ASTNode* node) {
         case ASTNodeType::Assignment: {
             auto assign = static_cast<AssignNode*>(node);
             if (analyzeExpression(assign->var1) != analyzeExpression(assign->var2))
-                throw std::runtime_error("Type mismatch in variable assignment"); // TODO
+                throw std::runtime_error("Type mismatch in variable assignment");
             break;
         }
 
@@ -101,7 +107,7 @@ void SemanticAnalyzer::analyzeStatement(ASTNode* node) {
             auto ifNode = static_cast<IfNode*>(node);
             std::string condType = analyzeExpression(ifNode->condition);
             if (condType != "bool")
-                throw std::runtime_error("if condition must be boolean"); // TODO BOOLEAN EXPR;
+                throw std::runtime_error("if condition must be boolean");
             enterScope();
             analyzeStatement(ifNode->thenBranch);
             exitScope();
@@ -138,6 +144,7 @@ void SemanticAnalyzer::analyzeStatement(ASTNode* node) {
             std::string returnType = analyzeExpression(ret->returnValue);
             if (returnType != currentReturnType)
                 throw std::runtime_error("Return type mismatch function signature " + returnType);
+            hasReturn = true;
             break;
         }
 
@@ -207,7 +214,7 @@ std::string SemanticAnalyzer::analyzeExpression(ASTNode* node) {
         }
 
         case ASTNodeType::CallParameter: {
-            auto cp = static_cast<CallParameter*>(node);
+            auto cp = static_cast<CallParameterNode*>(node);
             return analyzeExpression(cp->parameter);
         }
 

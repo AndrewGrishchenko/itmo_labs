@@ -32,6 +32,7 @@ class SemanticAnalyzer {
         std::string analyzeExpression(ASTNode* node);
         void analyzeStatement(ASTNode* node);
         void analyzeFunction(ASTNode* node);
+        bool hasReturn;
         std::string currentReturnType;
 
         std::string nodeStr(ASTNode* node);
