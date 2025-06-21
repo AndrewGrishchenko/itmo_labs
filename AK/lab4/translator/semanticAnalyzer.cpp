@@ -213,11 +213,6 @@ std::string SemanticAnalyzer::analyzeExpression(ASTNode* node) {
             throw std::runtime_error("Unknown unary operator: " + un->op);
         }
 
-        case ASTNodeType::CallParameter: {
-            auto cp = static_cast<CallParameterNode*>(node);
-            return analyzeExpression(cp->parameter);
-        }
-
         case ASTNodeType::FunctionCall: {
             auto call = static_cast<FunctionCallNode*>(node);
             if (!functions.count(call->name))

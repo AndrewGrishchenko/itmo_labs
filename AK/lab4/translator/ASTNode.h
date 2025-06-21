@@ -270,23 +270,6 @@ struct FunctionNode : ASTNode {
     }
 };
 
-struct CallParameterNode : ASTNode {
-    ASTNode* parameter;
-
-    CallParameterNode(ASTNode* parameter)
-        : ASTNode(ASTNodeType::CallParameter), parameter(parameter) { }
-
-    void print(int indent = 0) const override {
-        printIndent(indent);
-        std::cout << "CallPararameter\n";
-
-        printIndent(indent + 1);
-        std::cout << "parameter:\n";
-
-        parameter->print(indent + 2);
-    }
-};
-
 struct FunctionCallNode : ASTNode {
     std::string name;
     std::vector<ASTNode*> parameters;

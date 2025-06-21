@@ -313,10 +313,6 @@ ASTNode* Translator::parseFunction(std::vector<Token> tokens, size_t& pos) {
     return new FunctionNode(returnType, name, parameters, body);
 }
 
-ASTNode* Translator::parseCallParameter(std::vector<Token> tokens, size_t& pos) {
-    return new CallParameterNode(parseExpression(tokens, pos));
-}
-
 ASTNode* Translator::parseFunctionCall(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::Identifier)
         throw std::runtime_error("Expected identifier");

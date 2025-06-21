@@ -127,9 +127,6 @@ class CodeGenerator {
                 case ASTNodeType::FunctionCall:
                     processFunctionCall(node);
                     break;
-                case ASTNodeType::CallParameter:
-                    processCallParameter(node);
-                    break;
                 case ASTNodeType::Return:
                     processReturn(node);
                     break;
@@ -208,6 +205,7 @@ class CodeGenerator {
             // emitCode("st temp_sp");
             //TODO: have i to save sp?
             //TODO: redo parameters as field ParametersNode, containing vector of nodes
+            //TODO: think making function arguments as stack (+using sp)
 
             processNode(functionNode->body);
 
@@ -403,8 +401,7 @@ class CodeGenerator {
             std::string funcName = functionCallNode->name;
             
             for (size_t i = 0; i < functionCallNode->parameters.size(); i++) {
-                CallParameterNode* callParameterNode = static_cast<CallParameterNode*>(functionCallNode->parameters[i]);
-                processNode(callParameterNode->parameter);
+                processNode(functionCallNode->parameters[i]);
                 emitCode("st arg_" + funcName + "_" + functionParams[funcName][i].second);
             }
 
@@ -412,13 +409,6 @@ class CodeGenerator {
                 emitCode("call func_" + funcName);
             else
                 throw std::runtime_error("Could not find function " + funcName);
-        }
-
-        void processCallParameter(ASTNode* node) {
-            CallParameterNode* callParameterNode = static_cast<CallParameterNode*>(node);
-            //TODO: rename to CallParameterNode to meet standard
-
-            processNode(callParameterNode->parameter);
         }
 
         void processReturn(ASTNode* node) {
