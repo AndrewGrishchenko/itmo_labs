@@ -605,6 +605,7 @@ std::string CodeGenerator::assembleCode() {
     result << "  end_symb: 10\n";
     result << "  source_str: 0\n";
     result << "  target_str: 0\n";
+    result << "  str_end: 0\n";
     result << "\n";
 
     for (const auto& line : dataSection) {

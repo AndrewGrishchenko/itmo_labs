@@ -143,16 +143,18 @@ class CodeGenerator {
                                "str_copy_do:\n"
                                "  lda buffer_start\n"
                                "  sta target_buffer\n\n"
+                               "  ld target_buffer\n"
+                               "  inc\n"
+                               "  st target_buffer\n\n"
                                "  sub end_symb\n"
                                "  jz str_copy_end\n\n"
                                "  ld buffer_start\n"
                                "  inc\n"
                                "  st buffer_start\n\n"
-                               "  ld target_buffer\n"
-                               "  inc\n"
-                               "  st target_buffer\n"
                                "  jmp str_copy_do\n"
                                "str_copy_end:\n"
+                               "  lda str_end\n"
+                               "  sta target_buffer\n"
                                "  ret\n\n";
 
         std::string assembleCode();
