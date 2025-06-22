@@ -291,18 +291,6 @@ struct FunctionCallNode : ASTNode {
     }
 };
 
-struct ExpressionNode : ASTNode {
-    ASTNode* expression;
-
-    ExpressionNode(ASTNode* expression)
-        : ASTNode(ASTNodeType::Expression), expression(expression) { }
-
-    void print(int indent = 0) const override {
-        // std::cout << "{Expression}\n";
-        expression->print(indent);
-    }
-};
-
 struct ReturnNode : ASTNode {
     ASTNode* returnValue;
 

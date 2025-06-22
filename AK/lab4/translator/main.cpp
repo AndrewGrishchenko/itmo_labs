@@ -6,6 +6,7 @@
 
 #include "translator.h"
 #include "codeGenerator.h"
+#include "semanticAnalyzer.h"
 
 #include "treeVisualizer.h"
 
@@ -17,6 +18,10 @@ int main() {
 
     Translator translator;
     ASTNode* tree = translator.makeTree(data);
+
+    SemanticAnalyzer analyzer;
+    analyzer.analyze(tree);
+    std::cout << "semantic analyze success\n\n";
 
     TreeVisualizer tv;
     std::string puml_str = tv.makeUML(tree); 

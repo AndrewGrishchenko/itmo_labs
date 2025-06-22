@@ -256,17 +256,6 @@ class TreeVisualizer {
 
                     return objName;
                 }
-                case ASTNodeType::Expression: {
-                    ExpressionNode* expressionNode = static_cast<ExpressionNode*>(node);
-                    std::string objName = "Expression" + std::to_string(labelCount(node->nodeType));
-
-                    emitObject(objName);
-
-                    std::string childName = processNode(expressionNode->expression);
-                    emitObjectAssociation(objName, childName, "expression");
-
-                    return objName;
-                }
                 case ASTNodeType::Return: {
                     ReturnNode* returnNode = static_cast<ReturnNode*>(node);
                     std::string objName = "Return" + std::to_string(labelCount(node->nodeType));

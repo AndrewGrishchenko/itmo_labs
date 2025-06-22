@@ -99,11 +99,6 @@ ASTNode* Translator::makeTree(std::string data) {
     std::cout << "parse success\n\n";
 
     printTree(root);
-    
-    SemanticAnalyzer analyzer;
-    analyzer.analyze(root);
-
-    std::cout << "semantic analyze success\n\n";
 
     return root;
 }
@@ -180,7 +175,7 @@ ASTNode* Translator::parseStatement(std::vector<Token> tokens, size_t& pos) {
     } else if (tokens[pos].type == TokenType::Identifier) {
         if (pos + 1 < tokens.size() &&
             tokens[pos + 1].type == TokenType::LParen) {
-            ASTNode* node = new ExpressionNode(parseFunctionCall(tokens, pos));
+            ASTNode* node = parseFunctionCall(tokens, pos);
 
             if (tokens[pos].type != TokenType::Semicolon)
                 throw std::runtime_error("Expected ';'");
@@ -359,9 +354,8 @@ ASTNode* Translator::parseReturn(std::vector<Token> tokens, size_t& pos) {
     }
 }
 
-//TODO: remove expression nodes AT ALL!
 ASTNode* Translator::parseExpression(std::vector<Token> tokens, size_t& pos) {
-    return new ExpressionNode(parseLogicOr(tokens, pos));
+    return parseLogicOr(tokens, pos);
 }
 
 ASTNode* Translator::parseTerm(std::vector<Token> tokens, size_t& pos) {

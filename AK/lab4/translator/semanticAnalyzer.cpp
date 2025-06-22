@@ -11,7 +11,10 @@ void SemanticAnalyzer::analyze(ASTNode* node) {
         for (auto stmt : root->children) {
             if (stmt->nodeType == ASTNodeType::Function)
                 analyzeFunction(stmt);
-            else
+        }
+
+        for (auto stmt : root->children) {
+            if (stmt->nodeType != ASTNodeType::Function)
                 analyzeStatement(stmt);
         }
     } else {
@@ -30,8 +33,6 @@ void SemanticAnalyzer::exitScope() {
 
 void SemanticAnalyzer::declareVariable(const std::string& name, const std::string& type) {
     scopes.back()[name] = type;
-    
-    // scopes.back()[type] = name;
 }
 
 std::string SemanticAnalyzer::lookupVariable(const std::string& name) {
@@ -40,24 +41,54 @@ std::string SemanticAnalyzer::lookupVariable(const std::string& name) {
             return scopes[i][name];
     }
 
-    // for (size_t i = 0; i < scopes.size(); i++) {
-    //     std::cout << "Map#" << i << std::endl;
-    //     for (const auto& pair : scopes[i]) {
-    //         std::cout << pair.first << ": " << pair.second << "\n";
-    //     }
-    //     std::cout << scopes[i].count("x") << std::endl;
-    // }
+    std::cout << "Seman didnt found var " << name << "\n";
+    for (size_t i = 0; i < scopes.size(); i++) {
+        std::cout << "SCOPE #" << i << std::endl;
+        for (auto& p : scopes[i]) {
+            std::cout << "  " << p.first << ": " << p.second << std::endl;
+        }
+    }
 
     throw std::runtime_error("Undeclared variable: " + name);
 }
 
+bool SemanticAnalyzer::isReserved(const std::string& name, FunctionSignature sig) {
+    for (auto& p : reservedFunctions) {
+        if (p.first == name) {
+            for (auto& reserved : p.second) {
+                if (reserved == sig)
+                    return true;
+            }
+        }
+    }
+    return false;
+}
+
+std::string SemanticAnalyzer::findFunction(const std::string& name, std::vector<std::string> paramTypes) {
+    if (reservedFunctions.find(name) != reservedFunctions.end()) {
+        for (const auto& fn : reservedFunctions.at(name)) {
+            if (fn.paramTypes == paramTypes) return fn.returnType;
+        } 
+    } else {
+        for (auto& fn : functions[name]) {
+            if (fn.paramTypes == paramTypes) return fn.returnType;
+        }
+    }
+    return "";
+}
+
 void SemanticAnalyzer::analyzeFunction(ASTNode* node) {
     auto fn = static_cast<FunctionNode*>(node);
+
     FunctionSignature sig;
     sig.returnType = fn->returnType;
     for (const auto& param : fn->parameters)
         sig.paramTypes.push_back(static_cast<ParameterNode*>(param)->type);
-    functions[fn->name] = sig;
+
+    if (isReserved(fn->name, sig))
+        throw std::runtime_error("Function name " + fn->name + " is reserved");
+
+    functions[fn->name].push_back(sig);
     hasReturn = false;
     currentReturnType = fn->returnType;
 
@@ -78,10 +109,6 @@ void SemanticAnalyzer::analyzeStatement(ASTNode* node) {
         case ASTNodeType::VarDecl: {
             auto var = static_cast<VarDeclNode*>(node);
 
-            if (functions.find(var->name) != functions.end())
-                throw std::runtime_error("Already function named " + var->name);
-                
-
             std::string exprType = analyzeExpression(var->value);
             if (exprType != var->type)
                 throw std::runtime_error("Type mismatch in variable declaration: " + var->name);
@@ -98,10 +125,6 @@ void SemanticAnalyzer::analyzeStatement(ASTNode* node) {
                 throw std::runtime_error("Type mismatch in variable assignment");
             break;
         }
-
-        case ASTNodeType::Expression:
-            analyzeExpression(static_cast<ExpressionNode*>(node)->expression);
-            break;
         
         case ASTNodeType::If: {
             auto ifNode = static_cast<IfNode*>(node);
@@ -149,7 +172,7 @@ void SemanticAnalyzer::analyzeStatement(ASTNode* node) {
         }
 
         default:
-            throw std::runtime_error("Unknown statement type: " + nodeStr(node));
+            analyzeExpression(node);
     }
 }
 
@@ -167,11 +190,6 @@ std::string SemanticAnalyzer::analyzeExpression(ASTNode* node) {
         case ASTNodeType::Identifier: {
             auto id = static_cast<IdentifierNode*>(node);
             return lookupVariable(id->name);
-        }
-
-        case ASTNodeType::Expression: {
-            auto expr = static_cast<ExpressionNode*>(node);
-            return analyzeExpression(expr->expression);
         }
 
         case ASTNodeType::BinaryOp: {
@@ -215,16 +233,15 @@ std::string SemanticAnalyzer::analyzeExpression(ASTNode* node) {
 
         case ASTNodeType::FunctionCall: {
             auto call = static_cast<FunctionCallNode*>(node);
-            if (!functions.count(call->name))
-                throw std::runtime_error("Call to undefined function: " + call->name);
-            FunctionSignature sig = functions[call->name];
-            if (sig.paramTypes.size() != call->parameters.size())
-                throw std::runtime_error("Incorrect number of arguments to function: " + call->name);
-            for (size_t i = 0; i < sig.paramTypes.size(); i++) {
-                std::string actual = analyzeExpression(call->parameters[i]);
-                if (actual != sig.paramTypes[i])
-                    throw std::runtime_error("Argument type mismatch in function: " + call->name);
-            }
+            
+            FunctionSignature sig;
+            for (auto& param : call->parameters)
+                sig.paramTypes.push_back(analyzeExpression(param));
+            sig.returnType = findFunction(call->name, sig.paramTypes);
+            
+            if (sig.returnType.empty())
+                throw std::runtime_error("Unable to find function");
+            
             return sig.returnType;
         }
 
@@ -232,8 +249,6 @@ std::string SemanticAnalyzer::analyzeExpression(ASTNode* node) {
             throw std::runtime_error("Unsupported expression type: " + nodeStr(node));
     }
 }
-
-
 
 std::string SemanticAnalyzer::nodeStr(ASTNode* node) {
     switch (node->nodeType) {
