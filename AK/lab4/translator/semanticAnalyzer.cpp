@@ -8,15 +8,8 @@ void SemanticAnalyzer::analyze(ASTNode* node) {
     enterScope();
     if (!node || node->nodeType == ASTNodeType::Block) {
         auto root = static_cast<BlockNode*>(node);
-        for (auto stmt : root->children) {
-            if (stmt->nodeType == ASTNodeType::Function)
-                analyzeFunction(stmt);
-        }
-
-        for (auto stmt : root->children) {
-            if (stmt->nodeType != ASTNodeType::Function)
-                analyzeStatement(stmt);
-        }
+        for (auto& stmt : root->children)
+            analyzeStatement(stmt);
     } else {
         throw std::runtime_error("Root node must be block");
     }
@@ -170,6 +163,10 @@ void SemanticAnalyzer::analyzeStatement(ASTNode* node) {
             hasReturn = true;
             break;
         }
+
+        case ASTNodeType::Function:
+            analyzeFunction(node);
+            break;
 
         default:
             analyzeExpression(node);

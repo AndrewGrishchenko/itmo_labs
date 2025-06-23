@@ -7,6 +7,8 @@
 #include "translator.h"
 #include "codeGenerator.h"
 #include "semanticAnalyzer.h"
+#include "binarizer.h"
+#include "processorModel.h"
 
 #include "treeVisualizer.h"
 
@@ -33,4 +35,16 @@ int main() {
 
     std::cout << "CODE:\n";
     std::cout << code;
+
+    Binarizer binarizer;
+    binarizer.parse(code);
+    binarizer.writeToFile("program.bin");
+
+    std::cout << "RECONSTRUCTED CODE:\n";
+    std::cout << binarizer.toAsm();
+    binarizer.dump();
+
+    ProcessorModel processorModel;
+    processorModel.loadBinary("program.bin");
+    processorModel.process();
 }

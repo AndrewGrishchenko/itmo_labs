@@ -240,10 +240,6 @@ void CodeGenerator::processRoot(ASTNode* node) {
 
     emitCodeLabel("_start");
 
-    emitCode("ldi 1000");
-    emitCode("st sp");
-    emitCode("");
-
     for (auto* child : root->children) {
         processNode(child);
     }
@@ -272,6 +268,7 @@ void CodeGenerator::processFunction(ASTNode* node) {
     functions[funcName].push_back(*currentFunction);
 
     processNode(functionNode->body);
+    emitCode("");
 
     currentFunction.reset();
 }
@@ -375,6 +372,7 @@ void CodeGenerator::processUnaryOp(ASTNode* node) {
         emitCode("sub temp_right");
     } else if (op == "-") {
         emitCode("not");
+        emitCode("inc");
     } else {
         throw std::runtime_error("Unknown unary op " + op);
     }
@@ -541,8 +539,8 @@ std::string CodeGenerator::getVarLabel(const std::string& varName) {
         bool isArg = std::any_of(
             currentFunction->params.begin(),
             currentFunction->params.end(),
-            [&varName](const auto& param) { return param.first == varName; });
-        
+            [&varName](const auto& param) { return param.second == varName; });
+
         if (isArg) {
             return "arg_" + currentFunction->label + "_" + varName;
         } else {
@@ -550,6 +548,7 @@ std::string CodeGenerator::getVarLabel(const std::string& varName) {
                 return "var_" + varName;
             } else {
                 return "var_" + currentFunction->label + "_" + varName;
+                //TODO: check wtf is this
             }
         }
     } else {
@@ -602,6 +601,7 @@ std::string CodeGenerator::assembleCode() {
     result << "  temp_right: 0\n";
     result << "  buffer: 0\n";
     result << "  buffer_start: 0\n";
+    result << "  target_buffer: 0\n";
     result << "  end_symb: 10\n";
     result << "  source_str: 0\n";
     result << "  target_str: 0\n";
