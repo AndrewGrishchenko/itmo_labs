@@ -47,7 +47,9 @@ int main() {
 
     std::cout << "RECONSTRUCTED CODE:\n";
     std::cout << binarizer.toAsm();
+    std::cout << "DUMP:\n";
     binarizer.dump();
+    std::cout << "\n";
 
     ProcessorModel processorModel;
     processorModel.loadBinary("program.bin");

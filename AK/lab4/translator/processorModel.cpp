@@ -29,10 +29,10 @@ ProcessorModel::ProcessorModel() {
 ProcessorModel::~ProcessorModel() { }
 
 void ProcessorModel::process() {
-    memory.reset();
+    // memory.reset();
     registers.reset();
     operand = 0;
-    textSize = dataSize = dataStart = 0;
+    // textSize = dataSize = dataStart = 0;
     halted = false;
     tickCount = 0;
     microstep = 0;
@@ -44,13 +44,13 @@ void ProcessorModel::process() {
         tick();
         tickCount++;
     }
+
+    allDump();
 }
 
 void ProcessorModel::loadBinary(const std::string& filename) {
-    binaryLoaded = true;
-    
     std::ifstream in(filename, std::ios::binary);
-    if (!in) throw std::runtime_error("Can't open file " + filename);
+    if (!in) throw std::runtime_error("Can't open binary " + filename);
 
     uint8_t buf[3];
     size_t address = 0;
@@ -61,23 +61,57 @@ void ProcessorModel::loadBinary(const std::string& filename) {
     textSize = (buf[0] << 16) | (buf[1] << 8) | buf[2];
     dataStart = textSize;
 
+    std::cout << "BINARY LOAD:\n";
+    std::cout << "textSize: 0x" << std::hex << textSize << std::dec << "\n";
+    std::cout << "dataStart: 0x" << std::hex << dataStart << std::dec << "\n\n";
+
     while (in.read(reinterpret_cast<char*>(buf), 3)) {
         if (address >= MEM_SIZE)
             throw std::runtime_error("Binary too large");
         memory[address++] = (buf[0] << 16) | (buf[1] << 8) | buf[2];
+        std::cout << "MEM[" << std::hex << address - 1 << "] = " << memory[address - 1] << std::dec << "\n"; 
     }
 
     dataSize = address - textSize;
+    binaryLoaded = true;
+}
+
+void ProcessorModel::memDump() {
+    std::cout << "MEMDUMP:\n";
+    std::cout << "textSize: " << std::hex << textSize << std::dec << std::endl;
+    std::cout << "dataSize: " << std::hex << dataSize << std::dec << std::endl;
+    size_t address = 0;
+    while (address < textSize + dataSize) {
+        std::cout << "MEM[" << std::hex << address << "] = " << memory[address++] << std::dec << "\n";
+    }
+    std::cout << "\n\n";
+}
+
+void ProcessorModel::allDump() {
+    std::cout << "\nALL DUMP:\n";
+    
+    std::cout << "REGISTERS:\n";
+    std::cout << "ACC: " << std::hex << "0x" << registers.get(Registers::ACC) << std::dec << "\n";
+    std::cout << "IR: " << std::hex << "0x" << registers.get(Registers::IR) << std::dec << "\n";
+    std::cout << "AR: " << std::hex << "0x" << registers.get(Registers::AR) << std::dec << "\n";
+    std::cout << "DR: " << std::hex << "0x" << registers.get(Registers::DR) << std::dec << "\n";
+    std::cout << "IP: " << std::hex << "0x" << registers.get(Registers::IP) << std::dec << "\n";
+    std::cout << "SP: " << std::hex << "0x" << registers.get(Registers::SP) << std::dec << "\n";
+    std::cout << "\n";
+
+    memDump();
 }
 
 void ProcessorModel::tick() {
+    std::cout << "ticking state " << stateStr() << "\n";
+
     switch (state) {
         case CPUState::FetchAR: {
             mux1.select(3);
             mux2.select(0);
 
             alu.perform(ALU::Operation::NOP);
-            
+
             latchRouter.setLatches({0, 1, 0, 0, 0});
             latchRouter.propagate();
 
@@ -88,7 +122,7 @@ void ProcessorModel::tick() {
             uint32_t instr = memory[registers.get(Registers::AR)];
 
             registers.set(Registers::IR, instr);
-            
+
             opcode = (instr >> 19) & 0x1F;
             operand = instr & 0x7FFFF;
             //TODO: where do i calc opcode & operand? add to scheme tho
@@ -100,6 +134,10 @@ void ProcessorModel::tick() {
         case CPUState::Decode: {
             //decode
             //TODO: think why i need function; maybe i have to do this for opcode too?
+
+            std::cout << "instr = 0x" << std::hex << static_cast<int>(registers.get(Registers::IR)) << std::dec << "\n";
+            std::cout << "opcode = 0x" << std::hex << static_cast<int>(opcode) << std::dec << "\n";
+            std::cout << "operand = 0x" << std::hex << static_cast<int>(operand) << std::dec << "\n";
 
             instructionTick();
             if (instructionDone) {
@@ -124,9 +162,14 @@ void ProcessorModel::tick() {
             break;
         }
     }
+
+    allDump();
 }
 
 void ProcessorModel::instructionTick() {
+    std::cout << "microstep #" << microstep << "\n";
+    // std::cout << "tick #" << microstep << " of opcode = " << std::hex << "0x" << static_cast<int>(opcode) << " & operand = " << operand << std::dec << "\n";
+
     switch(opcode) {
         case OP_ADD:
         case OP_SUB:
@@ -167,7 +210,7 @@ void ProcessorModel::instructionTick() {
                     latchRouter.setLatches({1, 0, 0, 0, 0});
                     latchRouter.propagate();
 
-                    microstep++;
+                    microstep = 0;
                     instructionDone = true;
                     break;
             }

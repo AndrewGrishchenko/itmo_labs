@@ -105,7 +105,7 @@ void Binarizer::parse(const std::string& data) {
             if (value >= (1 << 24))
                 throw std::runtime_error("Data value too large (max 24 bits): " + std::to_string(value));
 
-            dataAddress[label] = dataSection.size();
+            dataAddress[label] = textAddr + dataSection.size();
             dataSection.push_back(value);
         }
     }
@@ -196,18 +196,33 @@ std::string Binarizer::toAsm() const {
 
 void Binarizer::dump() {
     std::ifstream in("program.bin", std::ios::binary);
+    if (!in.is_open())
+        throw std::runtime_error("Failed to open binary file");
+
     uint8_t buf[3];
+
+    //headere
+    if (!in.read(reinterpret_cast<char*>(buf), 3)) {
+        std::cerr << "Failed to read header\n";
+        return;
+    }
+
+    uint32_t textSize = (buf[0] << 16) | (buf[1] << 8) | buf[2];
+    std::cout << "HEADER: textSize = " << textSize << "\n";
+
     int addr = 0;
     while (in.read(reinterpret_cast<char*>(buf), 3)) {
         uint32_t raw = (buf[0] << 16) | (buf[1] << 8) | buf[2];
         std::cout << std::setw(4) << std::setfill('0') << std::hex << addr << ": ";
-        if (addr < instructions.size()) {
+
+        if (addr < textSize) {
             uint8_t opcode = raw >> 19;
             uint32_t operand = raw & 0x7FFFF;
-            std::cout << "opcode=" << std::hex << +opcode << " operand=" << operand << "\n";
+            std::cout << "opcode=0x" << std::hex << +opcode << " operand=0x" << operand << "\n";
         } else {
             std::cout << "DATA=0x" << std::uppercase << std::hex << raw << "\n";
         }
+
         ++addr;
     }
 }

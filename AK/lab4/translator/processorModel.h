@@ -159,6 +159,8 @@ class ALU {
             *flagRefs[1] = Z;
             *flagRefs[2] = V;
             *flagRefs[3] = C;
+
+            // std::cout << "ALU PERFORMED WITH RESULT = " << result << "\n";
         }
 
         // struct Result {
@@ -210,6 +212,7 @@ class MUX {
         void select(size_t index) {
             if (index >= inputs.size()) throw std::out_of_range("MUX select out of range");
             selectedIndex = index;
+            // std::cout << "MUX SELECTED " << index << " (" << inputs[selectedIndex].get() << ")\n";
         }
 
         uint32_t& getSelected() const {
@@ -358,9 +361,13 @@ class LatchRouter {
         // }
 
         void propagate() {
+            // std::cout << "PROPAGATING LATCHES:\n";
             for (auto& [ref, latch] : outputs) {
-                if (latch)
+                if (latch) {
+                    // std::cout << ref.get() << " = " << input.get() << "\n";
                     ref.get() = input.get();
+                }
+                    
             }
         }
 
@@ -402,9 +409,6 @@ class ProcessorModel {
             FetchAR,
             FetchIR,
             Decode,
-            FetchOperandAR,
-            FetchOperandDR,
-            ExecuteALU,
             IncrementIP,
             Halt
         };
@@ -448,6 +452,25 @@ class ProcessorModel {
 
         bool instructionDone = false;
         void instructionTick();
+
+        std::string stateStr() {
+            switch (state) {
+                case CPUState::FetchAR:
+                    return "FetchAR";
+                case CPUState::FetchIR:
+                    return "FetchIR";
+                case CPUState::Decode:
+                    return "Decode";
+                case CPUState::IncrementIP:
+                    return "IncrementIP";
+                case CPUState::Halt:
+                    return "Halt";
+                default:
+                    return "";
+            }
+        }
+        void memDump();
+        void allDump();
 };
 
 #endif
