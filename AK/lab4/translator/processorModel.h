@@ -146,7 +146,6 @@ class ALU {
                     C = (left >> (right - 1)) & 1;
                     break;
                 case Operation::NOP:
-                    //TODO: think ??
                     value = left + right;
                     break;
             }
@@ -154,27 +153,49 @@ class ALU {
             N = value >> 31;
             Z = value == 0;
 
-            result = { value, N, Z, V, C };
+            // result = { value, N, Z, V, C };
+            result = value;
+            *flagRefs[0] = N;
+            *flagRefs[1] = Z;
+            *flagRefs[2] = V;
+            *flagRefs[3] = C;
         }
 
-        struct Result {
-            uint32_t value;
-            bool N, Z, V, C;
-        };
+        // struct Result {
+        //     uint32_t value;
+        //     bool N, Z, V, C;
+        // };
 
-        Result getResult() const {
+        // Result getResult() const {
+        //     return result;
+        // }
+
+        // uint32_t& getResultValueRef() {
+        //     return result.value;
+        // }
+
+        uint32_t getResult() const {
             return result;
         }
 
-        uint32_t& getResultValueRef() {
-            return result.value;
+        uint32_t& getResultRef() {
+            return result;
+        }
+
+        void setFlagRefs(bool& n, bool& z, bool& v, bool& c) {
+            flagRefs[0] = &n;
+            flagRefs[1] = &z;
+            flagRefs[2] = &v;
+            flagRefs[3] = &c;
         }
 
     private:
         std::function<uint32_t&()> leftGetter;
         std::function<uint32_t&()> rightGetter;
-        Result result;
-        uint32_t dummyInput = 0; //TODO: smth to do w this
+        // Result result;
+        uint32_t result = 0;
+        bool* flagRefs[4];
+        //TODO: smth to do w dummies
 };
 
 class MUX {
@@ -245,15 +266,19 @@ class Registers {
         }
 
         bool getN() const { return N; }
+        bool& getNRef() { return N; }
         void setN(bool val) { N = val; }
 
         bool getZ() const { return Z; }
+        bool& getZRef() { return Z; }
         void setZ(bool val) { Z = val; }
 
         bool getV() const { return V; }
+        bool& getVRef() { return V; }
         void setV(bool val) { V = val; }
 
         bool getC() const { return C; }
+        bool& getCRef() { return C; }
         void setC(bool val) { C = val; }
 
         void dump() const {

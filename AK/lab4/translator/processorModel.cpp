@@ -13,8 +13,12 @@ ProcessorModel::ProcessorModel() {
 
     alu.setLeftInputGetter(mux1.makeGetter());
     alu.setRightInputGetter(mux2.makeGetter());
+    alu.setFlagRefs(registers.getNRef(),
+                    registers.getZRef(),
+                    registers.getVRef(),
+                    registers.getCRef());
 
-    latchRouter.setInput(alu.getResultValueRef());
+    latchRouter.setInput(alu.getResultRef());
     latchRouter.addOutput(registers.getRef(Registers::ACC));
     latchRouter.addOutput(registers.getRef(Registers::AR));
     latchRouter.addOutput(registers.getRef(Registers::DR));
@@ -212,26 +216,122 @@ void ProcessorModel::instructionTick() {
             instructionDone = true;
             break;
 
+        case OP_JZ:
+            mux1.select(2);
+            mux2.select(0);
+
+            if (registers.getZ())
+                latchRouter.setLatches({0, 0, 0, 1, 0});
+            else
+                latchRouter.setLatches({0, 0, 0, 0, 0});
+
+            alu.perform(ALU::Operation::NOP);
+            
+            latchRouter.propagate();
+
+            instructionDone = true;
+            break;
+
+        case OP_JNZ:
+            mux1.select(2);
+            mux2.select(0);
+
+            if (!registers.getZ())
+                latchRouter.setLatches({0, 0, 0, 1, 0});
+            else
+                latchRouter.setLatches({0, 0, 0, 0, 0});
+
+            alu.perform(ALU::Operation::NOP);
+            
+            latchRouter.propagate();
+
+            instructionDone = true;
+            break;
+        
+        case OP_JG:
+            mux1.select(2);
+            mux2.select(0);
+
+            if (!registers.getZ() && registers.getN() == registers.getV())
+                latchRouter.setLatches({0, 0, 0, 1, 0});
+            else
+                latchRouter.setLatches({0, 0, 0, 0, 0});
+
+            alu.perform(ALU::Operation::NOP);
+
+            latchRouter.propagate();
+
+            instructionDone = true;
+            break;
+
+        case OP_JGE:
+            mux1.select(2);
+            mux2.select(0);
+
+            if (registers.getN() == registers.getV())
+                latchRouter.setLatches({0, 0, 0, 1, 0});
+            else
+                latchRouter.setLatches({0, 0, 0, 0, 0});
+
+            alu.perform(ALU::Operation::NOP);
+
+            latchRouter.propagate();
+
+            instructionDone = true;
+            break;
+
+        case OP_JL:
+            mux1.select(2);
+            mux2.select(0);
+
+            if (registers.getN() != registers.getV())
+                latchRouter.setLatches({0, 0, 0, 1, 0});
+            else
+                latchRouter.setLatches({0, 0, 0, 0, 0});
+
+            alu.perform(ALU::Operation::NOP);
+
+            latchRouter.propagate();
+
+            instructionDone = true;
+            break;
+
+        case OP_JLE:
+            mux1.select(2);
+            mux2.select(0);
+
+            if (registers.getZ() || registers.getN() != registers.getV())
+                latchRouter.setLatches({0, 0, 0, 1, 0});
+            else
+                latchRouter.setLatches({0, 0, 0, 0, 0});
+
+            alu.perform(ALU::Operation::NOP);
+
+            latchRouter.propagate();
+
+            instructionDone = true;
+            break;
+
         case OP_PUSH:
             switch (microstep) {
                 case 0:
                     mux1.select(0);
-                    mux2.select(1);
+                    mux2.select(3);
 
-                    alu.perform(ALU::Operation::ADD);
+                    alu.perform(ALU::Operation::NOP);
 
-                    latchRouter.setLatches({0, 0, 1, 0, 0});
+                    latchRouter.setLatches({0, 1, 0, 0, 0});
                     latchRouter.propagate();
 
                     microstep++;
                     break;
                 case 1:
-                    mux1.select(3);
+                    mux1.select(1);
                     mux2.select(0);
 
-                    alu.perform(ALU::Operation::ADD);
+                    alu.perform(ALU::Operation::NOP);
 
-                    latchRouter.setLatches({0, 1, 0, 0, 0});
+                    latchRouter.setLatches({0, 0, 1, 0, 0});
                     latchRouter.propagate();
 
                     microstep++;
@@ -241,8 +341,8 @@ void ProcessorModel::instructionTick() {
                     microstep++;
                     break;
                 case 3:
-                    mux1.select(3);
-                    mux2.select(0);
+                    mux1.select(0);
+                    mux2.select(3);
 
                     alu.perform(ALU::Operation::DEC);
 
@@ -253,6 +353,328 @@ void ProcessorModel::instructionTick() {
                     instructionDone = true;
                     break;
             }
+            break;
+
+        case OP_POP:
+            switch (microstep) {
+                case 0:
+                    mux1.select(0);
+                    mux2.select(3);
+
+                    alu.perform(ALU::Operation::NOP);
+
+                    latchRouter.setLatches({0, 1, 0, 0, 0});
+                    latchRouter.propagate();
+
+                    microstep++;
+                    break;
+                case 1:
+                    registers.set(Registers::DR, memory[registers.get(Registers::AR)]);
+                    microstep++;
+                    break;
+                case 2:
+                    mux1.select(0);
+                    mux2.select(2);
+
+                    alu.perform(ALU::Operation::NOP);
+
+                    latchRouter.setLatches({1, 0, 0, 0, 0});
+                    latchRouter.propagate();
+
+                    microstep++;
+                    break;
+                case 3:
+                    mux1.select(0);
+                    mux2.select(3);
+
+                    alu.perform(ALU::Operation::INC);
+
+                    latchRouter.setLatches({0, 0, 0, 0, 1});
+                    latchRouter.propagate();
+
+                    microstep = 0;
+                    instructionDone = true;
+                    break;
+            }
+            break;
+
+        case OP_LD:
+            //TODO: think flags in nop, i.e. ld value; jz ...
+            switch (microstep) {
+                case 0:
+                    mux1.select(2);
+                    mux2.select(0);
+
+                    alu.perform(ALU::Operation::NOP);
+
+                    latchRouter.setLatches({0, 1, 0, 0, 0});
+                    latchRouter.propagate();
+
+                    microstep++;
+                    break;
+                case 1:
+                    registers.set(Registers::DR, memory[registers.get(Registers::AR)]);
+                    microstep++;
+                    break;
+                case 2:
+                    mux1.select(0);
+                    mux2.select(2);
+
+                    alu.perform(ALU::Operation::NOP);
+
+                    latchRouter.setLatches({1, 0, 0, 0, 0});
+                    latchRouter.propagate();
+
+                    microstep = 0;
+                    instructionDone = true;
+                    break;
+            }
+            break;
+
+        case OP_LDA:
+            switch (microstep) {
+                case 0:
+                    mux1.select(2);
+                    mux2.select(0);
+
+                    alu.perform(ALU::Operation::NOP);
+
+                    latchRouter.setLatches({0, 1, 0, 0, 0});
+                    latchRouter.propagate();
+
+                    microstep++;
+                    break;
+                case 1:
+                    registers.set(Registers::DR, memory[registers.get(Registers::AR)]);
+                    microstep++;
+                    break;
+                case 2:
+                    mux1.select(0);
+                    mux2.select(2);
+
+                    alu.perform(ALU::Operation::NOP);
+
+                    latchRouter.setLatches({0, 1, 0, 0, 0});
+                    latchRouter.propagate();
+
+                    microstep++;
+                    break;
+                case 3:
+                    registers.set(Registers::DR, memory[registers.get(Registers::AR)]);
+                    microstep++;
+                    break;
+                case 4:
+                    mux1.select(0);
+                    mux2.select(2);
+
+                    alu.perform(ALU::Operation::NOP);
+
+                    latchRouter.setLatches({1, 0, 0, 0, 0});
+                    latchRouter.propagate();
+
+                    microstep = 0;
+                    instructionDone = true;
+                    break;
+            }
+            break;
+
+        case OP_LDI:
+            mux1.select(2);
+            mux2.select(0);
+
+            alu.perform(ALU::Operation::NOP);
+
+            latchRouter.setLatches({1, 0, 0, 0, 0});
+            latchRouter.propagate();
+
+            instructionDone = true;
+            break;
+
+        case OP_ST:
+            switch (microstep) {
+                case 0:
+                    mux1.select(2);
+                    mux2.select(0);
+
+                    alu.perform(ALU::Operation::NOP);
+
+                    latchRouter.setLatches({0, 1, 0, 0, 0});
+                    latchRouter.propagate();
+
+                    microstep++;
+                    break;
+                case 1:
+                    mux1.select(1);
+                    mux2.select(0);
+
+                    alu.perform(ALU::Operation::NOP);
+
+                    latchRouter.setLatches({0, 0, 1, 0, 0});
+                    latchRouter.propagate();
+
+                    microstep++;
+                    break;
+                case 2:
+                    memory[registers.get(Registers::AR)] = registers.get(Registers::DR);
+                    microstep = 0;
+                    instructionDone = true;
+                    break;
+            }
+            break;
+
+        case OP_STA:
+            switch (microstep) {
+                case 0:
+                    mux1.select(2);
+                    mux2.select(0);
+
+                    alu.perform(ALU::Operation::NOP);
+
+                    latchRouter.setLatches({0, 1, 0, 0, 0});
+                    latchRouter.propagate();
+
+                    microstep++;
+                    break;
+                case 1:
+                    registers.set(Registers::DR, memory[registers.get(Registers::AR)]);
+                    microstep++;
+                    break;
+                case 2:
+                    mux1.select(0);
+                    mux2.select(2);
+
+                    alu.perform(ALU::Operation::NOP);
+
+                    latchRouter.setLatches({0, 1, 0, 0, 0});
+                    latchRouter.propagate();
+
+                    microstep++;
+                    break;
+                case 3:
+                    mux1.select(1);
+                    mux2.select(0);
+
+                    alu.perform(ALU::Operation::NOP);
+
+                    latchRouter.setLatches({0, 0, 1, 0, 0});
+                    latchRouter.propagate();
+
+                    microstep++;
+                    break;
+                case 4:
+                    memory[registers.get(Registers::AR)] = registers.get(Registers::DR);
+                    microstep = 0;
+                    instructionDone = true;
+                    break;
+            }
+            break;
+        
+        case OP_IN:
+            break;
+
+        case OP_OUT:
+            break;
+
+        case OP_CALL:
+            switch (microstep) {
+                case 0:
+                    mux1.select(0);
+                    mux2.select(3);
+
+                    alu.perform(ALU::Operation::NOP);
+
+                    latchRouter.setLatches({0, 1, 0, 0, 0});
+                    latchRouter.propagate();
+
+                    microstep++;
+                    break;
+                case 1:
+                    mux1.select(3);
+                    mux2.select(0);
+
+                    alu.perform(ALU::Operation::NOP);
+
+                    latchRouter.setLatches({0, 0, 1, 0, 0});
+                    latchRouter.propagate();
+
+                    microstep++;
+                    break;
+                case 2:
+                    memory[registers.get(Registers::AR)] = registers.get(Registers::DR);
+                    microstep++;
+                    break;
+                case 3:
+                    mux1.select(0);
+                    mux2.select(3);
+
+                    alu.perform(ALU::Operation::DEC);
+
+                    latchRouter.setLatches({0, 0, 0, 0, 1});
+                    latchRouter.propagate();
+
+                    microstep++;
+                    break;
+                case 4:
+                    mux1.select(2);
+                    mux2.select(0);
+
+                    alu.perform(ALU::Operation::NOP);
+
+                    latchRouter.setLatches({0, 0, 0, 1, 0});
+                    latchRouter.propagate();
+
+                    microstep = 0;
+                    instructionDone = true;
+                    break;
+            }
+            break;
+
+        case OP_RET:
+            switch (microstep) {
+                case 0:
+                    mux1.select(0);
+                    mux2.select(3);
+
+                    alu.perform(ALU::Operation::NOP);
+
+                    latchRouter.setLatches({0, 1, 0, 0, 0});
+                    latchRouter.propagate();
+
+                    microstep++;
+                    break;
+                case 1:
+                    registers.set(Registers::DR, memory[registers.get(Registers::AR)]);
+                    microstep++;
+                    break;
+                case 2:
+                    mux1.select(0);
+                    mux2.select(2);
+
+                    alu.perform(ALU::Operation::NOP);
+
+                    latchRouter.setLatches({0, 0, 0, 1, 0});
+                    latchRouter.propagate();
+
+                    microstep++;
+                    break;
+                case 3:
+                    mux1.select(0);
+                    mux2.select(3);
+
+                    alu.perform(ALU::Operation::INC);
+
+                    latchRouter.setLatches({0, 0, 0, 0, 1});
+                    latchRouter.propagate();
+
+                    microstep = 0;
+                    instructionDone = true;
+                    break;
+            }
+            break;
+
+        case OP_HALT:
+            halted = true;
+            instructionDone = true;
             break;
 
         default:
