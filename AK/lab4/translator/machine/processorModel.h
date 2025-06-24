@@ -40,6 +40,7 @@ class Memory {
         uint32_t& operator[](size_t address) {
             if (address >= MEM_SIZE)
                 throw std::out_of_range("Memory access out of bounds");
+                
             return data[address];
         }
 
@@ -52,9 +53,6 @@ class Memory {
         std::array<uint32_t, MEM_SIZE> data;
         
         uint32_t memory[MEM_SIZE] = {0};
-        size_t textSize = 0;
-        size_t dataStart = 0;
-        size_t dataSize = 0;
 };
 
 class ALU {
@@ -79,6 +77,41 @@ class ALU {
             NOP
         };
 
+        std::string opStr(Operation op) {
+            switch (op) {
+                case Operation::ADD:
+                    return "ADD";
+                case Operation::SUB:
+                    return "SUB";
+                case Operation::MUL:
+                    return "MUL";
+                case Operation::DIV:
+                    return "DIV";
+                case Operation::REM:
+                    return "REM";
+                case Operation::INC:
+                    return "INC";
+                case Operation::DEC:
+                    return "DEC";
+                case Operation::NOT:
+                    return "NOT";
+                case Operation::AND:
+                    return "AND";
+                case Operation::OR:
+                    return "OR";
+                case Operation::XOR:
+                    return "XOR";
+                case Operation::SHL:
+                    return "SHL";
+                case Operation::SHR:
+                    return "SHR";
+                case Operation::NOP:
+                    return "NOP";
+                default:
+                    return "unknown";
+            }
+        }
+
         void setLeftInputGetter(std::function<uint32_t&()> getter) {
             leftGetter = std::move(getter);
         }
@@ -87,7 +120,7 @@ class ALU {
             rightGetter = std::move(getter);
         }
 
-        void perform(Operation operation) {
+        void perform(Operation operation, bool writeFlags = false) {
             uint32_t left = leftGetter();
             uint32_t right = rightGetter();
             uint32_t value = 0;
@@ -106,6 +139,8 @@ class ALU {
                     value = tmp & 0xFFFFFFFF;
                     C = left >= right;
                     V = ((left ^ right) & (left ^ value)) >> 31;
+                    // V = (((left ^ right) & (left ^ value)) & 0x80000000) != 0;
+                    break;
                 }
                 case Operation::MUL:
                     value = left * right;
@@ -155,10 +190,15 @@ class ALU {
 
             // result = { value, N, Z, V, C };
             result = value;
-            *flagRefs[0] = N;
-            *flagRefs[1] = Z;
-            *flagRefs[2] = V;
-            *flagRefs[3] = C;
+            if (writeFlags) {
+                *flagRefs[0] = N;
+                *flagRefs[1] = Z;
+                *flagRefs[2] = V;
+                *flagRefs[3] = C;
+            }
+
+            std::cout << "ALU: 0x" << std::hex << left << " " << opStr(operation) << " 0x" << right << " = 0x" << value << std::dec << "\n";
+            std::cout << "NZVC: " << (*flagRefs[0] ? 1 : 0) << (*flagRefs[1] ? 1 : 0) << (*flagRefs[2] ? 1 : 0) << (*flagRefs[3] ? 1 : 0) << "\n";
 
             // std::cout << "ALU PERFORMED WITH RESULT = " << result << "\n";
         }
@@ -389,6 +429,7 @@ class ProcessorModel {
         size_t textSize = 0;
         size_t dataStart = 0;
         size_t dataSize = 0;
+        uint32_t entryPoint = 0;
 
         uint32_t zero = 0;
         uint8_t opcode = 0;

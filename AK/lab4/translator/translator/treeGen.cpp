@@ -1,14 +1,14 @@
-#include "translator.h"
+#include "treeGen.h"
 
-Translator::Translator() { }
+TreeGenerator::TreeGenerator() { }
 
-Translator::~Translator() { }
+TreeGenerator::~TreeGenerator() { }
 
-void Translator::printTree(ASTNode* root) {    
+void TreeGenerator::printTree(ASTNode* root) {    
     root->print();
 }
 
-std::string Translator::tokenStr(Token token) {
+std::string TreeGenerator::tokenStr(Token token) {
     switch (token.type) {
         case TokenType::KeywordIf:
             return "KeywordIf\n";
@@ -79,16 +79,16 @@ std::string Translator::tokenStr(Token token) {
     }
 }
 
-ASTNode* Translator::makeTree(std::string data) {
+ASTNode* TreeGenerator::makeTree(std::string data) {
     BlockNode* root = new BlockNode();
 
     std::vector<Token> tokens = tokenize(data);
 
-    std::cout << "TOKENS:\n";
-    for (auto token : tokens) {
-        std::cout << tokenStr(token);
-    }
-    std::cout << "\n\n";
+    // std::cout << "TOKENS:\n";
+    // for (auto token : tokens) {
+    //     std::cout << tokenStr(token);
+    // }
+    // std::cout << "\n\n";
 
     size_t pos = 0;
 
@@ -96,14 +96,12 @@ ASTNode* Translator::makeTree(std::string data) {
         root->addChild(parseStatement(tokens, pos));
     }
 
-    std::cout << "parse success\n\n";
-
-    printTree(root);
+    std::cout << "Tree parse success\n";
 
     return root;
 }
 
-ASTNode* Translator::parseAssignStatement(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseAssignStatement(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::Identifier)
         throw std::runtime_error("Expected variable name");
     ASTNode* var = new IdentifierNode(tokens[pos].value);
@@ -122,7 +120,7 @@ ASTNode* Translator::parseAssignStatement(std::vector<Token> tokens, size_t& pos
     return new AssignNode(var, expr);
 }
 
-ASTNode* Translator::parseVarStatement(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseVarStatement(std::vector<Token> tokens, size_t& pos) {
     std::string type;
     if (tokens[pos].type == TokenType::KeywordInt)
         type = "int";
@@ -152,7 +150,7 @@ ASTNode* Translator::parseVarStatement(std::vector<Token> tokens, size_t& pos) {
     return new VarDeclNode(type, varName, expr);
 }
 
-ASTNode* Translator::parseStatement(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseStatement(std::vector<Token> tokens, size_t& pos) {
     ASTNode* node;
     
     if (tokens[pos].type == TokenType::KeywordInt ||
@@ -191,7 +189,7 @@ ASTNode* Translator::parseStatement(std::vector<Token> tokens, size_t& pos) {
     }
 }
 
-ASTNode* Translator::parseIf(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseIf(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::KeywordIf)
         throw std::runtime_error("Expected 'if'");
     pos++;
@@ -217,7 +215,7 @@ ASTNode* Translator::parseIf(std::vector<Token> tokens, size_t& pos) {
     return new IfNode(condition, thenBranch, elseBranch);
 }
 
-ASTNode* Translator::parseWhile(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseWhile(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::KeywordWhile)
         throw std::runtime_error("Expected 'while'");
     pos++;
@@ -237,7 +235,7 @@ ASTNode* Translator::parseWhile(std::vector<Token> tokens, size_t& pos) {
     return new WhileNode(condition, body);
 }
 
-ASTNode* Translator::parseBlock(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseBlock(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::LBrace)
         throw std::runtime_error("Expected '{'");
     pos++;
@@ -255,7 +253,7 @@ ASTNode* Translator::parseBlock(std::vector<Token> tokens, size_t& pos) {
     return block;
 }
 
-ASTNode* Translator::parseParameter(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseParameter(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::KeywordInt &&
         tokens[pos].type != TokenType::KeywordString &&
         tokens[pos].type != TokenType::KeywordBool)
@@ -271,7 +269,7 @@ ASTNode* Translator::parseParameter(std::vector<Token> tokens, size_t& pos) {
     return new ParameterNode(name, type);
 }
 
-ASTNode* Translator::parseFunction(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseFunction(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::KeywordInt &&
         tokens[pos].type != TokenType::KeywordString &&
         tokens[pos].type != TokenType::KeywordBool &&
@@ -308,7 +306,7 @@ ASTNode* Translator::parseFunction(std::vector<Token> tokens, size_t& pos) {
     return new FunctionNode(returnType, name, parameters, body);
 }
 
-ASTNode* Translator::parseFunctionCall(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseFunctionCall(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::Identifier)
         throw std::runtime_error("Expected identifier");
     std::string name = tokens[pos].value;
@@ -335,7 +333,7 @@ ASTNode* Translator::parseFunctionCall(std::vector<Token> tokens, size_t& pos) {
     return new FunctionCallNode(name, parameters);
 }
 
-ASTNode* Translator::parseReturn(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseReturn(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::KeywordReturn)
         throw std::runtime_error("Expected 'return'");
     pos++;
@@ -354,11 +352,11 @@ ASTNode* Translator::parseReturn(std::vector<Token> tokens, size_t& pos) {
     }
 }
 
-ASTNode* Translator::parseExpression(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseExpression(std::vector<Token> tokens, size_t& pos) {
     return parseLogicOr(tokens, pos);
 }
 
-ASTNode* Translator::parseTerm(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseTerm(std::vector<Token> tokens, size_t& pos) {
     ASTNode* node = parseFactor(tokens, pos);
 
     while (pos < tokens.size() &&
@@ -372,7 +370,7 @@ ASTNode* Translator::parseTerm(std::vector<Token> tokens, size_t& pos) {
     return node;
 }
 
-ASTNode* Translator::parseFactor(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseFactor(std::vector<Token> tokens, size_t& pos) {
     ASTNode* node = parseUnary(tokens, pos);
     
     while (pos < tokens.size() &&
@@ -388,7 +386,7 @@ ASTNode* Translator::parseFactor(std::vector<Token> tokens, size_t& pos) {
     return node;
 }
 
-ASTNode* Translator::parseLogicOr(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseLogicOr(std::vector<Token> tokens, size_t& pos) {
     ASTNode* node = parseLogicAnd(tokens, pos);
     while (pos < tokens.size() && tokens[pos].type == TokenType::LogicOr) {
         std::string op = tokens[pos].value;
@@ -400,7 +398,7 @@ ASTNode* Translator::parseLogicOr(std::vector<Token> tokens, size_t& pos) {
     return node;
 }
 
-ASTNode* Translator::parseLogicAnd(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseLogicAnd(std::vector<Token> tokens, size_t& pos) {
     ASTNode* node = parseEquality(tokens, pos);
     while (pos < tokens.size() && tokens[pos].type == TokenType::LogicAnd) {
         std::string op = tokens[pos].value;
@@ -412,7 +410,7 @@ ASTNode* Translator::parseLogicAnd(std::vector<Token> tokens, size_t& pos) {
     return node;
 }
 
-ASTNode* Translator::parseEquality(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseEquality(std::vector<Token> tokens, size_t& pos) {
     ASTNode* node = parseComparsion(tokens, pos);
     while (pos < tokens.size() && 
           (tokens[pos].type == TokenType::LogicEqual || tokens[pos].type == TokenType::LogicNotEqual)) {
@@ -425,7 +423,7 @@ ASTNode* Translator::parseEquality(std::vector<Token> tokens, size_t& pos) {
     return node;
 }
 
-ASTNode* Translator::parseComparsion(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseComparsion(std::vector<Token> tokens, size_t& pos) {
     ASTNode* node = parseTerm(tokens, pos);
 
     while (pos < tokens.size() && 
@@ -440,7 +438,7 @@ ASTNode* Translator::parseComparsion(std::vector<Token> tokens, size_t& pos) {
     return node;
 }
 
-ASTNode* Translator::parseUnary(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseUnary(std::vector<Token> tokens, size_t& pos) {
     if (pos < tokens.size() && 
        (tokens[pos].type == TokenType::LogicNot || tokens[pos].type == TokenType::Minus)) {
         std::string op = tokens[pos].value;
@@ -451,7 +449,7 @@ ASTNode* Translator::parseUnary(std::vector<Token> tokens, size_t& pos) {
     return parsePrimary(tokens, pos);
 }
 
-ASTNode* Translator::parsePrimary(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parsePrimary(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type == TokenType::Number) {
         int value = std::stoi(tokens[pos].value);
         pos++;
@@ -484,7 +482,7 @@ ASTNode* Translator::parsePrimary(std::vector<Token> tokens, size_t& pos) {
     throw std::runtime_error("Unexpected token in factor: " + tokenStr(tokens[pos]));
 }
 
-std::vector<Token> Translator::tokenize(const std::string& input) {
+std::vector<Token> TreeGenerator::tokenize(const std::string& input) {
     std::vector<Token> tokens;
     size_t pos = 0;
 

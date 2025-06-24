@@ -613,9 +613,9 @@ std::string CodeGenerator::assembleCode() {
     }
 
     result << "\n.text\n";
-    result << buffer_read;
-    result << buffer_write;
-    result << str_copy;
+    // result << buffer_read;
+    // result << buffer_write;
+    // result << str_copy;
 
     for (const auto& line : funcSection) {
         result << line << "\n";

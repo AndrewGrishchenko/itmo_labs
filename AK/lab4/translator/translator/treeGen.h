@@ -1,5 +1,5 @@
-#ifndef _TRANSLATOR_H
-#define _TRANSLATOR_H
+#ifndef _TREE_GEN_H
+#define _TREE_GEN_H
 
 #include <string>
 #include <sstream>
@@ -69,10 +69,10 @@ struct Token {
         : type(type), value(value) { }
 };
 
-class Translator {
+class TreeGenerator {
     public:
-        Translator();
-        ~Translator();
+        TreeGenerator();
+        ~TreeGenerator();
 
         ASTNode* makeTree(std::string data);
 

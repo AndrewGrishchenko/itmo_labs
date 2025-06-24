@@ -120,9 +120,20 @@ void Binarizer::writeToFile(const std::string& filename) const {
     if (textSize >= (1 << 24)) //TODO: idk
         throw std::runtime_error(".text section too large");
 
+    if (labelAddress.find("_start") == labelAddress.end())
+        throw std::runtime_error("Unable to find _start label");
+    
+    uint32_t entryPoint = static_cast<uint32_t>(labelAddress.at("_start"));
+    if (entryPoint >= textSize)
+        throw std::runtime_error("_start is outside of .text section");
+
     out.put((textSize >> 16) & 0xFF);
     out.put((textSize >> 8) & 0xFF);
     out.put(textSize & 0xFF);
+
+    out.put((entryPoint >> 16) & 0xFF);
+    out.put((entryPoint >> 8) & 0xFF);
+    out.put(entryPoint & 0xFF);
 
     //.text
     for (const auto& instr : instructions) {
@@ -201,20 +212,25 @@ void Binarizer::dump() {
 
     uint8_t buf[3];
 
-    //headere
-    if (!in.read(reinterpret_cast<char*>(buf), 3)) {
-        std::cerr << "Failed to read header\n";
-        return;
-    }
+    //header
+    if (!in.read(reinterpret_cast<char*>(buf), 3))
+        throw std::runtime_error("Failed to read header\n");
 
     uint32_t textSize = (buf[0] << 16) | (buf[1] << 8) | buf[2];
     std::cout << "HEADER: textSize = " << textSize << "\n";
+
+    if (!in.read(reinterpret_cast<char*>(buf), 3))
+        throw std::runtime_error("Failed to read header\n");
+    
+    uint32_t entryPoint = (buf[0] << 16) | (buf[1] << 8) | buf[2];
+    std::cout << "HEADER: entryPoint = 0x" << std::hex << entryPoint << std::dec << "\n";
 
     int addr = 0;
     while (in.read(reinterpret_cast<char*>(buf), 3)) {
         uint32_t raw = (buf[0] << 16) | (buf[1] << 8) | buf[2];
         std::cout << std::setw(4) << std::setfill('0') << std::hex << addr << ": ";
 
+        std::cout << "raw=0x" << std::hex << raw << std::dec << " ";
         if (addr < textSize) {
             uint8_t opcode = raw >> 19;
             uint32_t operand = raw & 0x7FFFF;

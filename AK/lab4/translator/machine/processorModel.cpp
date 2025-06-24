@@ -30,7 +30,7 @@ ProcessorModel::~ProcessorModel() { }
 
 void ProcessorModel::process() {
     // memory.reset();
-    registers.reset();
+    // registers.reset();
     operand = 0;
     // textSize = dataSize = dataStart = 0;
     halted = false;
@@ -46,6 +46,7 @@ void ProcessorModel::process() {
     }
 
     allDump();
+    std::cout << "Completed in " << tickCount << " ticks\n";
 }
 
 void ProcessorModel::loadBinary(const std::string& filename) {
@@ -56,14 +57,20 @@ void ProcessorModel::loadBinary(const std::string& filename) {
     size_t address = 0;
 
     if (!in.read(reinterpret_cast<char*>(buf), 3))
-        throw std::runtime_error("Failed to read header");
-
+        throw std::runtime_error("Failed to read textSize from header");
     textSize = (buf[0] << 16) | (buf[1] << 8) | buf[2];
+
+    if (!in.read(reinterpret_cast<char*>(buf), 3))
+        throw std::runtime_error("Failed to read entryPoint from header");
+    entryPoint = (buf[0] << 16) | (buf[1] << 8) | buf[2];
+
     dataStart = textSize;
+    registers.set(Registers::IP, entryPoint);
 
     std::cout << "BINARY LOAD:\n";
     std::cout << "textSize: 0x" << std::hex << textSize << std::dec << "\n";
     std::cout << "dataStart: 0x" << std::hex << dataStart << std::dec << "\n\n";
+    allDump();
 
     while (in.read(reinterpret_cast<char*>(buf), 3)) {
         if (address >= MEM_SIZE)
@@ -82,8 +89,16 @@ void ProcessorModel::memDump() {
     std::cout << "dataSize: " << std::hex << dataSize << std::dec << std::endl;
     size_t address = 0;
     while (address < textSize + dataSize) {
-        std::cout << "MEM[" << std::hex << address << "] = " << memory[address++] << std::dec << "\n";
+        std::cout << "MEM[" << std::hex << address << "] = 0x" << memory[address++] << std::dec << "\n";
     }
+
+    address = 0x7FFFF;
+    int count = 5;
+    while (count >= 0) {
+        std::cout << "MEM[" << std::hex << address << "] = 0x" << memory[address--] << std::dec << "\n";
+        count--;
+    }
+
     std::cout << "\n\n";
 }
 
@@ -197,15 +212,15 @@ void ProcessorModel::instructionTick() {
                     mux2.select(2);
 
                     if (opcode == OP_ADD)
-                        alu.perform(ALU::Operation::ADD);
+                        alu.perform(ALU::Operation::ADD, true);
                     else if (opcode == OP_SUB)
-                        alu.perform(ALU::Operation::SUB);
+                        alu.perform(ALU::Operation::SUB, true);
                     else if (opcode == OP_DIV)
-                        alu.perform(ALU::Operation::DIV);
+                        alu.perform(ALU::Operation::DIV, true);
                     else if (opcode == OP_MUL)
-                        alu.perform(ALU::Operation::MUL);
+                        alu.perform(ALU::Operation::MUL, true);
                     else if (opcode == OP_REM)
-                        alu.perform(ALU::Operation::REM);
+                        alu.perform(ALU::Operation::REM, true);
 
                     latchRouter.setLatches({1, 0, 0, 0, 0});
                     latchRouter.propagate();
@@ -223,11 +238,12 @@ void ProcessorModel::instructionTick() {
             mux2.select(0);
             
             if (opcode == OP_INC)
-                alu.perform(ALU::Operation::INC);
+                alu.perform(ALU::Operation::INC, true);
+                //TODO: think should i save flags in these cases
             else if (opcode == OP_DEC)
-                alu.perform(ALU::Operation::DEC);
+                alu.perform(ALU::Operation::DEC, true);
             else if (opcode == OP_NOT)
-                alu.perform(ALU::Operation::NOT);
+                alu.perform(ALU::Operation::NOT, true);
 
             latchRouter.setLatches({1, 0, 0, 0, 0});
             latchRouter.propagate();
@@ -251,7 +267,7 @@ void ProcessorModel::instructionTick() {
             mux1.select(2);
             mux2.select(0);
 
-            alu.perform(ALU::Operation::NOP);
+            alu.perform(ALU::Operation::DEC);
 
             latchRouter.setLatches({0, 0, 0, 1, 0});
             latchRouter.propagate();
@@ -263,12 +279,13 @@ void ProcessorModel::instructionTick() {
             mux1.select(2);
             mux2.select(0);
 
-            if (registers.getZ())
+            if (registers.getZ()) {
                 latchRouter.setLatches({0, 0, 0, 1, 0});
-            else
+                alu.perform(ALU::Operation::DEC);
+            } else {
                 latchRouter.setLatches({0, 0, 0, 0, 0});
-
-            alu.perform(ALU::Operation::NOP);
+                alu.perform(ALU::Operation::NOP);
+            }
             
             latchRouter.propagate();
 
@@ -279,12 +296,13 @@ void ProcessorModel::instructionTick() {
             mux1.select(2);
             mux2.select(0);
 
-            if (!registers.getZ())
+            if (!registers.getZ()) {
                 latchRouter.setLatches({0, 0, 0, 1, 0});
-            else
+                alu.perform(ALU::Operation::DEC);
+            } else {
                 latchRouter.setLatches({0, 0, 0, 0, 0});
-
-            alu.perform(ALU::Operation::NOP);
+                alu.perform(ALU::Operation::NOP);
+            }
             
             latchRouter.propagate();
 
@@ -295,12 +313,13 @@ void ProcessorModel::instructionTick() {
             mux1.select(2);
             mux2.select(0);
 
-            if (!registers.getZ() && registers.getN() == registers.getV())
+            if (!registers.getZ() && registers.getN() == registers.getV()) {
                 latchRouter.setLatches({0, 0, 0, 1, 0});
-            else
+                alu.perform(ALU::Operation::DEC);
+            } else {
                 latchRouter.setLatches({0, 0, 0, 0, 0});
-
-            alu.perform(ALU::Operation::NOP);
+                alu.perform(ALU::Operation::NOP);
+            }
 
             latchRouter.propagate();
 
@@ -311,12 +330,13 @@ void ProcessorModel::instructionTick() {
             mux1.select(2);
             mux2.select(0);
 
-            if (registers.getN() == registers.getV())
+            if (registers.getN() == registers.getV()) {
                 latchRouter.setLatches({0, 0, 0, 1, 0});
-            else
+                alu.perform(ALU::Operation::DEC);
+            } else {
                 latchRouter.setLatches({0, 0, 0, 0, 0});
-
-            alu.perform(ALU::Operation::NOP);
+                alu.perform(ALU::Operation::NOP);
+            }
 
             latchRouter.propagate();
 
@@ -327,12 +347,13 @@ void ProcessorModel::instructionTick() {
             mux1.select(2);
             mux2.select(0);
 
-            if (registers.getN() != registers.getV())
+            if (registers.getN() != registers.getV()) {
                 latchRouter.setLatches({0, 0, 0, 1, 0});
-            else
+                alu.perform(ALU::Operation::DEC);
+            } else {
                 latchRouter.setLatches({0, 0, 0, 0, 0});
-
-            alu.perform(ALU::Operation::NOP);
+                alu.perform(ALU::Operation::NOP);
+            }
 
             latchRouter.propagate();
 
@@ -343,12 +364,13 @@ void ProcessorModel::instructionTick() {
             mux1.select(2);
             mux2.select(0);
 
-            if (registers.getZ() || registers.getN() != registers.getV())
+            if (registers.getZ() || registers.getN() != registers.getV()) {
                 latchRouter.setLatches({0, 0, 0, 1, 0});
-            else
+                alu.perform(ALU::Operation::DEC);
+            } else {
                 latchRouter.setLatches({0, 0, 0, 0, 0});
-
-            alu.perform(ALU::Operation::NOP);
+                alu.perform(ALU::Operation::NOP);
+            }
 
             latchRouter.propagate();
 
@@ -404,6 +426,17 @@ void ProcessorModel::instructionTick() {
                     mux1.select(0);
                     mux2.select(3);
 
+                    alu.perform(ALU::Operation::INC);
+
+                    latchRouter.setLatches({0, 0, 0, 0, 1});
+                    latchRouter.propagate();
+
+                    microstep++;
+                    break;
+                case 1:
+                    mux1.select(0);
+                    mux2.select(3);
+
                     alu.perform(ALU::Operation::NOP);
 
                     latchRouter.setLatches({0, 1, 0, 0, 0});
@@ -411,28 +444,17 @@ void ProcessorModel::instructionTick() {
 
                     microstep++;
                     break;
-                case 1:
+                case 2:
                     registers.set(Registers::DR, memory[registers.get(Registers::AR)]);
                     microstep++;
                     break;
-                case 2:
+                case 3:
                     mux1.select(0);
                     mux2.select(2);
 
                     alu.perform(ALU::Operation::NOP);
 
                     latchRouter.setLatches({1, 0, 0, 0, 0});
-                    latchRouter.propagate();
-
-                    microstep++;
-                    break;
-                case 3:
-                    mux1.select(0);
-                    mux2.select(3);
-
-                    alu.perform(ALU::Operation::INC);
-
-                    latchRouter.setLatches({0, 0, 0, 0, 1});
                     latchRouter.propagate();
 
                     microstep = 0;
@@ -661,7 +683,7 @@ void ProcessorModel::instructionTick() {
                     mux1.select(2);
                     mux2.select(0);
 
-                    alu.perform(ALU::Operation::NOP);
+                    alu.perform(ALU::Operation::DEC);
 
                     latchRouter.setLatches({0, 0, 0, 1, 0});
                     latchRouter.propagate();
@@ -678,6 +700,17 @@ void ProcessorModel::instructionTick() {
                     mux1.select(0);
                     mux2.select(3);
 
+                    alu.perform(ALU::Operation::INC);
+
+                    latchRouter.setLatches({0, 0, 0, 0, 1});
+                    latchRouter.propagate();
+
+                    microstep++;
+                    break;
+                case 1:
+                    mux1.select(0);
+                    mux2.select(3);
+
                     alu.perform(ALU::Operation::NOP);
 
                     latchRouter.setLatches({0, 1, 0, 0, 0});
@@ -685,28 +718,17 @@ void ProcessorModel::instructionTick() {
 
                     microstep++;
                     break;
-                case 1:
+                case 2:
                     registers.set(Registers::DR, memory[registers.get(Registers::AR)]);
                     microstep++;
                     break;
-                case 2:
+                case 3:
                     mux1.select(0);
                     mux2.select(2);
 
                     alu.perform(ALU::Operation::NOP);
 
                     latchRouter.setLatches({0, 0, 0, 1, 0});
-                    latchRouter.propagate();
-
-                    microstep++;
-                    break;
-                case 3:
-                    mux1.select(0);
-                    mux2.select(3);
-
-                    alu.perform(ALU::Operation::INC);
-
-                    latchRouter.setLatches({0, 0, 0, 0, 1});
                     latchRouter.propagate();
 
                     microstep = 0;
