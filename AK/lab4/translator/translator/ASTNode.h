@@ -12,6 +12,8 @@ enum class ASTNodeType {
     StringLiteral,
     BooleanLiteral,
     VoidLiteral,
+    IntArrayLiteral,
+    ArrayGet,
     
     Identifier,
     Assignment,
@@ -59,8 +61,15 @@ struct VarDeclNode : ASTNode {
 
     void print(int indent = 0) const override {
         printIndent(indent);
-        std::cout << "VarDecl: " << name << "\n";
-        if (value) value->print(indent + 1);
+        std::cout << "VarDecl:\n";
+
+        printIndent(indent + 1);
+        std::cout << "type: " << type << "\n";
+
+        printIndent(indent + 1);
+        std::cout << "name: " << name << "\n";
+
+        if (value) value->print(indent + 2);
     }
 };
 
@@ -107,6 +116,39 @@ struct VoidLiteralNode : ASTNode {
     void print(int indent = 0) const override {
         printIndent(indent);
         std::cout << "VoidLiteral\n";
+    }
+};
+
+struct IntArrayLiteralNode : ASTNode {
+    std::vector<ASTNode*> values;
+    
+    IntArrayLiteralNode(std::vector<ASTNode*> values)
+        : ASTNode(ASTNodeType::IntArrayLiteral), values(values) { }
+
+    void print(int indent = 0) const override {
+        printIndent(indent);
+        std::cout << "IntArrayLiteral\n";
+        for (auto* node : values)
+            node->print(indent + 1);
+    }
+};
+
+struct ArrayGetNode : ASTNode {
+    std::string name;
+    size_t index;
+
+    ArrayGetNode(std::string name, size_t index)
+        : ASTNode(ASTNodeType::ArrayGet), name(name), index(index) { }
+
+    void print(int indent = 0) const override {
+        printIndent(indent);
+        std::cout << "ArrayGet\n";
+
+        printIndent(indent + 1);
+        std::cout << "name: " << name << "\n";
+
+        printIndent(indent + 1);
+        std::cout << "index: " << index << "\n";
     }
 };
 

@@ -63,8 +63,9 @@ class CodeGenerator {
         };
 
         int labelCounter = 0;
-        int tempVarCounter = 0;
-        int stackOffset = 0;
+        int strCounter = 0;
+        int arrCounter = 0;
+        int stackOffset = 0; //TODO: why
 
         std::shared_ptr<FunctionData> currentFunction;
 
@@ -104,6 +105,9 @@ class CodeGenerator {
         void processBooleanLiteral(ASTNode* node);
         void processStringLiteral(ASTNode* node);
         void processVoidLiteral(ASTNode* node);
+
+        void processIntArrayLiteral(ASTNode* node);
+        void processArrayGet(ASTNode* node);
 
         std::string buffer_read = "buffer_read:\n"
                                   "  ld buffer_start\n"

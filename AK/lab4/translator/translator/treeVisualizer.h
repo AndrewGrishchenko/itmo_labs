@@ -120,6 +120,29 @@ class TreeVisualizer {
 
                     return objName;
                 }
+                case ASTNodeType::IntArrayLiteral: {
+                    IntArrayLiteralNode* intArrayLiteralNode = static_cast<IntArrayLiteralNode*>(node);
+                    std::string objName = "IntArrayLiteral" + std::to_string(labelCount(node->nodeType));
+
+                    emitObject(objName);
+
+                    for (auto* value : intArrayLiteralNode->values) {
+                        std::string valueName = processNode(value);
+                        emitObjectAssociation(objName, valueName, "value");
+                    }
+
+                    return objName;
+                }
+                case ASTNodeType::ArrayGet: {
+                    ArrayGetNode* arrayGetNode = static_cast<ArrayGetNode*>(node);
+                    std::string objName = "ArrayGet" + std::to_string(labelCount(node->nodeType));
+
+                    emitObject(objName);
+                    emitObjectData(objName, "name", arrayGetNode->name);
+                    emitObjectData(objName, "index", std::to_string(arrayGetNode->index));
+
+                    return objName;
+                }
                 case ASTNodeType::Identifier: {
                     IdentifierNode* identifierNode = static_cast<IdentifierNode*>(node);
                     std::string objName = "Identifier" + std::to_string(labelCount(node->nodeType));

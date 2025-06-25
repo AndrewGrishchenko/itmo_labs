@@ -22,6 +22,7 @@ enum class TokenType {
     KeywordInt,
     KeywordString,
     KeywordBool,
+    KeywordIntArr,
 
     // Utility
     Identifier,
@@ -35,6 +36,8 @@ enum class TokenType {
     RParen,
     LBrace,
     RBrace,
+    LBracket,
+    RBracket,
     Semicolon,
     Comma,
 
@@ -94,6 +97,8 @@ class TreeGenerator {
         ASTNode* parseReturn(std::vector<Token> tokens, size_t& pos);
 
         ASTNode* parseExpression(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseArray(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseArrayGet(std::vector<Token> tokens, size_t& pos);
         ASTNode* parseTerm(std::vector<Token> tokens, size_t& pos);
         ASTNode* parseFactor(std::vector<Token> tokens, size_t& pos);
 

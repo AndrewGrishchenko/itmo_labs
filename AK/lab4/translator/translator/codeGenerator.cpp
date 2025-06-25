@@ -15,7 +15,8 @@ std::string CodeGenerator::generateCode(ASTNode* root) {
     functions.clear();
 
     labelCounter = 0;
-    tempVarCounter = 0;
+    strCounter = 0;
+    arrCounter = 0;
     stackOffset = 0;
 
     processRoot(root);
@@ -33,6 +34,10 @@ std::string CodeGenerator::evalType(ASTNode* node) {
             return "bool";
         case ASTNodeType::VoidLiteral:
             return "void";
+        case ASTNodeType::IntArrayLiteral:
+            return "int[]";
+        case ASTNodeType::ArrayGet:
+            return "int";
         case ASTNodeType::Identifier: {
             IdentifierNode* identifierNode = static_cast<IdentifierNode*>(node);
             
@@ -212,6 +217,12 @@ void CodeGenerator::processNode(ASTNode* node) {
         case ASTNodeType::VoidLiteral:
             processVoidLiteral(node);
             break;
+        case ASTNodeType::IntArrayLiteral:
+            processIntArrayLiteral(node);
+            break;
+        case ASTNodeType::ArrayGet:
+            processArrayGet(node);
+            break;
         default:
             throw std::runtime_error("Unknown node");
     }
@@ -254,7 +265,7 @@ void CodeGenerator::processFunction(ASTNode* node) {
 
     currentFunction = std::make_unique<FunctionData>();
     currentFunction->name = funcName;
-    currentFunction->label = funcName + std::to_string(functionLabels[funcName]++);
+    currentFunction->label = funcName + "_" + std::to_string(functionLabels[funcName]++);
     currentFunction->returnType = functionNode->returnType;
 
     std::string funcLabel = "func_" + currentFunction->label;
@@ -277,22 +288,46 @@ void CodeGenerator::processVarDecl(ASTNode* node) {
     VarDeclNode* varDeclNode = static_cast<VarDeclNode*>(node);
     
     std::string varName = varDeclNode->name;
-    std::string varLabel = "var_";
-
-    varLabel = getVarLabel(varName);
+    std::string varLabel = getVarLabel(varName);
 
     emitData(varLabel + ": 0");
     variables[varLabel] = varDeclNode->type;
-    
+
     processNode(varDeclNode->value);
-    if (evalType(varDeclNode->value) == "string") {
-        emitCode("ld " + varLabel);
-        emitCode("st target_str");
-        emitCode("call str_copy");
-        emitCode("");
-    } else {
-        emitCode("st " + varLabel);
-    }
+    emitCode("st " + varLabel);
+
+    // if (evalType(varDeclNode->value) == "int[]") {
+    //     // emitData(varLabel + ": 0");
+    //     // variables[varLabel] = varDeclNode->type;
+
+    //     // processNode(varDeclNode->value);
+    //     // emitCode("st " + varLabel);
+
+    //     // std::string arrLabel = "arr_" + std::to_string(labelCounter++);
+
+    //     // emitData(varLabel + ": arr_" + std::to_string(arrCounter - 1));
+        
+        
+    //     emitCode("st " + varLabel);
+    // } else if (evalType(varDeclNode->value) == "string") {
+    //     // emitData(varLabel + ": str_" + std::to_string(strCounter - 1));
+    //     emitCode("st " + varLabel);
+    // } else {
+    //     emitCode("st " + varLabel);
+    // }
+
+
+    // } else {
+    //     if (evalType(varDeclNode->value)  == "string") {
+    //         // emitCode("ld " + varLabel);
+    //         // emitCode("st target_str");
+    //         // emitCode("call str_copy");
+    //         // emitCode("");
+    //     } else {
+    //         // emitCode("st " + varLabel);
+    //         emitData(varLabel + ": ")
+    //     } 
+    // }
 }
 
 void CodeGenerator::processAssignment(ASTNode* node) {
@@ -308,11 +343,19 @@ void CodeGenerator::processAssignment(ASTNode* node) {
     processNode(assignNode->var2);
 
     if (evalType(var1Node) == "string") {
-        emitCode("st source_str");
-        emitCode("ld " + var1Label);
-        emitCode("st target_str");
-        emitCode("call str_copy");
-        emitCode("");
+        if (var2Node->nodeType == ASTNodeType::StringLiteral) {
+            emitCode("ld str_" + std::to_string(strCounter - 1));
+            emitCode("st " + getVarLabel(var1Name));
+        } else {
+            // emitCode("st source_str");
+            // emitCode("ld " + var1Label);
+            // emitCode("st target_str");
+            // emitCode("call str_copy");
+            // emitCode("");
+            emitCode("st " + getVarLabel(var1Name));
+        }
+    } else if (evalType(var1Node) == "int[]") {
+        emitCode("st " + var1Label);
     } else {
         if (variables.find(var1Label) != variables.end())
             emitCode("st " + var1Label);
@@ -581,17 +624,74 @@ void CodeGenerator::processStringLiteral(ASTNode* node) {
     StringLiteralNode* stringLiteralNode = static_cast<StringLiteralNode*>(node);
 
     std::string value = stringLiteralNode->value;
-    std::string strLabel = "str_" + std::to_string(labelCounter++);
+    std::string strLabel = "str_" + std::to_string(strCounter++);
 
     emitData(strLabel + ": \"" + value + "\\0\"");
-    
-    emitCode("");
-    emitCode("ld " + strLabel);
-    emitCode("st source_str");
+    emitData(strLabel + "_size: " + std::to_string(value.size() + 1));
+    emitCode("ldi " + strLabel);
+
+    // emitCode("");
+    // emitCode("ld " + strLabel);
+    // emitCode("st source_str");
 }
 
 void CodeGenerator::processVoidLiteral(ASTNode* node) {
     return;
+}
+
+void CodeGenerator::processIntArrayLiteral(ASTNode* node) {
+    IntArrayLiteralNode* intArrayLiteralNode = static_cast<IntArrayLiteralNode*>(node);
+
+    std::string dataLabel = "arr_" + std::to_string(arrCounter++);
+    std::string data = dataLabel + ": ";
+
+    // for (auto& val : intArrayLiteralNode->values) {
+    //     auto* number = static_cast<NumberLiteralNode*>(val);
+    //     if (!number) throw std::runtime_error("Only int allowed in int[]");
+    //     emitData("  .word " + std::to_string(number->number));
+        
+    // }
+
+    for (size_t i = 0; i < intArrayLiteralNode->values.size(); i++) {
+        auto* number = static_cast<NumberLiteralNode*>(intArrayLiteralNode->values[i]);
+        if (!number) throw std::runtime_error("Only int allowed in int[]");
+        data += std::to_string(number->number);
+        if (i != intArrayLiteralNode->values.size() - 1) data += ", ";
+    }
+
+    // emitData("  .word " + std::to_string(intArrayLiteralNode->values.size()));
+    // emitCode("lda " + dataLabel);
+
+    emitData(data);
+    emitData(dataLabel + "_size: " + std::to_string(intArrayLiteralNode->values.size()));
+    emitCode("ldi " + dataLabel);
+    // emitCode("lda " + dataLabel);
+}
+
+void CodeGenerator::processArrayGet(ASTNode* node) {
+    ArrayGetNode* arrayGetNode = static_cast<ArrayGetNode*>(node);
+
+    std::string arrayName = arrayGetNode->name;
+    size_t index = arrayGetNode->index;
+
+    emitCode("ldi " + std::to_string(index));
+    emitCode("st temp_right");
+    emitCode("ld " + getVarLabel(arrayName));
+    emitCode("add temp_right");
+    emitCode("st temp_right");
+    emitCode("lda temp_right");
+
+
+    // std::string arrayLabel = getVarLabel(arrayName);
+
+    // emitCode("ld " + arrayLabel);
+
+    // if (index > 0) {
+    //     std::string tempIndexLabel = getNewLabel();
+    //     emitData(tempIndexLabel + ": " + std::to_string(index));
+
+    //     emitCode("add " + tempIndexLabel);
+    // }
 }
 
 std::string CodeGenerator::assembleCode() {

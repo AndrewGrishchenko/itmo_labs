@@ -74,6 +74,12 @@ std::string TreeGenerator::tokenStr(Token token) {
             return "Return\n";
         case TokenType::KeywordVoid:
             return "Void\n";
+        case TokenType::KeywordIntArr:
+            return "IntArr\n";
+        case TokenType::LBracket:
+            return "LBracket\n";
+        case TokenType::RBracket:
+            return "RBracket\n";
         default:
             return "Unknown\n";
     }
@@ -84,11 +90,11 @@ ASTNode* TreeGenerator::makeTree(std::string data) {
 
     std::vector<Token> tokens = tokenize(data);
 
-    // std::cout << "TOKENS:\n";
-    // for (auto token : tokens) {
-    //     std::cout << tokenStr(token);
-    // }
-    // std::cout << "\n\n";
+    std::cout << "TOKENS:\n";
+    for (auto token : tokens) {
+        std::cout << tokenStr(token);
+    }
+    std::cout << "\n\n";
 
     size_t pos = 0;
 
@@ -128,6 +134,8 @@ ASTNode* TreeGenerator::parseVarStatement(std::vector<Token> tokens, size_t& pos
         type = "string";
     else if (tokens[pos].type == TokenType::KeywordBool)
         type = "bool";
+    else if (tokens[pos].type == TokenType::KeywordIntArr)
+        type = "int[]";
     else
         throw std::runtime_error("Expected data type");
     pos++;
@@ -141,7 +149,9 @@ ASTNode* TreeGenerator::parseVarStatement(std::vector<Token> tokens, size_t& pos
         throw std::runtime_error("Expected '='");
     pos++;
 
-    ASTNode* expr = parseExpression(tokens, pos);
+    ASTNode* expr;
+
+    expr = parseExpression(tokens, pos);
     
     if (tokens[pos].type != TokenType::Semicolon)
         throw std::runtime_error("Expected ';'");
@@ -150,13 +160,33 @@ ASTNode* TreeGenerator::parseVarStatement(std::vector<Token> tokens, size_t& pos
     return new VarDeclNode(type, varName, expr);
 }
 
+ASTNode* TreeGenerator::parseArray(std::vector<Token> tokens, size_t& pos) {
+    if (tokens[pos].type != TokenType::LBrace)
+        throw std::runtime_error("Expected '{'");
+    pos++;
+
+    std::vector<ASTNode*> values;
+    while (tokens[pos].type != TokenType::RBrace) {
+        values.push_back(parseExpression(tokens, pos));
+
+        if (tokens[pos].type == TokenType::Comma)
+            pos++;
+        else if (tokens[pos].type != TokenType::RBrace)
+            throw std::runtime_error("Expected ',' or '}'");
+    }
+    pos++;
+
+    return new IntArrayLiteralNode(values);
+}
+
 ASTNode* TreeGenerator::parseStatement(std::vector<Token> tokens, size_t& pos) {
     ASTNode* node;
     
     if (tokens[pos].type == TokenType::KeywordInt ||
         tokens[pos].type == TokenType::KeywordString ||
         tokens[pos].type == TokenType::KeywordBool || 
-        tokens[pos].type == TokenType::KeywordVoid) {
+        tokens[pos].type == TokenType::KeywordVoid ||
+        tokens[pos].type == TokenType::KeywordIntArr) {
         if (pos + 2 < tokens.size() &&
             tokens[pos + 1].type == TokenType::Identifier &&
             tokens[pos + 2].type == TokenType::LParen) {
@@ -256,7 +286,8 @@ ASTNode* TreeGenerator::parseBlock(std::vector<Token> tokens, size_t& pos) {
 ASTNode* TreeGenerator::parseParameter(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::KeywordInt &&
         tokens[pos].type != TokenType::KeywordString &&
-        tokens[pos].type != TokenType::KeywordBool)
+        tokens[pos].type != TokenType::KeywordBool &&
+        tokens[pos].type != TokenType::KeywordIntArr)
         throw std::runtime_error("Expected data type");
     std::string type = tokens[pos].value;
     pos++;
@@ -273,7 +304,8 @@ ASTNode* TreeGenerator::parseFunction(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::KeywordInt &&
         tokens[pos].type != TokenType::KeywordString &&
         tokens[pos].type != TokenType::KeywordBool &&
-        tokens[pos].type != TokenType::KeywordVoid)
+        tokens[pos].type != TokenType::KeywordVoid &&
+        tokens[pos].type != TokenType::KeywordIntArr)
         throw std::runtime_error("Expected data type");
     std::string returnType = tokens[pos].value;
     pos++;
@@ -350,6 +382,28 @@ ASTNode* TreeGenerator::parseReturn(std::vector<Token> tokens, size_t& pos) {
 
         return new ReturnNode(node);
     }
+}
+
+ASTNode* TreeGenerator::parseArrayGet(std::vector<Token> tokens, size_t& pos) {
+    if (tokens[pos].type != TokenType::Identifier)
+        throw std::runtime_error("Expected identifier");
+    std::string name = tokens[pos].value;
+    pos++;
+
+    if (tokens[pos].type != TokenType::LBracket)
+        throw std::runtime_error("Expected '['");
+    pos++;
+
+    if (tokens[pos].type != TokenType::Number)
+        throw std::runtime_error("Expected number");
+    size_t index = static_cast<size_t>(std::stoull(tokens[pos].value));
+    pos++;
+
+    if (tokens[pos].type != TokenType::RBracket)
+        throw std::runtime_error("Expected ']'");
+    pos++;
+
+    return new ArrayGetNode(name, index);
 }
 
 ASTNode* TreeGenerator::parseExpression(std::vector<Token> tokens, size_t& pos) {
@@ -465,6 +519,8 @@ ASTNode* TreeGenerator::parsePrimary(std::vector<Token> tokens, size_t& pos) {
     } else if (tokens[pos].type == TokenType::Identifier) {
         if (pos + 1 < tokens.size() && tokens[pos + 1].type == TokenType::LParen) {
             return parseFunctionCall(tokens, pos);
+        } else if (pos + 1 < tokens.size() && tokens[pos + 1].type == TokenType::LBracket) {
+            return parseArrayGet(tokens, pos);
         } else {
             std::string name = tokens[pos].value;
             pos++;
@@ -477,6 +533,8 @@ ASTNode* TreeGenerator::parsePrimary(std::vector<Token> tokens, size_t& pos) {
             throw std::runtime_error("Expected ')'");    
         pos++;
         return expr;
+    } else if (tokens[pos].type == TokenType::LBrace) {
+        return parseArray(tokens, pos);
     }
 
     throw std::runtime_error("Unexpected token in factor: " + tokenStr(tokens[pos]));
@@ -515,7 +573,23 @@ std::vector<Token> TreeGenerator::tokenize(const std::string& input) {
             } else if (word == "void") {
                 tokens.push_back({TokenType::KeywordVoid, word});
             } else if (word == "int") {
+                size_t tempPos = pos;
+                while (tempPos < input.size() && isspace(input[tempPos])) tempPos++;
+
+                if (tempPos < input.size() && input[tempPos] == '[') {
+                    tempPos++;
+                    while (tempPos < input.size() && isspace(input[tempPos])) tempPos++;
+
+                    if (tempPos < input.size() && input[tempPos] == ']') {
+                        tempPos++;
+                        pos = tempPos;
+                        tokens.push_back({TokenType::KeywordIntArr, "int[]"});
+                        continue;
+                    }
+                }
+
                 tokens.push_back({TokenType::KeywordInt, word});
+                continue;
             } else if (word == "string") {
                 tokens.push_back({TokenType::KeywordString, word});
             } else if (word == "bool") {
@@ -584,6 +658,14 @@ std::vector<Token> TreeGenerator::tokenize(const std::string& input) {
                 break;
             case '}':
                 tokens.push_back({TokenType::RBrace, "}"});
+                pos++;
+                break;
+            case '[':
+                tokens.push_back({TokenType::LBracket, "["});
+                pos++;
+                break;
+            case ']':
+                tokens.push_back({TokenType::RBracket, "]"});
                 pos++;
                 break;
             case '!':

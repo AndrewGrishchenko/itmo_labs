@@ -24,21 +24,21 @@ void SemanticAnalyzer::exitScope() {
     scopes.pop_back();
 }
 
-void SemanticAnalyzer::declareVariable(const std::string& name, const std::string& type) {
-    scopes.back()[name] = type;
+void SemanticAnalyzer::declareVariable(const std::string& name, VariableData data) {
+    scopes.back()[name] = data;
 }
 
 std::string SemanticAnalyzer::lookupVariable(const std::string& name) {
     for (int i = scopes.size() - 1; i >= 0; i--) {
         if (scopes[i].count(name))
-            return scopes[i][name];
+            return scopes[i][name].type;
     }
 
     std::cout << "Seman didnt found var " << name << "\n";
     for (size_t i = 0; i < scopes.size(); i++) {
         std::cout << "SCOPE #" << i << std::endl;
         for (auto& p : scopes[i]) {
-            std::cout << "  " << p.first << ": " << p.second << std::endl;
+            std::cout << "  " << p.first << ": " << p.second.type << std::endl;
         }
     }
 
@@ -102,26 +102,26 @@ void SemanticAnalyzer::analyzeStatement(ASTNode* node) {
         case ASTNodeType::VarDecl: {
             auto var = static_cast<VarDeclNode*>(node);
 
-            std::string exprType = analyzeExpression(var->value);
-            if (exprType != var->type)
-                throw std::runtime_error("Type mismatch in variable declaration: " + var->name);
-            else if (exprType == "void") {
+            VariableData varData = analyzeExpression(var->value).type;
+            if (varData.type != var->type)
+                throw std::runtime_error("Type mismatch in variable declaration: "  + var->name);
+            else if (varData.type == "void") {
                 throw std::runtime_error("Can't assign void");
             }
-            declareVariable(var->name, exprType);
+            declareVariable(var->name, varData);
             break;
         }
 
         case ASTNodeType::Assignment: {
             auto assign = static_cast<AssignNode*>(node);
-            if (analyzeExpression(assign->var1) != analyzeExpression(assign->var2))
+            if (analyzeExpression(assign->var1).type != analyzeExpression(assign->var2).type)
                 throw std::runtime_error("Type mismatch in variable assignment");
             break;
         }
         
         case ASTNodeType::If: {
             auto ifNode = static_cast<IfNode*>(node);
-            std::string condType = analyzeExpression(ifNode->condition);
+            std::string condType = analyzeExpression(ifNode->condition).type;
             if (condType != "bool")
                 throw std::runtime_error("if condition must be boolean");
             enterScope();
@@ -137,7 +137,7 @@ void SemanticAnalyzer::analyzeStatement(ASTNode* node) {
         
         case ASTNodeType::While: {
             auto wh = static_cast<WhileNode*>(node);
-            std::string condType = analyzeExpression(wh->condition);
+            std::string condType = analyzeExpression(wh->condition).type;
             if (condType != "bool")
                 throw std::runtime_error("while condition must be boolean");
             enterScope();
@@ -157,7 +157,7 @@ void SemanticAnalyzer::analyzeStatement(ASTNode* node) {
 
         case ASTNodeType::Return: {
             auto ret = static_cast<ReturnNode*>(node);
-            std::string returnType = analyzeExpression(ret->returnValue);
+            std::string returnType = analyzeExpression(ret->returnValue).type;
             if (returnType != currentReturnType)
                 throw std::runtime_error("Return type mismatch function signature " + returnType);
             hasReturn = true;
@@ -173,57 +173,71 @@ void SemanticAnalyzer::analyzeStatement(ASTNode* node) {
     }
 }
 
-std::string SemanticAnalyzer::analyzeExpression(ASTNode* node) {
+SemanticAnalyzer::VariableData SemanticAnalyzer::analyzeExpression(ASTNode* node) {
     switch (node->nodeType) {
         case ASTNodeType::NumberLiteral:
-            return "int";
+            return {"int"};
         case ASTNodeType::StringLiteral:
-            return "string";
+            return {"string"};
         case ASTNodeType::BooleanLiteral:
-            return "bool";
+            return {"bool"};
         case ASTNodeType::VoidLiteral:
-            return "void";
+            return {"void"};
+        case ASTNodeType::IntArrayLiteral: {
+            auto intArray = static_cast<IntArrayLiteralNode*>(node);
+            for (auto value : intArray->values) {
+                if (analyzeExpression(value).type != "int")
+                    throw std::runtime_error("Int array must contain int values");
+            }
+            
+            return {"int[]", intArray->values.size()};
+        }
         
         case ASTNodeType::Identifier: {
             auto id = static_cast<IdentifierNode*>(node);
             return lookupVariable(id->name);
         }
 
+        case ASTNodeType::ArrayGet: {
+            auto arrayGet = static_cast<ArrayGetNode*>(node);
+            return {"int"};
+        }
+
         case ASTNodeType::BinaryOp: {
             auto bin = static_cast<BinaryOpNode*>(node);
-            std::string left = analyzeExpression(bin->left);
-            std::string right = analyzeExpression(bin->right);
+            std::string left = analyzeExpression(bin->left).type;
+            std::string right = analyzeExpression(bin->right).type;
 
             if (bin->op == "+" || bin->op == "-" || bin->op == "*" || bin->op == "/" || bin->op == "%") {
                 if (left != "int" || right != "int")
                     throw std::runtime_error("Arithmetic operations require int operands");
-                return "int";
+                return {"int"};
             }
             if (bin->op == "==" || bin->op == "!=" || bin->op == ">" || bin->op == ">=" || bin->op == "<" || bin->op == "<=") {
                 if (left != right)
                     throw std::runtime_error("Comparsion between incompatible types");
-                return "bool";
+                return {"bool"};
             }
             if (bin->op == "&&" || bin->op == "||") {
                 if (left != "bool" || right != "bool")
                     throw std::runtime_error("Logical operations require bool operands");
-                return "bool";
+                return {"bool"};
             }
             throw std::runtime_error("Unknown binary operator: " + bin->op);
         }
 
         case ASTNodeType::UnaryOp: {
             auto un = static_cast<UnaryOpNode*>(node);
-            std::string exprType = analyzeExpression(un->operand);
+            std::string exprType = analyzeExpression(un->operand).type;
             if (un->op == "!") {
                 if (exprType != "bool")
                     throw std::runtime_error("Unary '!' requres bool");
-                return "bool";
+                return {"bool"};
             }
             if (un->op == "-") {
                 if (exprType != "int")
                     throw std::runtime_error("Unary '-' requires int");
-                return "int";
+                return {"int"};
             }
             throw std::runtime_error("Unknown unary operator: " + un->op);
         }
@@ -233,7 +247,7 @@ std::string SemanticAnalyzer::analyzeExpression(ASTNode* node) {
             
             FunctionSignature sig;
             for (auto& param : call->parameters)
-                sig.paramTypes.push_back(analyzeExpression(param));
+                sig.paramTypes.push_back(analyzeExpression(param).type);
             sig.returnType = findFunction(call->name, sig.paramTypes);
             
             if (sig.returnType.empty())

@@ -13,8 +13,20 @@ class SemanticAnalyzer {
         SemanticAnalyzer();
         ~SemanticAnalyzer();
 
+        struct VariableData {
+            std::string type;
+            size_t size;
+
+            VariableData(std::string type, size_t size)
+                : type(type), size(size) { }
+            VariableData(std::string type)
+                : type(type), size(0) { }
+            VariableData()
+                : type(""), size(0) { }
+        };
+
         void analyze(ASTNode* node);
-        std::string analyzeExpression(ASTNode* node);
+        VariableData analyzeExpression(ASTNode* node);
     private:
         struct FunctionSignature {
             std::string returnType;
@@ -27,7 +39,7 @@ class SemanticAnalyzer {
         };
 
         std::unordered_map<std::string, std::vector<FunctionSignature>> functions;
-        std::vector<std::unordered_map<std::string, std::string>> scopes;
+        std::vector<std::unordered_map<std::string, VariableData>> scopes;
         
         const std::unordered_map<std::string, std::vector<FunctionSignature>> reservedFunctions = {
             {"in", {
@@ -45,7 +57,7 @@ class SemanticAnalyzer {
         void enterScope();
         void exitScope();
 
-        void declareVariable(const std::string& name, const std::string& type);
+        void declareVariable(const std::string& name, VariableData data);
         std::string lookupVariable(const std::string& name);
 
         void analyzeStatement(ASTNode* node);

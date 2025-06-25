@@ -98,15 +98,31 @@ void Binarizer::parse(const std::string& data) {
             if (label.empty() || valueStr.empty())
                 throw std::runtime_error("Invalid data format in line: " + line);
 
-            if (!isNumber(valueStr))
-                throw std::runtime_error("Invalid numeric value in data entry: " + line);
+            // if (!isNumber(valueStr))
+            //     throw std::runtime_error("Invalid numeric value in data entry: " + line);
 
-            uint32_t value = static_cast<uint32_t>(parseNumber(valueStr));
-            if (value >= (1 << 24))
-                throw std::runtime_error("Data value too large (max 24 bits): " + std::to_string(value));
+            // uint32_t value = static_cast<uint32_t>(parseNumber(valueStr));
+            // if (value >= (1 << 24))
+            //     throw std::runtime_error("Data value too large (max 24 bits): " + std::to_string(value));
+
+            // dataAddress[label] = textAddr + dataSection.size();
+            // dataSection.push_back(value);
 
             dataAddress[label] = textAddr + dataSection.size();
-            dataSection.push_back(value);
+
+            std::stringstream ss(valueStr);
+            std::string item;
+            while (std::getline(ss, item, ',')) {
+                trim(item);
+                if (!isNumber(item))
+                    throw std::runtime_error("Invalid number in data entry: " + item);
+
+                uint32_t value = static_cast<uint32_t>(parseNumber(item));
+                if (value >= (1 << 24))
+                    throw std::runtime_error("Data value too large (max 24 bits): " + std::to_string(value));
+
+                dataSection.push_back(value);
+            }
         }
     }
 }
