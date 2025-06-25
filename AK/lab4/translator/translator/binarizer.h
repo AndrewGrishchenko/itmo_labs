@@ -52,11 +52,10 @@ class Binarizer {
             {"ldi",  0b10100},
             {"st",   0b10101},
             {"sta",  0b10110},
-            {"in",   0b10111},
-            {"out",  0b11000},
-            {"call", 0b11001},
-            {"ret",  0b11010},
-            {"halt", 0b11011}
+            {"call", 0b10111},
+            {"ret",  0b11000},
+            {"iret", 0b11001},
+            {"halt", 0b11010}
         };
 
         const std::unordered_set<std::string> noOperandMnemonics = {

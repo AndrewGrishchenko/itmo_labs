@@ -80,6 +80,10 @@ void Binarizer::parse(const std::string& data) {
                     throw std::runtime_error("Unknown operand at label " + operandStr);
             }
 
+            std::cout << "MNEMONIC: " << mnemonic << "\n";
+            std::cout << "OPCODE: 0x" << std::hex << static_cast<int>(opcode) << std::dec << "\n";
+            std::cout << "OPERAND: 0x" << std::hex << static_cast<int>(opcode) << std::dec << "\n";
+
             if (operand >= (1 << 19))
                 throw std::runtime_error("Operand out of 19-bit range " + std::to_string(operand));
 

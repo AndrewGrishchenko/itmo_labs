@@ -49,6 +49,31 @@ class Memory {
                 throw std::out_of_range("Memory access out of bounds");
             return data[address];
         }
+
+        uint32_t& atRef(const size_t& addressRef) {
+            if (addressRef >= MEM_SIZE)
+                throw std::runtime_error("Memory access out of bounds");
+            return data[addressRef];
+        }
+
+        const uint32_t& atRef(const size_t& addressRef) const {
+            if (addressRef >= MEM_SIZE)
+                throw std::runtime_error("Memory access out of bounds");
+            return data[addressRef];
+        }
+        //TODO: think need i const
+
+        std::function<uint32_t&()> makeGetterAtRef(const size_t& addressRef) {
+            return [this, &addressRef]() -> uint32_t& {
+                return this->atRef(addressRef);
+            };
+        }
+
+        std::function<uint32_t&()> makeDynamicGetter(std::function<uint32_t&()> addressGetter) {
+            return [this, addressGetter]() -> uint32_t& {
+                return this->atRef(addressGetter());
+            };
+        }
     private:
         std::array<uint32_t, MEM_SIZE> data;
         
@@ -120,7 +145,20 @@ class ALU {
             rightGetter = std::move(getter);
         }
 
-        void perform(Operation operation, bool writeFlags = false) {
+        void setOperation(Operation operation) {
+            this->operation = operation;
+            std::cout << "alu set op " << opStr(operation) << "\n";
+        }
+
+        void setWriteFlags(bool writeFlags) {
+            this->writeFlags = writeFlags;
+        }
+
+        void perform() {
+            std::cout << "alu performing\n";
+            std::cout << "current left: 0x" << std::hex << leftGetter() << std::dec << "\n";
+            std::cout << "current right: 0x" << std::hex << rightGetter() << std::dec << "\n";
+
             uint32_t left = leftGetter();
             uint32_t right = rightGetter();
             uint32_t value = 0;
@@ -235,8 +273,10 @@ class ALU {
         std::function<uint32_t&()> leftGetter;
         std::function<uint32_t&()> rightGetter;
         // Result result;
+        Operation operation;
         uint32_t result = 0;
         bool* flagRefs[4];
+        bool writeFlags; //TODO: redo as latch
         //TODO: smth to do w dummies
 };
 
@@ -247,6 +287,12 @@ class MUX {
 
         void addInput(uint32_t& value) {
             inputs.emplace_back(value);
+        }
+
+        void replaceInput(size_t index, uint32_t& value) {
+            if (index >= inputs.size())
+                throw std::out_of_range("MUX replace input out of range");
+            inputs[index] = value;
         }
 
         void select(size_t index) {
@@ -337,114 +383,150 @@ class Registers {
         bool N = false, Z = false, V = false, C = false;
 };
 
+class Latch {
+    public:
+        Latch() {
+            sourceGetter = [this]() -> uint32_t& {
+                return source.get();
+            };
+            targetGetter = [this]() -> uint32_t& {
+                return this->target.get();
+            };
+        }
+        ~Latch() { }
+
+        void setSource(std::reference_wrapper<uint32_t> source) {
+            this->source = source;
+            sourceGetter = [this]() -> uint32_t& {
+                return this->source.get();
+            };
+        }
+
+        void setSourceGetter(std::function<uint32_t&()> sourceGetter) {
+            this->sourceGetter = std::move(sourceGetter);
+        }
+
+        void setTarget(std::reference_wrapper<uint32_t> target) {
+            this->target = target;
+            targetGetter = [this]() -> uint32_t& {
+                return this->target.get();
+            };
+        }
+
+        void setTargetGetter(std::function<uint32_t&()> targetGetter) {
+            this->targetGetter = std::move(targetGetter);
+        }
+
+        void setEnabled(bool enabled) {
+            this->enabled = enabled;
+        }
+
+        void propagate() {
+            if (enabled)
+                std::cout << " 0x" << std::hex << targetGetter() << " = 0x" << sourceGetter() << std::dec;
+            if (enabled)
+                targetGetter() = sourceGetter();
+            std::cout << "\n";
+        }
+
+    private:
+        std::reference_wrapper<uint32_t> source = dummyInput;
+        std::reference_wrapper<uint32_t> target = dummyInput;
+        
+        std::function<uint32_t&()> sourceGetter;
+        std::function<uint32_t&()> targetGetter;
+        
+        bool enabled = false;
+        uint32_t dummyInput = 0;
+};
+
 class LatchRouter {
     public:
         LatchRouter() { }
         ~LatchRouter() { }
 
-        void setInput(std::reference_wrapper<uint32_t> value) {
-            input = value;
+        void addLatch(Latch& latch) {
+            latches.emplace_back(latch);
         }
 
-        void addOutput(std::reference_wrapper<uint32_t> output) {
-            outputs.emplace_back(output, false);
+        template<typename... Latches>
+        void setLatches(Latches&... ls) {
+            latches = { std::ref(ls)... };
         }
 
-        void setLatch(size_t index, bool enabled) {
-            if (index >= outputs.size())
-                throw std::out_of_range("Latch index out of range");
-            outputs[index].second = enabled;
+        void setLatchState(size_t index, bool enabled) {
+            if (index >= latches.size())
+                throw std::invalid_argument("Latch index out of range");
+            latches[index].get().setEnabled(enabled);
         }
 
-        void setLatches(const std::vector<bool>& latchStates) {
-            if (latchStates.size() != outputs.size())
+        void setLatchStates(const std::vector<bool>& latchStates) {
+            if (latchStates.size() != latches.size())
                 throw std::invalid_argument("Latch state count doesn't match output count");
-            
-            for (size_t i = 0; i < outputs.size(); i++) {
-                outputs[i].second = latchStates[i];
-            }
+
+            for (size_t i = 0; i < latches.size(); i++)
+                latches[i].get().setEnabled(latchStates[i]);
         }
-
-        // void setLatch(size_t index, bool enabled) {
-        //     if (index >= outputs.size())
-        //         throw std::out_of_range("Latch index out of range");
-        //     outputs[index].second = enabled;
-        // }
-
-        // void setLatches(const std::vector<int>& latchStates) {
-        //     if (latchStates.size() != outputs.size())
-        //         throw std::invalid_argument("Latch state count doesn't match output count");
-            
-        //     for (size_t i = 0; i < outputs.size(); i++) {
-        //         *outputs[i].second = latchStates[i] == 1 ? true : false;
-        //     }
-        // }
-
-        // void setLatches(const std::unordered_map<Registers::RegName, bool>& latchStates) {
-        //     for (const auto& [reg, enabled] : latchStates) {
-        //         setLatch(reg, enabled);
-        //     }
-        // }
-        //TODO: think
-
-        // void setLatches(const std::unordered_map<Registers::RegName, int>& latchStates) {
-        //     for (const auto& [reg, enabled] : latchStates) {
-        //         setLatch(reg, enabled);
-        //     }
-        // }
-
-        // void propagate() {
-        //     for (auto& [ref, latch] : outputs) {
-        //         if (*latch)
-        //             ref.get() = value;
-        //     }
-        // }
 
         void propagate() {
-            // std::cout << "PROPAGATING LATCHES:\n";
-            for (auto& [ref, latch] : outputs) {
-                if (latch) {
-                    // std::cout << ref.get() << " = " << input.get() << "\n";
-                    ref.get() = input.get();
-                }
-                    
-            }
+            for (auto& latchRef : latches)
+                latchRef.get().propagate();
         }
 
     private:
-        std::reference_wrapper<uint32_t> input = dummyInput;
-        std::vector<std::pair<std::reference_wrapper<uint32_t>, bool>> outputs;
-        // std::unordered_map<Registers::RegName, std::pair<std::reference_wrapper<uint32_t>, bool>> outputs;
-        uint32_t dummyInput = 0;
+        std::vector<std::reference_wrapper<Latch>> latches;
 };
 
-class ProcessorModel {
+//TODO: latch class, so LatchRouter<Latches>
+
+class CU {
     public:
-        ProcessorModel();
-        ~ProcessorModel();
+        CU() { }
+        ~CU() { }
 
-        void loadBinary(const std::string& filename);
-        void process();
+        void connect(MUX& mux1, MUX& mux2, ALU& alu, LatchRouter& latchRouter, Latch& latchMEM_IR, Latch& latchMEM_DR, Latch& latchDR_MEM) {
+            this->mux1 = &mux1;
+            this->mux2 = &mux2;
+            this->alu = &alu;
+            this->latchRouter = &latchRouter;
+            this->latchMEM_IR = &latchMEM_IR;
+            this->latchMEM_DR = &latchMEM_DR;
+            this->latchDR_MEM = &latchDR_MEM;
+            
+            this->mux1->replaceInput(2, operand);
+        }
+
+        void setIRInput(const uint32_t& IR) {
+            this->IR = &IR;
+        }
+
+        void setFlagsInput(const bool& N, const bool& Z, const bool& V, const bool& C) {
+            this->N = &N;
+            this->Z = &Z;
+            this->V = &V;
+            this->C = &C;
+        }
+
+        bool isHalted() {
+            return halted;
+        }
+
+        void decode();
+    
     private:
-        size_t textSize = 0;
-        size_t dataStart = 0;
-        size_t dataSize = 0;
-        uint32_t entryPoint = 0;
+        MUX* mux1 = nullptr;
+        MUX* mux2 = nullptr;
+        ALU* alu = nullptr;
+        LatchRouter* latchRouter = nullptr;
+        Latch* latchMEM_IR = nullptr;
+        Latch* latchMEM_DR = nullptr;
+        Latch* latchDR_MEM = nullptr;
 
-        uint32_t zero = 0;
-        uint8_t opcode = 0;
-        uint32_t operand = 0;
-
-        bool halted = false;
-        bool binaryLoaded = false;
-        size_t tickCount = 0;
-        size_t microstep = 0;
-
-        Memory memory;
-        Registers registers;
-        ALU alu;
-        MUX mux1, mux2;
-        LatchRouter latchRouter;
+        const uint32_t* IR = nullptr;
+        const bool* N = nullptr;
+        const bool* Z = nullptr;
+        const bool* V = nullptr;
+        const bool* C = nullptr;
 
         enum class CPUState {
             FetchAR,
@@ -454,10 +536,34 @@ class ProcessorModel {
             Halt
         };
 
-        CPUState state = CPUState::FetchAR;
-        void tick();
+        std::string stateStr() {
+            switch (state) {
+                case CPUState::FetchAR:
+                    return "FetchAR";
+                case CPUState::FetchIR:
+                    return "FetchIR";
+                case CPUState::Decode:
+                    return "Decode";
+                case CPUState::IncrementIP:
+                    return "IncrementIP";
+                case CPUState::Halt:
+                    return "Halt";
+                default:
+                    return "";
+            }
+        }
 
-        void updateOperand();
+        CPUState state = CPUState::FetchAR;
+
+        bool instructionDone = false;
+        void instructionTick();
+
+        size_t microstep = 0;
+
+        uint8_t opcode = 0;
+        uint32_t operand = 0;
+
+        bool halted = false;
 
         enum Opcode : uint8_t {
             OP_ADD  = 0b00000,
@@ -483,33 +589,45 @@ class ProcessorModel {
             OP_LDI  = 0b10100,
             OP_ST   = 0b10101,
             OP_STA  = 0b10110,
-            OP_IN   = 0b10111,
-            OP_OUT  = 0b11000,
-            OP_CALL = 0b11001,
-            OP_RET  = 0b11010,
-            OP_HALT = 0b11011
+            OP_CALL = 0b10111,
+            OP_RET  = 0b11000,
+            OP_IRET = 0b11001,
+            OP_HALT = 0b11010
         };
+};
+
+class ProcessorModel {
+    public:
+        ProcessorModel();
+        ~ProcessorModel();
+
+        void loadBinary(const std::string& filename);
+        void process();
+    private:
+        size_t textSize = 0;
+        size_t dataStart = 0;
+        size_t dataSize = 0;
+        uint32_t entryPoint = 0;
+
+        uint32_t zero = 0;
+        size_t tickCount = 0;
+
+        bool halted = false;
+        bool binaryLoaded = false;
+
+        Memory memory;
+        Registers registers;
+        ALU alu;
+        MUX mux1, mux2;
         
+        Latch latchALU_DR, latchALU_AR, latchALU_SP, latchALU_AC, latchALU_PC, latchMEM_IR, latchMEM_DR, latchDR_MEM;
+        LatchRouter latchRouter;
 
-        bool instructionDone = false;
-        void instructionTick();
+        CU cu;
 
-        std::string stateStr() {
-            switch (state) {
-                case CPUState::FetchAR:
-                    return "FetchAR";
-                case CPUState::FetchIR:
-                    return "FetchIR";
-                case CPUState::Decode:
-                    return "Decode";
-                case CPUState::IncrementIP:
-                    return "IncrementIP";
-                case CPUState::Halt:
-                    return "Halt";
-                default:
-                    return "";
-            }
-        }
+        void tick();
+        void updateOperand();
+
         void memDump();
         void allDump();
 };

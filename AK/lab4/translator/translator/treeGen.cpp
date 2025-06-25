@@ -114,7 +114,7 @@ ASTNode* TreeGenerator::parseAssignStatement(std::vector<Token> tokens, size_t& 
     pos++;
 
     if (tokens[pos].type != TokenType::Equals)
-        throw std::runtime_error("Expected '='");
+        throw std::runtime_error("Expected '=', got " + tokenStr(tokens[pos]));
     pos++;
 
     ASTNode* expr = parseExpression(tokens, pos);
@@ -201,6 +201,7 @@ ASTNode* TreeGenerator::parseStatement(std::vector<Token> tokens, size_t& pos) {
     } else if (tokens[pos].type == TokenType::KeywordReturn) {
         return parseReturn(tokens, pos);
     } else if (tokens[pos].type == TokenType::Identifier) {
+        std::cout << "identifier\n";
         if (pos + 1 < tokens.size() &&
             tokens[pos + 1].type == TokenType::LParen) {
             ASTNode* node = parseFunctionCall(tokens, pos);
@@ -211,6 +212,7 @@ ASTNode* TreeGenerator::parseStatement(std::vector<Token> tokens, size_t& pos) {
             
             return node;
         } else {
+            std::cout << "parseassign " << pos << "\n";
             return parseAssignStatement(tokens, pos);
         }
 

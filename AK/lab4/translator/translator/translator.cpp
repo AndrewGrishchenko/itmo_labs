@@ -36,6 +36,11 @@ int main(int argc, char* argv[]) {
 
     std::cout << "CODE:\n" << code;
 
+    // std::ifstream asm_file(argv[1]);
+    // std::stringstream buffer;
+    // buffer << asm_file.rdbuf();
+    // std::string code = buffer.str();
+
     Binarizer binarizer;
     binarizer.parse(code);
     binarizer.writeToFile("program.bin");
