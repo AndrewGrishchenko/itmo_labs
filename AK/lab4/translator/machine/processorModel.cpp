@@ -93,48 +93,59 @@ void ProcessorModel::process() {
 
 void ProcessorModel::loadBinary(const std::string& filename) {
     std::ifstream in(filename, std::ios::binary);
-    if (!in) throw std::runtime_error("Can't open binary " + filename);
+    if (!in) throw std::runtime_error("Can't open binary file: " + filename);
 
     uint8_t buf[3];
-    size_t address = 0;
 
+    // Читаем размер кода (textSize)
     if (!in.read(reinterpret_cast<char*>(buf), 3))
         throw std::runtime_error("Failed to read textSize from header");
-    textSize = (buf[0] << 16) | (buf[1] << 8) | buf[2];
+    size_t textSize = (buf[0] << 16) | (buf[1] << 8) | buf[2];
 
+    // Читаем размер данных (dataSize)
     if (!in.read(reinterpret_cast<char*>(buf), 3))
-        throw std::runtime_error("Failed to read entryPoint from header");
-    entryPoint = (buf[0] << 16) | (buf[1] << 8) | buf[2];
+        throw std::runtime_error("Failed to read dataSize from header");
+    size_t dataSize = (buf[0] << 16) | (buf[1] << 8) | buf[2];
 
-    dataStart = textSize;
-    registers.set(Registers::IP, entryPoint);
+    if (textSize + dataSize > MEM_SIZE)
+        throw std::runtime_error("Binary too large for memory");
 
-    std::cout << "BINARY LOAD:\n";
-    std::cout << "textSize: 0x" << std::hex << textSize << std::dec << "\n";
-    std::cout << "dataStart: 0x" << std::hex << dataStart << std::dec << "\n";
-    std::cout << "entryPoint: 0x" << std::hex << entryPoint << std::dec << "\n\n";
-    allDump();
-
-    while (in.read(reinterpret_cast<char*>(buf), 3)) {
-        if (address >= MEM_SIZE)
-            throw std::runtime_error("Binary too large");
-        memory[address++] = (buf[0] << 16) | (buf[1] << 8) | buf[2];
-        std::cout << "MEM[" << std::hex << address - 1 << "] = " << memory[address - 1] << std::dec << "\n"; 
+    // Загружаем инструкции в память (адреса 0 .. textSize-1)
+    for (size_t addr = 0; addr < textSize; addr++) {
+        if (!in.read(reinterpret_cast<char*>(buf), 3))
+            throw std::runtime_error("Unexpected EOF while reading instructions");
+        memory[addr] = (buf[0] << 16) | (buf[1] << 8) | buf[2];
     }
-    std::cout << "\n";
 
-    dataSize = address - textSize;
+    // Загружаем данные в память (адреса textSize .. textSize+dataSize-1)
+    for (size_t addr = textSize; addr < textSize + dataSize; addr++) {
+        if (!in.read(reinterpret_cast<char*>(buf), 3))
+            throw std::runtime_error("Unexpected EOF while reading data");
+        memory[addr] = (buf[0] << 16) | (buf[1] << 8) | buf[2];
+    }
 
-    uint32_t defaultVector = memory[dataStart + 0x0002 - 2];
-    uint32_t inputVector   = memory[dataStart + 0x0003 - 2];
+    // Инициализируем IP — начинаем с 0 (там jmp _start)
+    registers.set(Registers::IP, 0); //TODO: remove
 
-    std::cout << "defaultVector = memory[0x" << std::hex << dataStart + 0x0002 - 2 << "] = 0x" << defaultVector << std::dec << "\n";
-    std::cout << "inputVector = memory[0x" << std::hex << dataStart + 0x0003 - 2 << "] = 0x" << inputVector << std::dec << "\n";
+    // Запоминаем размеры
+    this->textSize = textSize;
+    this->dataSize = dataSize;
+    this->dataStart = textSize;
+
+    binaryLoaded = true;
+
+    uint32_t defaultVector = memory[dataStart + 0];
+    uint32_t inputVector = memory[dataStart + 1];
 
     interruptHandler.setVectorTable(defaultVector, inputVector);
 
-    binaryLoaded = true;
+    std::cout << "Loaded binary:\n";
+    std::cout << "Code size: 0x" << std::hex << textSize << std::dec << "\n";
+    std::cout << "Data size: 0x" << std::hex << dataSize << std::dec << "\n";
+    std::cout << "Interrupt vectors: default=0x" << std::hex << defaultVector 
+              << ", input=0x" << inputVector << std::dec << "\n";
 }
+
 
 void ProcessorModel::memDump() {
     std::cout << "MEMDUMP:\n";
@@ -190,6 +201,7 @@ void ProcessorModel::tick() {
     latchMEM_IR.setEnabled(false);
     latchMEM_DR.setEnabled(false);
     latchDR_MEM.setEnabled(false);
+    alu.setOperation(ALU::Operation::NOP);
     alu.setWriteFlags(false);
     latchRouter.setLatchStates({0, 0, 0, 0, 0});
 
@@ -205,16 +217,19 @@ void InterruptHandler::step() {
                 case InterruptState::SavingPC:
                     ipc = true;
                     savedPC = registers->get(Registers::IP);
+                    std::cout << "saved ip as 0x" << std::hex << savedPC << std::dec << "\n";
                     intState = InterruptState::Jumping;
                     break;
                 case InterruptState::Jumping:
-                    registers->set(Registers::IP, inputVec - 1);
-                    std::cout << "input vec: " << inputVec << "\n";
+                    registers->set(Registers::IP, inputVec);
+                    std::cout << "input vec: 0x" << std::hex << inputVec << std::dec << "\n";
                     intState = InterruptState::InInterrupt;
                     break;
                 case InterruptState::InInterrupt:
-                    registers->set(Registers::IP, savedPC);
+                    registers->set(Registers::IP, savedPC - 1);
+                    std::cout << "restored ip as 0x" << std::hex << savedPC - 1 << std::dec << "\n";
                     ipc = false;
+                    irq = IRQType::NONE;
                     intState = InterruptState::SavingPC;
                     break;
             }
@@ -230,7 +245,7 @@ void InterruptHandler::step() {
 void CU::decode() {
     std::cout << "ticking state " << stateStr() << "\n";
 
-    if ((interruptHandler->shouldInterrupt() || interruptHandler->isEnteringInterrupt()) && instructionDone) {
+    if ((interruptHandler->shouldInterrupt() || interruptHandler->isEnteringInterrupt()) && state == CPUState::FetchAR) {
         interruptHandler->step();
         return;
     }

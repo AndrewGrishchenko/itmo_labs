@@ -539,12 +539,12 @@ class InterruptHandler {
 class IOSimulator {
     public:
         IOSimulator() {
-                inputSchedule.push_back({10, 'h'});
-                inputSchedule.push_back({20, 'e'});
-                inputSchedule.push_back({30, 'l'});
-                inputSchedule.push_back({40, 'l'});
-                inputSchedule.push_back({50, 'o'});
-                inputSchedule.push_back({60, '\n'});
+                inputSchedule.push_back({10, 'a'});
+                inputSchedule.push_back({100, 'b'});
+                inputSchedule.push_back({200, '\n'});
+                // inputSchedule.push_back({40, 'l'});
+                // inputSchedule.push_back({50, 'o'});
+                // inputSchedule.push_back({60, '\n'});
             }
         ~IOSimulator() { }
 
@@ -578,8 +578,8 @@ class IOSimulator {
         std::vector<IOScheduleEntry> inputSchedule;
         std::vector<IOScheduleEntry> outputSchedule;
         
-        const size_t input_address = 0x0;
-        const size_t output_address = 0x1;
+        const size_t input_address = 0x10;
+        const size_t output_address = 0x11;
         //TODO: redo kostyl
 };
 

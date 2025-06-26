@@ -64,10 +64,10 @@ class Binarizer {
             "inc", "dec", "not", "cla", "push", "pop", "in", "out", "ret", "halt"
         };
 
-        std::unordered_map<std::string, size_t> interruptVectorAddresses;
-        std::unordered_map<std::string, std::string> interruptTableEntries;
-
         enum class Section {None, Text, Data, InterruptTable};
+
+        size_t textStart;
+        size_t dataStart;
 
         std::vector<uint32_t> dataSection;
         std::unordered_map<std::string, size_t> dataAddress;
@@ -92,8 +92,16 @@ class Binarizer {
 
         static bool isNumber(const std::string& s) {
             if (s.empty()) return false;
-            if (s.size() > 2 && (s.substr(0, 2) == "0x" || s.substr(0, 2) == "0b")) return true;
-            return std::all_of(s.begin(), s.end(), [](char c) { return std::isdigit(c) || c == '-'; });
+
+            if (s.size() > 2 && s[0] == '0' && (s[1] == 'x' || s[1] == 'X')) {
+                return std::all_of(s.begin() + 2, s.end(), ::isxdigit);
+            }
+            if (s.size() > 2 && s[0] == '0' && (s[1] == 'b' || s[1] == 'B')) {
+                return std::all_of(s.begin() + 2, s.end(), [](char c) { return c == '0' || c == '1'; });
+            }
+
+            size_t start = (s[0] == '-') ? 1 : 0;
+            return std::all_of(s.begin() + start, s.end(), ::isdigit);
         }
 
         static int parseNumber(const std::string& s) {

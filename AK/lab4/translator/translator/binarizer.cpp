@@ -3,12 +3,23 @@
 Binarizer::Binarizer() { }
 Binarizer::~Binarizer() { }
 
-void Binarizer::parse(const std::string& data) {
-    std::istringstream iss(data);
+void Binarizer::parse(const std::string& inputData) {
+    std::istringstream iss(inputData);
     std::string line;
-    size_t textAddr = 2;
-    size_t dataAddr = 0;
+
+    enum class Section { None, Text, Data };
     Section current = Section::None;
+
+    textStart = 1;
+    dataStart = 0;
+
+    size_t textSize = 0;
+    size_t dataSize = 0;
+
+    labelAddress.clear();
+    dataAddress.clear();
+    instructions.clear();
+    dataSection.clear();
 
     while (std::getline(iss, line)) {
         stripComment(line);
@@ -18,50 +29,68 @@ void Binarizer::parse(const std::string& data) {
         if (line == ".text") {
             current = Section::Text;
             continue;
-        } else if (line == ".data") {
+        }
+        else if (line == ".data") {
             current = Section::Data;
             continue;
-        } else if (line == ".interrupt_table") {
-            current = Section::InterruptTable;
+        }
+
+        if (line.size() > 4 && line.substr(0,4) == ".org") {
+            std::string addrStr = line.substr(4);
+            trim(addrStr);
+            size_t orgAddr = 0;
+            if (!isNumber(addrStr))
+                throw std::runtime_error(".org must have numeric address: " + addrStr);
+            orgAddr = parseNumber(addrStr);
+            if (current == Section::Text)
+                textStart = orgAddr;
+            else if (current == Section::Data)
+                dataStart = orgAddr;
             continue;
         }
 
         if (line.back() == ':') {
-            std::string label = line.substr(0, line.size() - 1);
+            std::string label = line.substr(0, line.size()-1);
             trim(label);
-            if (current == Section::Text)
-                labelAddress[label] = textAddr;
-            else if (current == Section::Data)
-                dataAddress[label] = dataAddr;
-        } else if (current == Section::InterruptTable) {
-            auto colonPos = line.find(':');
-            if (colonPos == std::string::npos)
-                throw std::runtime_error("Invalid interrupt_table entry: " + line);
 
-            std::string vectorName = line.substr(0, colonPos);
-            std::string labelName = line.substr(colonPos + 1);
-            trim(vectorName);
-            trim(labelName);
+            size_t absoluteAddr = 0;
+            if (current == Section::Text) {
+                absoluteAddr = textStart + textSize;
+                labelAddress[label] = absoluteAddr;
+            }
+            else if (current == Section::Data) {
+                absoluteAddr = dataStart + dataSize;
+                dataAddress[label] = absoluteAddr;
+            }
+            continue;
+        }
 
-            interruptTableEntries[vectorName] = labelName;
-        } else {
-            if (current == Section::Text)
-                textAddr++;
-            else if (current == Section::Data)
-                dataAddr++;
+        if (current == Section::Text) {
+            textSize++;
+        }
+        else if (current == Section::Data) {
+            dataSize++;
         }
     }
 
-    // for (auto& [name, addr] : labelAddress)
-    // std::cout << "Label " << name << " → " << std::hex << addr << "\n";
+    dataStart = textStart + textSize;
 
-    // for (auto& [vec, lbl] : interruptTableEntries)
-    //     std::cout << "Interrupt vector " << vec << " → " << lbl << "\n";
-
+    
+    // instructions.resize(textStart + textSize, {0,0});
+    instructions.resize(textSize);
+    dataSection.resize(dataSize);
     iss.clear();
     iss.seekg(0);
     current = Section::None;
 
+    size_t textCursor = 0;
+    size_t dataCursor = 0;
+
+    std::cout << "dataStart: 0x" << std::hex << dataStart << std::dec << "\n";
+    std::cout << "textStart: 0x" << std::hex << textStart << std::dec << "\n";
+    std::cout << "instruction size " << instructions.size() << "\n";
+    std::cout << "data size " << dataSection.size() << "\n";
+    
     while (std::getline(iss, line)) {
         stripComment(line);
         trim(line);
@@ -69,16 +98,33 @@ void Binarizer::parse(const std::string& data) {
 
         if (line == ".text") {
             current = Section::Text;
+            textCursor = 0;
             continue;
-        } else if (line == ".data") {
+        }
+        else if (line == ".data") {
             current = Section::Data;
-            continue;
-        } else if (line == ".interrupt_table") {
-            current = Section::InterruptTable;
+            // dataCursor = 0;
             continue;
         }
 
-        if (line.back() == ':') continue;
+        if (line.size() > 4 && line.substr(0,4) == ".org") {
+            std::string addrStr = line.substr(4);
+            trim(addrStr);
+            size_t orgAddr = 0;
+            if (!isNumber(addrStr))
+                throw std::runtime_error(".org must have numeric address: " + addrStr);
+            orgAddr = parseNumber(addrStr);
+
+            if (current == Section::Text) {
+                textCursor = orgAddr - textStart;
+            } else if (current == Section::Data) {
+                dataCursor = orgAddr - dataStart;
+            }
+            continue;
+        }
+
+        if (line.back() == ':')
+            continue;
 
         if (current == Section::Text) {
             std::istringstream ls(line);
@@ -87,153 +133,184 @@ void Binarizer::parse(const std::string& data) {
             toLower(mnemonic);
 
             if (opcodeMap.find(mnemonic) == opcodeMap.end())
-                throw std::runtime_error("Unknown opcode " + mnemonic);
-            
+                throw std::runtime_error("Unknown opcode: " + mnemonic);
+
             uint8_t opcode = opcodeMap.at(mnemonic);
             uint32_t operand = 0;
 
             if (!operandStr.empty()) {
-                if (isNumber(operandStr))
+                if (isNumber(operandStr)) {
                     operand = parseNumber(operandStr);
-                else if (labelAddress.count(operandStr))
-                    operand = static_cast<uint32_t>(labelAddress.at(operandStr));
-                else if (dataAddress.count(operandStr))
-                    operand = static_cast<uint32_t>(dataAddress.at(operandStr));
-                else
-                    throw std::runtime_error("Unknown operand at label " + operandStr);
+                }
+                else if (labelAddress.count(operandStr)) {
+                    operand = labelAddress[operandStr];
+                }
+                else if (dataAddress.count(operandStr)) {
+                    operand = dataAddress[operandStr];
+                }
+                else {
+                    throw std::runtime_error("Unknown operand label: " + operandStr);
+                }
             }
 
-            if (operand >= (1 << 19))
-                throw std::runtime_error("Operand out of 19-bit range " + std::to_string(operand));
+            // size_t absoluteAddr = textStart + textCursor;
+            // if (instructions.size() <= absoluteAddr)
+                // instructions.resize(absoluteAddr + 1, {0,0});
 
-            instructions.push_back({opcode, operand});
-        } else if (current == Section::Data) {
+            // instructions[absoluteAddr] = {opcode, operand};
+            instructions[textCursor] = {opcode, operand};
+            textCursor++;
+        }
+        else if (current == Section::Data) {
             auto colonPos = line.find(':');
             if (colonPos == std::string::npos)
-                throw std::runtime_error("Invalid data entry (missing colon): " + line);
+                throw std::runtime_error("Invalid data entry: " + line);
 
             std::string label = line.substr(0, colonPos);
             std::string valueStr = line.substr(colonPos + 1);
-
             trim(label);
             trim(valueStr);
 
-            if (label.empty() || valueStr.empty())
-                throw std::runtime_error("Invalid data format in line: " + line);
+            uint32_t value = 0;
 
-            if (valueStr.size() >= 5 && valueStr.substr(0, 5) == ".zero") {
-                std::istringstream zeroIss(valueStr.substr(5));
-                int zeroCount = 0;
-                zeroIss >> zeroCount;
-                if (zeroCount <= 0)
-                    throw std::runtime_error("Invalid .zero count in line: " + line);
+            if (valueStr.size() >= 5 && valueStr.substr(0,5) == ".zero") {
+                int count = std::stoi(valueStr.substr(5));
+                if (count <= 0)
+                    throw std::runtime_error("Invalid .zero count: " + valueStr);
 
-                dataAddress[label] = textAddr + dataSection.size();
-                for (int i = 0; i < zeroCount; i++)
-                    dataSection.push_back(0);
-            } else if (valueStr.size() >= 2 && valueStr[0] == '0' && (valueStr[1] == 'x' || valueStr[1] == 'X')) {
-                uint32_t value = static_cast<uint32_t>(parseNumber(valueStr));
-                if (value >= (1 << 24))
-                    throw std::runtime_error("Data value too large (max 24 bits): " + std::to_string(value));
-
-                dataAddress[label] = textAddr + dataSection.size();
-                dataSection.push_back(value);
-            } else if (labelAddress.count(valueStr)) {
-                uint32_t addr = static_cast<uint32_t>(labelAddress.at(valueStr));
-                dataAddress[label] = textAddr + dataSection.size();
-                dataSection.push_back(addr);
-            } else if (dataAddress.count(valueStr)) {
-                uint32_t addr = static_cast<uint32_t>(dataAddress.at(valueStr));
-                dataAddress[label] = textAddr + dataSection.size();
-                dataSection.push_back(addr);
-            } else if (isNumber(valueStr)) {
-                uint32_t value = static_cast<uint32_t>(parseNumber(valueStr));
-                if (value >= (1 << 24))
-                    throw std::runtime_error("Data value too large (max 24 bits): " + std::to_string(value));
-
-                dataAddress[label] = textAddr + dataSection.size();
-                dataSection.push_back(value);
-            } else {
+                size_t index = dataCursor;
+                // if (dataSection.size() < index + count)
+                //     dataSection.resize(index + count, 0);
+                dataCursor += count;
+                dataAddress[label] = dataStart + index;
+            }
+            else if (isNumber(valueStr)) {
+                value = parseNumber(valueStr);
+                size_t index = dataCursor;
+                // if (dataSection.size() <= index)
+                //     dataSection.resize(index + 1);
+                dataSection[index] = value;
+                dataAddress[label] = dataStart + index;
+                dataCursor++;
+            }
+            else if (labelAddress.count(valueStr)) {
+                value = labelAddress[valueStr];
+                size_t index = dataCursor;
+                // if (dataSection.size() <= index)
+                //     dataSection.resize(index + 1);
+                dataSection[index] = value;
+                dataAddress[label] = dataStart + index;
+                dataCursor++;
+            }
+            else if (dataAddress.count(valueStr)) {
+                value = dataAddress[valueStr];
+                size_t index = dataCursor;
+                // if (dataSection.size() <= index)
+                //     dataSection.resize(index + 1);
+                dataSection[index] = value;
+                dataAddress[label] = dataStart + index;
+                dataCursor++;
+            }
+            else {
                 throw std::runtime_error("Unknown data value: " + valueStr);
             }
-        } else if (current == Section::InterruptTable) {
-            auto colonPos = line.find(':');
-            if (colonPos == std::string::npos)
-                throw std::runtime_error("Invalid interrupt_table entry: " + line);
-
-            std::string vectorName = line.substr(0, colonPos);
-            std::string labelName = line.substr(colonPos + 1);
-            trim(vectorName);
-            trim(labelName);
-
-            if (!labelAddress.count(labelName))
-                throw std::runtime_error("Unknown label in interrupt_table: " + labelName);
-
-            uint32_t handlerAddress = labelAddress[labelName];
-
-            size_t baseDataAddress = textAddr + instructions.size();
-            interruptVectorAddresses = {
-                {"default_vector", baseDataAddress},
-                {"input_vector", baseDataAddress + 1}
-            };
-            std::cout << "DECTORS\n";
-            for (auto& p : interruptVectorAddresses) {
-                std::cout << p.first << " = " << std::hex << p.second << std::dec << "\n";
-            }
-
-            if (!interruptVectorAddresses.count(vectorName))
-                throw std::runtime_error("Unknown vector name in interrupt_table: " + vectorName);
-
-            size_t vectorAddr = interruptVectorAddresses.at(vectorName);
-
-            size_t index = interruptVectorAddresses[vectorName] - baseDataAddress;
-            if (dataSection.size() <= index)
-                dataSection.resize(index + 1, 0);
-            dataSection[index] = handlerAddress;
         }
     }
+
+    if (!labelAddress.count("_start"))
+        throw std::runtime_error("Missing _start label");
+
+    uint32_t startAddr = labelAddress["_start"];
+    uint8_t jmpOpcode = opcodeMap.at("jmp");
+
+    if (instructions.size() < 1)
+        instructions.resize(1, {0,0});
+    // instructions[0] = {jmpOpcode, startAddr};
+    std::cout << "JUMP BLYAT 0x" << std::hex << static_cast<int>(instructions[0].opcode) << " 0x" << instructions[0].operand << "\n";
+
+    std::cout << "Sections start addresses:\n";
+    std::cout << " textStart = 0x" << std::hex << textStart << "\n";
+    std::cout << " dataStart = 0x" << dataStart << std::dec << "\n";
+
+    std::cout << "Labels:\n";
+    for (auto& [name, addr] : labelAddress)
+        std::cout << " " << name << " = 0x" << std::hex << addr << std::dec << "\n";
+
+    std::cout << "Instructions (" << instructions.size() << "):\n";
+    for (size_t i = 0; i < instructions.size(); i++)
+        std::cout << std::hex << i << ": opcode=" << (int)instructions[i].opcode << " operand=" << instructions[i].operand << std::dec << "\n";
+
+    std::cout << "Data (" << dataSection.size() << "):\n";
+    for (size_t i = 0; i < dataSection.size(); i++)
+        std::cout << std::hex << (i) << ": " << dataSection[i] << std::dec << "\n";
 }
 
 void Binarizer::writeToFile(const std::string& filename) const {
     std::ofstream out(filename, std::ios::binary);
     if (!out.is_open()) throw std::runtime_error("Failed to open output file");
 
-    //header: .text size
-    uint32_t textSize = static_cast<uint32_t>(instructions.size());
-    if (textSize >= (1 << 24)) //TODO: idk
-        throw std::runtime_error(".text section too large");
-
     if (labelAddress.find("_start") == labelAddress.end())
         throw std::runtime_error("Unable to find _start label");
-    
-    uint32_t entryPoint = static_cast<uint32_t>(labelAddress.at("_start"));
-    if (entryPoint >= textSize)
-        throw std::runtime_error("_start is outside of .text section");
 
-    out.put((textSize >> 16) & 0xFF);
-    out.put((textSize >> 8) & 0xFF);
-    out.put(textSize & 0xFF);
+    uint32_t codeSize = static_cast<uint32_t>(textStart + instructions.size());
+    uint32_t dataSize = static_cast<uint32_t>(dataSection.size());
 
-    out.put((entryPoint >> 16) & 0xFF);
-    out.put((entryPoint >> 8) & 0xFF);
-    out.put(entryPoint & 0xFF);
+    out.put((codeSize >> 16) & 0xFF);
+    out.put((codeSize >> 8) & 0xFF);
+    out.put(codeSize & 0xFF);
+
+    out.put((dataSize >> 16) & 0xFF);
+    out.put((dataSize >> 8) & 0xFF);
+    out.put(dataSize & 0xFF);
+
+    size_t memSize = codeSize + dataSize;
+    std::vector<uint32_t> mem(memSize, 0);
+
+    uint32_t startAddr = labelAddress.at("_start");
+    uint8_t jmpOpcode = opcodeMap.at("jmp");
+    std::cout << "jmp opcode: 0x" << std::hex << static_cast<int>(jmpOpcode) << std::dec << "\n";
+    mem[0] = (jmpOpcode << 19) | (startAddr & 0x7FFFF);
 
     //.text
-    for (const auto& instr : instructions) {
-        uint32_t raw = (instr.opcode << 19) | (instr.operand & 0x7FFFF);
-        out.put((raw >> 16) & 0xFF);
-        out.put((raw >> 8) & 0xFF);
-        out.put(raw & 0xFF);
+    // for (const auto& instr : instructions) {
+    //     uint32_t raw = (instr.opcode << 19) | (instr.operand & 0x7FFFF);
+    //     out.put((raw >> 16) & 0xFF);
+    //     out.put((raw >> 8) & 0xFF);
+    //     out.put(raw & 0xFF);
+    // }
+    for (size_t i = 0; i < instructions.size(); i++) {
+        uint32_t raw = (instructions[i].opcode << 19) | (instructions[i].operand & 0x7FFFF);
+        mem[textStart + i] = raw;
+        // std::cout << "at address 0x" << std::hex << (textStart + i) << std::dec << "\n";
+        // std::cout << "raw instr: 0x" << std::hex << raw << std::dec << "\n";
+        // std::cout << "instr opcode 0x" << std::hex << instructions[i].opcode << " operand 0x" << instructions[i].operand << "\n";
     }
 
     //.data
-    for (uint32_t value : dataSection) {
+    // for (uint32_t value : dataSection) {
+    //     if (value >= (1 << 24))
+    //         throw std::runtime_error("Data value too big for 3 bytes");
+        
+    //     out.put((value >> 16) & 0xFF);
+    //     out.put((value >> 8) & 0xFF);
+    //     out.put(value & 0xFF);
+    // }
+    for (size_t i = 0; i < dataSection.size(); i++) {
+        uint32_t value = dataSection[i];
         if (value >= (1 << 24))
             throw std::runtime_error("Data value too big for 3 bytes");
-        
-        out.put((value >> 16) & 0xFF);
-        out.put((value >> 8) & 0xFF);
-        out.put(value & 0xFF);
+        mem[dataStart + i] = value;
+        // std::cout << "at address 0x" << std::hex << (dataStart + i) << std::dec << "\n";
+        // std::cout << "raw data: 0x" << std::hex << value << std::dec << "\n";
+    }
+
+    size_t i = 0;
+    for (uint32_t val : mem) {
+        out.put((val >> 16) & 0xFF);
+        out.put((val >> 8) & 0xFF);
+        out.put(val & 0xFF);
+        std::cout << "MEM[0x" << std::hex << i << "] = 0x" << val << std::dec << "\n";
+        i++;
     }
 }
 
@@ -288,6 +365,44 @@ std::string Binarizer::toAsm() const {
     return oss.str();
 }
 
+// void Binarizer::dump() {
+//     std::ifstream in("program.bin", std::ios::binary);
+//     if (!in.is_open())
+//         throw std::runtime_error("Failed to open binary file");
+
+//     uint8_t buf[3];
+
+//     //header
+//     if (!in.read(reinterpret_cast<char*>(buf), 3))
+//         throw std::runtime_error("Failed to read header\n");
+
+//     uint32_t codeSize = (buf[0] << 16) | (buf[1] << 8) | buf[2];
+//     std::cout << "HEADER: codeSize = 0x" << std::hex << codeSize << std::dec << "\n";
+
+//     if (!in.read(reinterpret_cast<char*>(buf), 3))
+//         throw std::runtime_error("Failed to read header\n");
+    
+//     uint32_t dataSize = (buf[0] << 16) | (buf[1] << 8) | buf[2];
+//     std::cout << "HEADER: dataSize = 0x" << std::hex << dataSize << std::dec << "\n";
+
+//     int addr = 0;
+//     while (in.read(reinterpret_cast<char*>(buf), 3)) {
+//         uint32_t raw = (buf[0] << 16) | (buf[1] << 8) | buf[2];
+//         std::cout << std::setw(4) << std::setfill('0') << std::hex << addr << ": ";
+
+//         std::cout << "raw=0x" << std::hex << raw << std::dec << " ";
+//         if (addr < codeSize) {
+//             uint8_t opcode = raw >> 19;
+//             uint32_t operand = raw & 0x7FFFF;
+//             std::cout << "opcode=0x" << std::hex << +opcode << " operand=0x" << operand << "\n";
+//         } else {
+//             std::cout << "DATA=0x" << std::uppercase << std::hex << raw << "\n";
+//         }
+
+//         ++addr;
+//     }
+// }
+
 void Binarizer::dump() {
     std::ifstream in("program.bin", std::ios::binary);
     if (!in.is_open())
@@ -295,33 +410,40 @@ void Binarizer::dump() {
 
     uint8_t buf[3];
 
-    //header
     if (!in.read(reinterpret_cast<char*>(buf), 3))
-        throw std::runtime_error("Failed to read header\n");
+        throw std::runtime_error("Failed to read codeSize from header");
 
-    uint32_t textSize = (buf[0] << 16) | (buf[1] << 8) | buf[2];
-    std::cout << "HEADER: textSize = " << textSize << "\n";
+    uint32_t codeSize = (uint32_t(buf[0]) << 16) | (uint32_t(buf[1]) << 8) | uint32_t(buf[2]);
+    std::cout << "HEADER: codeSize = 0x" << std::hex << codeSize << std::dec << "\n";
 
     if (!in.read(reinterpret_cast<char*>(buf), 3))
-        throw std::runtime_error("Failed to read header\n");
-    
-    uint32_t entryPoint = (buf[0] << 16) | (buf[1] << 8) | buf[2];
-    std::cout << "HEADER: entryPoint = 0x" << std::hex << entryPoint << std::dec << "\n";
+        throw std::runtime_error("Failed to read dataSize from header");
+
+    uint32_t dataSize = (uint32_t(buf[0]) << 16) | (uint32_t(buf[1]) << 8) | uint32_t(buf[2]);
+    std::cout << "HEADER: dataSize = 0x" << std::hex << dataSize << std::dec << "\n";
 
     int addr = 0;
-    while (in.read(reinterpret_cast<char*>(buf), 3)) {
-        uint32_t raw = (buf[0] << 16) | (buf[1] << 8) | buf[2];
-        std::cout << std::setw(4) << std::setfill('0') << std::hex << addr << ": ";
-
-        std::cout << "raw=0x" << std::hex << raw << std::dec << " ";
-        if (addr < textSize) {
-            uint8_t opcode = raw >> 19;
-            uint32_t operand = raw & 0x7FFFF;
-            std::cout << "opcode=0x" << std::hex << +opcode << " operand=0x" << operand << "\n";
-        } else {
-            std::cout << "DATA=0x" << std::uppercase << std::hex << raw << "\n";
+    while (true) {
+        if (!in.read(reinterpret_cast<char*>(buf), 3)) {
+            if (in.eof()) break;
+            throw std::runtime_error("Failed to read 3 bytes from file");
         }
 
+        uint32_t raw = (uint32_t(buf[0]) << 16) | (uint32_t(buf[1]) << 8) | uint32_t(buf[2]);
+
+        std::cout << std::setw(4) << std::setfill('0') << std::hex << addr << ": ";
+
+        if (addr < static_cast<int>(codeSize)) {
+            uint8_t opcode = raw >> 19;
+            uint32_t operand = raw & 0x7FFFF;
+            std::cout << "raw=0x" << std::setw(6) << std::setfill('0') << raw
+                      << " opcode=0x" << std::hex << int(opcode)
+                      << " operand=0x" << operand << std::dec << "\n";
+        } else if (addr < static_cast<int>(codeSize + dataSize)) {
+            std::cout << "DATA=0x" << std::uppercase << std::hex << raw << std::dec << "\n";
+        } else {
+            std::cout << "UNKNOWN=0x" << std::hex << raw << std::dec << "\n";
+        }
         ++addr;
     }
 }
