@@ -533,11 +533,26 @@ void CodeGenerator::processReservedFunction(ASTNode* node) {
     }
 
     if (funcName == "in") {
-        emitCode("call buffer_read");
-        emitCode("ld buffer_start");
-        emitCode("st source_str");
+        //TODO: handling \0 in strings
+        std::string bufferLabel = "buffer" + std::to_string(bufferCounter);
+        std::string bufferCountLabel = "buffer" + std::to_string(bufferCounter++);
+
+        emitData(bufferLabel + ": 0");
+        emitData(bufferCountLabel + "_count: 0");
+
+        if (paramTypes.size() == 0)
+            emitCode("ld token_buffer_count");
+        else if (paramTypes.size() == 1)
+            processNode(functionCallNode->parameters[0]);
+
+        emitCode("st " + bufferCountLabel);
+        emitCode("st token_count");
+        emitCode("call read_string");
+        emitCode("sub " + bufferCountLabel);
+        emitCode("st " + bufferLabel);
+        emitCode("");
     } else if (funcName == "out") {
-        emitCode("call buffer_write");
+        // emitCode("call buffer_write");
     } else {
         throw std::runtime_error("Unimplemented reserved function " + funcName + " behavior");
     }
@@ -698,14 +713,16 @@ std::string CodeGenerator::assembleCode() {
     std::stringstream result;
 
     result << ".data\n";
-    result << "  temp_right: 0\n";
-    result << "  buffer: 0\n";
-    result << "  buffer_start: 0\n";
-    result << "  target_buffer: 0\n";
     result << "  end_symb: 10\n";
-    result << "  source_str: 0\n";
-    result << "  target_str: 0\n";
-    result << "  str_end: 0\n";
+    result << "  temp_right: 0\n";
+    result << "  input_addr: 0x0\n";
+    result << "  output_addr: 0x1\n";
+    result << "  token: 0\n";
+    result << "  token_count: 0\n";
+    result << "  token_buffer_count: 20\n";
+    result << "  token_i: 0\n";
+    // result << "  token_buffer: .zero 256\n";
+    result << "  token_buffer: .zero 20\n";
     result << "\n";
 
     for (const auto& line : dataSection) {
@@ -713,6 +730,8 @@ std::string CodeGenerator::assembleCode() {
     }
 
     result << "\n.text\n";
+    result << read_token;
+    result << read_string;
     // result << buffer_read;
     // result << buffer_write;
     // result << str_copy;

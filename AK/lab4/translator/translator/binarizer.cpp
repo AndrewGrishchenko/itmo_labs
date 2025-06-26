@@ -42,6 +42,9 @@ void Binarizer::parse(const std::string& data) {
     iss.seekg(0);
     current = Section::None;
 
+    dataSection.push_back(0);
+    dataSection.push_back(0);
+
     while (std::getline(iss, line)) {
         stripComment(line);
         trim(line);
@@ -80,10 +83,6 @@ void Binarizer::parse(const std::string& data) {
                     throw std::runtime_error("Unknown operand at label " + operandStr);
             }
 
-            std::cout << "MNEMONIC: " << mnemonic << "\n";
-            std::cout << "OPCODE: 0x" << std::hex << static_cast<int>(opcode) << std::dec << "\n";
-            std::cout << "OPERAND: 0x" << std::hex << static_cast<int>(opcode) << std::dec << "\n";
-
             if (operand >= (1 << 19))
                 throw std::runtime_error("Operand out of 19-bit range " + std::to_string(operand));
 
@@ -102,32 +101,43 @@ void Binarizer::parse(const std::string& data) {
             if (label.empty() || valueStr.empty())
                 throw std::runtime_error("Invalid data format in line: " + line);
 
-            // if (!isNumber(valueStr))
-            //     throw std::runtime_error("Invalid numeric value in data entry: " + line);
+            if (valueStr.size() >= 5 && valueStr.substr(0, 5) == ".zero") {
+                std::istringstream zeroIss(valueStr.substr(5));
+                int zeroCount = 0;
+                zeroIss >> zeroCount;
+                if (zeroCount <= 0)
+                    throw std::runtime_error("Invalid .zero count in line: " + line);
 
-            // uint32_t value = static_cast<uint32_t>(parseNumber(valueStr));
-            // if (value >= (1 << 24))
-            //     throw std::runtime_error("Data value too large (max 24 bits): " + std::to_string(value));
-
-            // dataAddress[label] = textAddr + dataSection.size();
-            // dataSection.push_back(value);
-
-            dataAddress[label] = textAddr + dataSection.size();
-
-            std::stringstream ss(valueStr);
-            std::string item;
-            while (std::getline(ss, item, ',')) {
-                trim(item);
-                if (!isNumber(item))
-                    throw std::runtime_error("Invalid number in data entry: " + item);
-
-                uint32_t value = static_cast<uint32_t>(parseNumber(item));
+                dataAddress[label] = textAddr + dataSection.size();
+                for (int i = 0; i < zeroCount; i++)
+                    dataSection.push_back(0);
+            } else if (valueStr.size() >= 2 && valueStr[0] == '0' && (valueStr[1] == 'x' || valueStr[1] == 'X')) {
+                uint32_t value = static_cast<uint32_t>(parseNumber(valueStr));
                 if (value >= (1 << 24))
                     throw std::runtime_error("Data value too large (max 24 bits): " + std::to_string(value));
 
+                dataAddress[label] = textAddr + dataSection.size();
                 dataSection.push_back(value);
+            } else if (labelAddress.count(valueStr)) {
+                uint32_t addr = static_cast<uint32_t>(labelAddress.at(valueStr));
+                dataAddress[label] = textAddr + dataSection.size();
+                dataSection.push_back(addr);
+            } else if (dataAddress.count(valueStr)) {
+                uint32_t addr = static_cast<uint32_t>(dataAddress.at(valueStr));
+                dataAddress[label] = textAddr + dataSection.size();
+                dataSection.push_back(addr);
+            } else if (isNumber(valueStr)) {
+                uint32_t value = static_cast<uint32_t>(parseNumber(valueStr));
+                if (value >= (1 << 24))
+                    throw std::runtime_error("Data value too large (max 24 bits): " + std::to_string(value));
+
+                dataAddress[label] = textAddr + dataSection.size();
+                dataSection.push_back(value);
+            } else {
+                throw std::runtime_error("Unknown data value: " + valueStr);
             }
         }
+
     }
 }
 

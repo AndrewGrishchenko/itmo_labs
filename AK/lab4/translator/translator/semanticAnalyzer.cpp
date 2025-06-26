@@ -61,7 +61,7 @@ std::string SemanticAnalyzer::findFunction(const std::string& name, std::vector<
     if (reservedFunctions.find(name) != reservedFunctions.end()) {
         for (const auto& fn : reservedFunctions.at(name)) {
             if (fn.paramTypes == paramTypes) return fn.returnType;
-        } 
+        }
     } else {
         for (auto& fn : functions[name]) {
             if (fn.paramTypes == paramTypes) return fn.returnType;
@@ -244,12 +244,12 @@ SemanticAnalyzer::VariableData SemanticAnalyzer::analyzeExpression(ASTNode* node
 
         case ASTNodeType::FunctionCall: {
             auto call = static_cast<FunctionCallNode*>(node);
-            
+
             FunctionSignature sig;
             for (auto& param : call->parameters)
                 sig.paramTypes.push_back(analyzeExpression(param).type);
             sig.returnType = findFunction(call->name, sig.paramTypes);
-            
+
             if (sig.returnType.empty())
                 throw std::runtime_error("Unable to find function");
             

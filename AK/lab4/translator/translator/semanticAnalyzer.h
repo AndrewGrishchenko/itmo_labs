@@ -43,6 +43,7 @@ class SemanticAnalyzer {
         
         const std::unordered_map<std::string, std::vector<FunctionSignature>> reservedFunctions = {
             {"in", {
+                {"string", {"int"}},
                 {"string", {}}
             }},
             {"out", {

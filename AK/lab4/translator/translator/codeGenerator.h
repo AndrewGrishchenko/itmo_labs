@@ -54,6 +54,7 @@ class CodeGenerator {
         
         const std::unordered_map<std::string, std::vector<FunctionSignature>> reservedFunctions = {
             {"in", {
+                {"string", {"int"}},
                 {"string", {}}
             }},
             {"out", {
@@ -65,6 +66,7 @@ class CodeGenerator {
         int labelCounter = 0;
         int strCounter = 0;
         int arrCounter = 0;
+        int bufferCounter = 0;
         int stackOffset = 0; //TODO: why
 
         std::shared_ptr<FunctionData> currentFunction;
@@ -160,6 +162,47 @@ class CodeGenerator {
                                "  lda str_end\n"
                                "  sta target_buffer\n"
                                "  ret\n\n";
+
+        std::string read_token = "read_token:\n"
+                                 "  ld token\n"
+                                 "  jz read_token\n"
+                                 "  ret\n\n";
+
+        std::string read_string = "read_string:\n"
+                                  "  ld token_i\n"
+                                  "  sub token_buffer_count\n"
+                                  "  jz read_string_overflow\n\n"
+                                  "  call read_token\n"
+                                  "  ldi token_buffer\n"
+                                  "  add token_i\n"
+                                  "  st temp_right\n"
+                                  "  ld token\n"
+                                  "  sta temp_right\n\n"
+                                  "  ld token_i\n"
+                                  "  inc\n"
+                                  "  st token_i\n\n"
+                                  "  ld token\n"
+                                  "  sub end_symb\n"
+                                  "  jz read_string_ret\n\n"
+                                  "  ldi 0\n"
+                                  "  st token\n"
+                                  "  ld token_count\n"
+                                  "  dec\n"
+                                  "  st token_count\n"
+                                  "  dec\n"
+                                  "  jz read_string_ret\n\n"
+                                  "  jmp read_string\n"
+                                  "read_string_ret:\n"
+                                  "  ldi token_buffer\n"
+                                  "  add token_i\n"
+                                  "  st temp_right\n"
+                                  "  ldi 0\n"
+                                  "  sta temp_right\n"
+                                  "  st token\n\n"
+                                  "  ld token_i\n"
+                                  "  ret\n"
+                                  "read_string_overflow:\n"
+                                  "  halt\n\n";
 
         std::string assembleCode();
 };
