@@ -204,6 +204,11 @@ class CodeGenerator {
                                   "read_string_overflow:\n"
                                   "  halt\n\n";
 
+        std::unordered_map<std::string, std::string> interruptTableEntries = {
+            {"default_vector", "default_interrupt"},
+            {"input_vector", "input_interrupt"}
+        };
+
         std::string assembleCode();
 };
 

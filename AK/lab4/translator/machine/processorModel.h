@@ -477,14 +477,119 @@ class LatchRouter {
         std::vector<std::reference_wrapper<Latch>> latches;
 };
 
-//TODO: latch class, so LatchRouter<Latches>
+class InterruptHandler {
+    public:
+        InterruptHandler() { }
+        ~InterruptHandler() { }
+
+        void TEMP_CONNECT(Registers& registers) {
+            this->registers = &registers;
+        }
+
+        enum class IRQType {
+            NONE = 0,
+            IO_INPUT = 1
+        };
+
+        // IRQType getIRQ() const { return irq; }
+        void setIRQ(IRQType irq) { 
+            if (!ipc)
+                this->irq = irq;
+            if (!ipc)
+                std::cout << "set irq to " << (irq == IRQType::IO_INPUT ? 1 : 0) << "\n";
+        }
+
+        // IRQType& getIRQRef() { return irq; }
+        bool& getIERef() { return ie; }
+        bool& getIPCRef() { return ipc; }
+
+        void setVectorTable(uint32_t defaultVec, uint32_t inputVec) {
+            this->defaultVec = defaultVec;
+            this->inputVec = inputVec;
+        }
+
+        bool shouldInterrupt() const {
+            return ie && irq != IRQType::NONE && !ipc;
+        }
+
+        bool isEnteringInterrupt() {
+            return intState == InterruptState::Jumping;
+        }
+
+        void step();
+
+    private:
+        IRQType irq = IRQType::NONE;
+        bool ie = false;
+        bool ipc = false;
+
+        uint32_t defaultVec, inputVec;
+        uint32_t savedPC;
+
+        enum class InterruptState {
+            SavingPC,
+            Jumping,
+            InInterrupt
+        };
+        InterruptState intState = InterruptState::SavingPC;
+
+        Registers* registers = nullptr; //TODO: REMOVE!!!!!!!
+};
+
+class IOSimulator {
+    public:
+        IOSimulator() {
+                inputSchedule.push_back({10, 'h'});
+                inputSchedule.push_back({20, 'e'});
+                inputSchedule.push_back({30, 'l'});
+                inputSchedule.push_back({40, 'l'});
+                inputSchedule.push_back({50, 'o'});
+                inputSchedule.push_back({60, '\n'});
+            }
+        ~IOSimulator() { }
+
+        void connect(InterruptHandler& interruptHandler, Memory& memory) {
+            this->interruptHandler = &interruptHandler;
+            this->memory = &memory;
+        }
+
+        struct IOScheduleEntry {
+            size_t tick;
+            int token;
+        };
+
+        void addOutput(IOScheduleEntry entry) {
+            outputSchedule.push_back(entry);
+        }
+
+        void check(size_t tick) {
+            for (const auto& entry : inputSchedule) {
+                if (entry.tick == tick) {
+                    interruptHandler->setIRQ(InterruptHandler::IRQType::IO_INPUT);
+                    memory->write(input_address, entry.token);
+                }
+            }
+        }
+
+    private:
+        InterruptHandler* interruptHandler = nullptr;
+        Memory* memory = nullptr;
+
+        std::vector<IOScheduleEntry> inputSchedule;
+        std::vector<IOScheduleEntry> outputSchedule;
+        
+        const size_t input_address = 0x0;
+        const size_t output_address = 0x1;
+        //TODO: redo kostyl
+};
 
 class CU {
     public:
         CU() { }
         ~CU() { }
 
-        void connect(MUX& mux1, MUX& mux2, ALU& alu, LatchRouter& latchRouter, Latch& latchMEM_IR, Latch& latchMEM_DR, Latch& latchDR_MEM) {
+        void connect(InterruptHandler& interruptHandler, MUX& mux1, MUX& mux2, ALU& alu, LatchRouter& latchRouter, Latch& latchMEM_IR, Latch& latchMEM_DR, Latch& latchDR_MEM) {
+            this->interruptHandler = &interruptHandler;
             this->mux1 = &mux1;
             this->mux2 = &mux2;
             this->alu = &alu;
@@ -492,6 +597,7 @@ class CU {
             this->latchMEM_IR = &latchMEM_IR;
             this->latchMEM_DR = &latchMEM_DR;
             this->latchDR_MEM = &latchDR_MEM;
+            //TODO: make norm
             
             this->mux1->replaceInput(2, operand);
         }
@@ -514,6 +620,8 @@ class CU {
         void decode();
     
     private:
+        InterruptHandler* interruptHandler = nullptr;
+
         MUX* mux1 = nullptr;
         MUX* mux2 = nullptr;
         ALU* alu = nullptr;
@@ -591,10 +699,14 @@ class CU {
             OP_STA  = 0b10110,
             OP_CALL = 0b10111,
             OP_RET  = 0b11000,
-            OP_IRET = 0b11001,
-            OP_HALT = 0b11010
+            OP_EI   = 0b11001,
+            OP_DI   = 0b11010,
+            OP_IRET = 0b11011,
+            OP_HALT = 0b11100
         };
 };
+
+//RN: interrupt handler in asm + interrupt handler here
 
 class ProcessorModel {
     public:
@@ -624,6 +736,9 @@ class ProcessorModel {
         LatchRouter latchRouter;
 
         CU cu;
+        InterruptHandler interruptHandler;
+
+        IOSimulator iosim;
 
         void tick();
         void updateOperand();

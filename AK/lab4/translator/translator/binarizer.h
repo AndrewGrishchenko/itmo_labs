@@ -54,15 +54,20 @@ class Binarizer {
             {"sta",  0b10110},
             {"call", 0b10111},
             {"ret",  0b11000},
-            {"iret", 0b11001},
-            {"halt", 0b11010}
+            {"ei",   0b11001},
+            {"di",   0b11010},
+            {"iret", 0b11011},
+            {"halt", 0b11100}
         };
 
-        const std::unordered_set<std::string> noOperandMnemonics = {
+        const std::unordered_set<std::string> noOperandMnemonics = { //TODO: remove
             "inc", "dec", "not", "cla", "push", "pop", "in", "out", "ret", "halt"
         };
 
-        enum class Section {None, Text, Data};
+        std::unordered_map<std::string, size_t> interruptVectorAddresses;
+        std::unordered_map<std::string, std::string> interruptTableEntries;
+
+        enum class Section {None, Text, Data, InterruptTable};
 
         std::vector<uint32_t> dataSection;
         std::unordered_map<std::string, size_t> dataAddress;

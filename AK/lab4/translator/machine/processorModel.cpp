@@ -11,8 +11,6 @@ ProcessorModel::ProcessorModel() {
     mux2.addInput(registers.getRef(Registers::DR));
     mux2.addInput(registers.getRef(Registers::SP));
 
-    
-
     alu.setLeftInputGetter(mux1.makeGetter());
     alu.setRightInputGetter(mux2.makeGetter());
     alu.setFlagRefs(registers.getNRef(),
@@ -37,7 +35,6 @@ ProcessorModel::ProcessorModel() {
 
     latchRouter.setLatches(latchALU_AC, latchALU_AR, latchALU_DR, latchALU_PC, latchALU_SP);
 
-    
     auto memoryGetter = [this]() -> uint32_t& {
         return this->memory.atRef(this->registers.getRef(Registers::AR));
     };
@@ -59,7 +56,11 @@ ProcessorModel::ProcessorModel() {
     // latchRouter.addOutput(registers.getRef(Registers::IP));
     // latchRouter.addOutput(registers.getRef(Registers::SP));
 
-    cu.connect(mux1, mux2, alu, latchRouter, latchMEM_IR, latchMEM_DR, latchDR_MEM);
+    interruptHandler.TEMP_CONNECT(registers);
+
+    iosim.connect(interruptHandler, memory);
+
+    cu.connect(interruptHandler, mux1, mux2, alu, latchRouter, latchMEM_IR, latchMEM_DR, latchDR_MEM);
     cu.setFlagsInput(registers.getNRef(),
                      registers.getZRef(),
                      registers.getVRef(),
@@ -123,6 +124,15 @@ void ProcessorModel::loadBinary(const std::string& filename) {
     std::cout << "\n";
 
     dataSize = address - textSize;
+
+    uint32_t defaultVector = memory[dataStart + 0x0002 - 2];
+    uint32_t inputVector   = memory[dataStart + 0x0003 - 2];
+
+    std::cout << "defaultVector = memory[0x" << std::hex << dataStart + 0x0002 - 2 << "] = 0x" << defaultVector << std::dec << "\n";
+    std::cout << "inputVector = memory[0x" << std::hex << dataStart + 0x0003 - 2 << "] = 0x" << inputVector << std::dec << "\n";
+
+    interruptHandler.setVectorTable(defaultVector, inputVector);
+
     binaryLoaded = true;
 }
 
@@ -161,8 +171,9 @@ void ProcessorModel::allDump() {
 }
 
 void ProcessorModel::tick() {
-    // std::cout << "ticking state " << stateStr() << "\n";
+    std::cout << "tick #" << tickCount << "\n";
     
+    iosim.check(tickCount);
     cu.decode();
 
     std::cout << "LATCH_MEM_IR ";
@@ -185,8 +196,44 @@ void ProcessorModel::tick() {
     allDump();
 }
 
+void InterruptHandler::step() {
+    std::cout << "interrupt step\n";
+
+    switch (irq) {
+        case IRQType::IO_INPUT: {
+            switch (intState) {
+                case InterruptState::SavingPC:
+                    ipc = true;
+                    savedPC = registers->get(Registers::IP);
+                    intState = InterruptState::Jumping;
+                    break;
+                case InterruptState::Jumping:
+                    registers->set(Registers::IP, inputVec - 1);
+                    std::cout << "input vec: " << inputVec << "\n";
+                    intState = InterruptState::InInterrupt;
+                    break;
+                case InterruptState::InInterrupt:
+                    registers->set(Registers::IP, savedPC);
+                    ipc = false;
+                    intState = InterruptState::SavingPC;
+                    break;
+            }
+            break;
+        }
+
+        case IRQType::NONE:
+            std::cout << "lol wha\n";
+            break;
+    }
+}
+
 void CU::decode() {
     std::cout << "ticking state " << stateStr() << "\n";
+
+    if ((interruptHandler->shouldInterrupt() || interruptHandler->isEnteringInterrupt()) && instructionDone) {
+        interruptHandler->step();
+        return;
+    }
 
     switch(state) {
         case CPUState::FetchAR: {
@@ -606,6 +653,7 @@ void CU::instructionTick() {
                     mux2->select(2);
 
                     alu->setOperation(ALU::Operation::NOP);
+                    alu->setWriteFlags(true);
                     // alu.perform(ALU::Operation::NOP);
 
                     latchRouter->setLatchStates({1, 0, 0, 0, 0});
@@ -662,6 +710,7 @@ void CU::instructionTick() {
                     mux2->select(2);
 
                     alu->setOperation(ALU::Operation::NOP);
+                    alu->setWriteFlags(true);
                     // alu.perform(ALU::Operation::NOP);
 
                     latchRouter->setLatchStates({1, 0, 0, 0, 0});
@@ -883,6 +932,22 @@ void CU::instructionTick() {
                     instructionDone = true;
                     break;
             }
+            break;
+
+        case OP_EI:
+            interruptHandler->getIERef() = true;
+            //TODO: redo kostyl
+            instructionDone = true;
+            break;
+
+        case OP_DI:
+            interruptHandler->getIERef() = false;
+            instructionDone = true;
+            break;
+
+        case OP_IRET:
+            interruptHandler->step();
+            instructionDone = true;
             break;
 
         case OP_HALT:

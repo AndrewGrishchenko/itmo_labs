@@ -6,7 +6,7 @@ Binarizer::~Binarizer() { }
 void Binarizer::parse(const std::string& data) {
     std::istringstream iss(data);
     std::string line;
-    size_t textAddr = 0;
+    size_t textAddr = 2;
     size_t dataAddr = 0;
     Section current = Section::None;
 
@@ -21,6 +21,9 @@ void Binarizer::parse(const std::string& data) {
         } else if (line == ".data") {
             current = Section::Data;
             continue;
+        } else if (line == ".interrupt_table") {
+            current = Section::InterruptTable;
+            continue;
         }
 
         if (line.back() == ':') {
@@ -30,6 +33,17 @@ void Binarizer::parse(const std::string& data) {
                 labelAddress[label] = textAddr;
             else if (current == Section::Data)
                 dataAddress[label] = dataAddr;
+        } else if (current == Section::InterruptTable) {
+            auto colonPos = line.find(':');
+            if (colonPos == std::string::npos)
+                throw std::runtime_error("Invalid interrupt_table entry: " + line);
+
+            std::string vectorName = line.substr(0, colonPos);
+            std::string labelName = line.substr(colonPos + 1);
+            trim(vectorName);
+            trim(labelName);
+
+            interruptTableEntries[vectorName] = labelName;
         } else {
             if (current == Section::Text)
                 textAddr++;
@@ -38,12 +52,15 @@ void Binarizer::parse(const std::string& data) {
         }
     }
 
+    // for (auto& [name, addr] : labelAddress)
+    // std::cout << "Label " << name << " → " << std::hex << addr << "\n";
+
+    // for (auto& [vec, lbl] : interruptTableEntries)
+    //     std::cout << "Interrupt vector " << vec << " → " << lbl << "\n";
+
     iss.clear();
     iss.seekg(0);
     current = Section::None;
-
-    dataSection.push_back(0);
-    dataSection.push_back(0);
 
     while (std::getline(iss, line)) {
         stripComment(line);
@@ -55,6 +72,9 @@ void Binarizer::parse(const std::string& data) {
             continue;
         } else if (line == ".data") {
             current = Section::Data;
+            continue;
+        } else if (line == ".interrupt_table") {
+            current = Section::InterruptTable;
             continue;
         }
 
@@ -136,8 +156,41 @@ void Binarizer::parse(const std::string& data) {
             } else {
                 throw std::runtime_error("Unknown data value: " + valueStr);
             }
-        }
+        } else if (current == Section::InterruptTable) {
+            auto colonPos = line.find(':');
+            if (colonPos == std::string::npos)
+                throw std::runtime_error("Invalid interrupt_table entry: " + line);
 
+            std::string vectorName = line.substr(0, colonPos);
+            std::string labelName = line.substr(colonPos + 1);
+            trim(vectorName);
+            trim(labelName);
+
+            if (!labelAddress.count(labelName))
+                throw std::runtime_error("Unknown label in interrupt_table: " + labelName);
+
+            uint32_t handlerAddress = labelAddress[labelName];
+
+            size_t baseDataAddress = textAddr + instructions.size();
+            interruptVectorAddresses = {
+                {"default_vector", baseDataAddress},
+                {"input_vector", baseDataAddress + 1}
+            };
+            std::cout << "DECTORS\n";
+            for (auto& p : interruptVectorAddresses) {
+                std::cout << p.first << " = " << std::hex << p.second << std::dec << "\n";
+            }
+
+            if (!interruptVectorAddresses.count(vectorName))
+                throw std::runtime_error("Unknown vector name in interrupt_table: " + vectorName);
+
+            size_t vectorAddr = interruptVectorAddresses.at(vectorName);
+
+            size_t index = interruptVectorAddresses[vectorName] - baseDataAddress;
+            if (dataSection.size() <= index)
+                dataSection.resize(index + 1, 0);
+            dataSection[index] = handlerAddress;
+        }
     }
 }
 

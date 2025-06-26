@@ -712,6 +712,11 @@ void CodeGenerator::processArrayGet(ASTNode* node) {
 std::string CodeGenerator::assembleCode() {
     std::stringstream result;
 
+    result << ".interrupt_table\n";
+    for (auto& p : interruptTableEntries)
+        result << p.first << ": " << p.second << "\n";
+    result << "\n";
+
     result << ".data\n";
     result << "  end_symb: 10\n";
     result << "  temp_right: 0\n";
