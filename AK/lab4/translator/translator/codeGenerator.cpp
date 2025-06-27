@@ -557,8 +557,17 @@ void CodeGenerator::processReservedFunction(ASTNode* node) {
         // emitCode("");
     } else if (funcName == "out") {
         processNode(functionCallNode->parameters[0]);
-        emitCode("st output_string");
-        emitCode("call write_string");
+        
+        if (paramTypes[0] == "int") {
+            emitCode("st temp_right");
+            emitCode("ldi 48");
+            emitCode("add temp_right");
+            emitCode("st token");
+            emitCode("call write_token");
+        } else if (paramTypes[0] == "string") {
+            emitCode("st output_string");
+            emitCode("call write_string");
+        }
     } else {
         throw std::runtime_error("Unimplemented reserved function " + funcName + " behavior");
     }

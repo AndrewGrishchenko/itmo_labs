@@ -230,6 +230,35 @@ void Binarizer::parse(const std::string& inputData) {
                 dataAddress[label] = dataStart + index;
                 dataCursor += bytes.size();
             }
+            else if (valueStr.find(',') != std::string::npos) {
+                std::vector<std::string> parts;
+                std::stringstream ss(valueStr);
+                std::string item;
+                while (std::getline(ss, item, ',')) {
+                    trim(item);
+                    parts.push_back(item);
+                }
+
+                size_t index = dataCursor;
+                dataAddress[label] = dataStart + index;
+
+                for (const auto& part : parts) {
+                    uint32_t value = 0;
+                    if (isNumber(part)) {
+                        value = parseNumber(part);
+                    } else if (labelAddress.count(part)) {
+                        value = labelAddress[part];
+                    } else if (dataAddress.count(part)) {
+                        value = dataAddress[part];
+                    } else {
+                        throw std::runtime_error("Unknown array value: " + part);
+                    }
+
+                    if (dataSection.size() <= dataCursor)
+                        dataSection.resize(dataCursor + 1);
+                    dataSection[dataCursor++] = value;
+                }
+            }
             else if (labelAddress.count(valueStr)) {
                 value = labelAddress[valueStr];
                 size_t index = dataCursor;
