@@ -537,22 +537,28 @@ void CodeGenerator::processReservedFunction(ASTNode* node) {
         std::string bufferLabel = "buffer" + std::to_string(bufferCounter);
         std::string bufferCountLabel = "buffer" + std::to_string(bufferCounter++);
 
-        emitData(bufferLabel + ": 0");
-        emitData(bufferCountLabel + "_count: 0");
+        // emitData(bufferLabel + ": 0");
+        // emitData(bufferCountLabel + "_count: 0");
+
 
         if (paramTypes.size() == 0)
-            emitCode("ld token_buffer_count");
+            emitCode("ldi 0");
         else if (paramTypes.size() == 1)
             processNode(functionCallNode->parameters[0]);
 
-        emitCode("st " + bufferCountLabel);
         emitCode("st token_count");
         emitCode("call read_string");
-        emitCode("sub " + bufferCountLabel);
-        emitCode("st " + bufferLabel);
-        emitCode("");
+
+        // emitCode("st " + bufferCountLabel);
+        // emitCode("st token_count");
+        // emitCode("call read_string");
+        // emitCode("sub " + bufferCountLabel);
+        // emitCode("st " + bufferLabel);
+        // emitCode("");
     } else if (funcName == "out") {
-        // emitCode("call buffer_write");
+        processNode(functionCallNode->parameters[0]);
+        emitCode("st output_string");
+        emitCode("call write_string");
     } else {
         throw std::runtime_error("Unimplemented reserved function " + funcName + " behavior");
     }
@@ -712,31 +718,19 @@ void CodeGenerator::processArrayGet(ASTNode* node) {
 std::string CodeGenerator::assembleCode() {
     std::stringstream result;
 
-    result << ".interrupt_table\n";
-    for (auto& p : interruptTableEntries)
-        result << p.first << ": " << p.second << "\n";
-    result << "\n";
-
-    result << ".data\n";
-    result << "  end_symb: 10\n";
-    result << "  temp_right: 0\n";
-    result << "  input_addr: 0x0\n";
-    result << "  output_addr: 0x1\n";
-    result << "  token: 0\n";
-    result << "  token_count: 0\n";
-    result << "  token_buffer_count: 20\n";
-    result << "  token_i: 0\n";
-    // result << "  token_buffer: .zero 256\n";
-    result << "  token_buffer: .zero 20\n";
-    result << "\n";
+    result << data << "\n";
 
     for (const auto& line : dataSection) {
         result << line << "\n";
     }
 
     result << "\n.text\n";
+    result << ".org 0x20\n";
+    result << interrupts;
     result << read_token;
     result << read_string;
+    result << write_token;
+    result << write_string;
     // result << buffer_read;
     // result << buffer_write;
     // result << str_copy;

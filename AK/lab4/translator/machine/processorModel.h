@@ -539,9 +539,12 @@ class InterruptHandler {
 class IOSimulator {
     public:
         IOSimulator() {
-                inputSchedule.push_back({10, 'a'});
-                inputSchedule.push_back({100, 'b'});
-                inputSchedule.push_back({200, '\n'});
+                inputSchedule.push_back({0, 'h'});
+                inputSchedule.push_back({200, 'e'});
+                inputSchedule.push_back({400, 'l'});
+                inputSchedule.push_back({600, 'l'});
+                inputSchedule.push_back({800, 'o'});
+                inputSchedule.push_back({1000, '\n'});
                 // inputSchedule.push_back({40, 'l'});
                 // inputSchedule.push_back({50, 'o'});
                 // inputSchedule.push_back({60, '\n'});
@@ -569,6 +572,26 @@ class IOSimulator {
                     memory->write(input_address, entry.token);
                 }
             }
+
+            if (memory->read(output_address) != 0x0) {
+                outputSchedule.push_back({tick, static_cast<int>(memory->read(output_address))});
+                memory->write(output_address, 0);
+            }
+        }
+
+        void printOutput() {
+            if (outputSchedule.empty()) return;
+            std::cout << "OUTPUT SCHEDULE:\n[";
+            for (auto& entry : outputSchedule) {
+                char symb = entry.token;
+                std::cout << "(" << entry.tick << ", ";
+                if (static_cast<int>(symb) == 10)
+                    std::cout << "'\\n'";
+                else
+                    std::cout << static_cast<char>(entry.token);
+                std::cout << "), ";
+            }
+            std::cout << "]\n";
         }
 
     private:

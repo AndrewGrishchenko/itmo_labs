@@ -12,34 +12,34 @@ int main(int argc, char* argv[]) {
     if (argc != 2)
         throw std::runtime_error("Usage: ./translator <filename>");
     
-    // std::ifstream file(argv[1]);
-    // std::stringstream buffer;
-    // buffer << file.rdbuf();
-    // std::string data = buffer.str();
-
-    // TreeGenerator treeGenerator;
-    // ASTNode* tree = treeGenerator.makeTree(data);
-    // tree->print();
-
-    // SemanticAnalyzer semanticAnalyzer;
-    // semanticAnalyzer.analyze(tree);
-    // std::cout << "Semantic analyze success\n";
-
-    // TreeVisualizer tv;
-    // std::string uml = tv.makeUML(tree);
-    // std::ofstream file_o("output.puml");
-    // file_o << uml;
-
-    // CodeGenerator codeGenerator;
-    // std::string code = codeGenerator.generateCode(tree);
-    // std::cout << "Code generation success\n";
-
-    // std::cout << "CODE:\n" << code;
-
-    std::ifstream asm_file(argv[1]);
+    std::ifstream file(argv[1]);
     std::stringstream buffer;
-    buffer << asm_file.rdbuf();
-    std::string code = buffer.str();
+    buffer << file.rdbuf();
+    std::string data = buffer.str();
+
+    TreeGenerator treeGenerator;
+    ASTNode* tree = treeGenerator.makeTree(data);
+    tree->print();
+
+    SemanticAnalyzer semanticAnalyzer;
+    semanticAnalyzer.analyze(tree);
+    std::cout << "Semantic analyze success\n";
+
+    TreeVisualizer tv;
+    std::string uml = tv.makeUML(tree);
+    std::ofstream file_o("output.puml");
+    file_o << uml;
+
+    CodeGenerator codeGenerator;
+    std::string code = codeGenerator.generateCode(tree);
+    std::cout << "Code generation success\n";
+
+    std::cout << "CODE:\n" << code;
+
+    // std::ifstream asm_file(argv[1]);
+    // std::stringstream buffer;
+    // buffer << asm_file.rdbuf();
+    // std::string code = buffer.str();
 
     Binarizer binarizer;
     binarizer.parse(code);

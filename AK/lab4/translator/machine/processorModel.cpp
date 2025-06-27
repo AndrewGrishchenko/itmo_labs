@@ -88,6 +88,7 @@ void ProcessorModel::process() {
     }
 
     allDump();
+    iosim.printOutput();
     std::cout << "Completed in " << tickCount << " ticks\n";
 }
 
@@ -385,6 +386,7 @@ void CU::instructionTick() {
             mux1->select(1);
             mux2->select(0);
             
+            alu->setWriteFlags(true);
             if (opcode == OP_INC)
                 alu->setOperation(ALU::Operation::INC);
                 // alu.perform(ALU::Operation::INC, true);

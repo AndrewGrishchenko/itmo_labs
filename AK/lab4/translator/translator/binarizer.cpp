@@ -181,14 +181,19 @@ void Binarizer::parse(const std::string& inputData) {
                 size_t index = dataCursor;
                 // if (dataSection.size() < index + count)
                 //     dataSection.resize(index + count, 0);
-                dataCursor += count;
+                // dataCursor += count;
                 dataAddress[label] = dataStart + index;
+                std::cout << "dataCursor = 0x" << std::hex << dataCursor + dataStart << " + " << std::dec << count << " = ";
+                dataCursor += count;
+                std::cout << std::hex << "0x" << dataCursor + dataStart << std::dec << "\n";
+
             }
             else if (isNumber(valueStr)) {
                 value = parseNumber(valueStr);
                 size_t index = dataCursor;
-                // if (dataSection.size() <= index)
-                //     dataSection.resize(index + 1);
+                if (dataSection.size() <= index)
+                    dataSection.resize(index + 1);
+                // std::cout << "dataSection at 0x" << std::hex << dataStart + index << std::dec << std::endl;
                 dataSection[index] = value;
                 dataAddress[label] = dataStart + index;
                 dataCursor++;
@@ -196,8 +201,8 @@ void Binarizer::parse(const std::string& inputData) {
             else if (labelAddress.count(valueStr)) {
                 value = labelAddress[valueStr];
                 size_t index = dataCursor;
-                // if (dataSection.size() <= index)
-                //     dataSection.resize(index + 1);
+                if (dataSection.size() <= index)
+                    dataSection.resize(index + 1);
                 dataSection[index] = value;
                 dataAddress[label] = dataStart + index;
                 dataCursor++;
@@ -205,8 +210,8 @@ void Binarizer::parse(const std::string& inputData) {
             else if (dataAddress.count(valueStr)) {
                 value = dataAddress[valueStr];
                 size_t index = dataCursor;
-                // if (dataSection.size() <= index)
-                //     dataSection.resize(index + 1);
+                if (dataSection.size() <= index)
+                    dataSection.resize(index + 1);
                 dataSection[index] = value;
                 dataAddress[label] = dataStart + index;
                 dataCursor++;
