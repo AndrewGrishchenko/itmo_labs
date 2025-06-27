@@ -198,6 +198,38 @@ void Binarizer::parse(const std::string& inputData) {
                 dataAddress[label] = dataStart + index;
                 dataCursor++;
             }
+            else if (valueStr.front() == '"' && valueStr.back() == '"') {
+                std::string str = valueStr.substr(1, valueStr.size() - 2); // убрать кавычки
+                std::vector<uint8_t> bytes;
+
+                for (size_t i = 0; i < str.size(); ++i) {
+                    if (str[i] == '\\') {
+                        if (i + 1 >= str.size())
+                            throw std::runtime_error("Invalid escape sequence in string: " + valueStr);
+                        ++i;
+                        switch (str[i]) {
+                            case '0': bytes.push_back('\0'); break;
+                            case 'n': bytes.push_back('\n'); break;
+                            case 't': bytes.push_back('\t'); break;
+                            case '\\': bytes.push_back('\\'); break;
+                            case '"': bytes.push_back('"'); break;
+                            default:
+                                throw std::runtime_error("Unsupported escape sequence: \\" + std::string(1, str[i]));
+                        }
+                    } else {
+                        bytes.push_back(static_cast<uint8_t>(str[i]));
+                    }
+                }
+
+                size_t index = dataCursor;
+                if (dataSection.size() < index + bytes.size())
+                    dataSection.resize(index + bytes.size());
+                for (size_t j = 0; j < bytes.size(); ++j) {
+                    dataSection[index + j] = bytes[j];
+                }
+                dataAddress[label] = dataStart + index;
+                dataCursor += bytes.size();
+            }
             else if (labelAddress.count(valueStr)) {
                 value = labelAddress[valueStr];
                 size_t index = dataCursor;

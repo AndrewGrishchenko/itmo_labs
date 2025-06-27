@@ -282,7 +282,6 @@ void CU::decode() {
         }
         case CPUState::Decode: {
             //decode
-            //TODO: think why i need function; maybe i have to do this for opcode too?
 
             // std::cout << "instr = 0x" << std::hex << static_cast<int>(registers.get(Registers::IR)) << std::dec << "\n";
             // std::cout << "opcode = 0x" << std::hex << static_cast<int>(opcode) << std::dec << "\n";
@@ -390,7 +389,6 @@ void CU::instructionTick() {
             if (opcode == OP_INC)
                 alu->setOperation(ALU::Operation::INC);
                 // alu.perform(ALU::Operation::INC, true);
-                //TODO: think should i save flags in these cases
             else if (opcode == OP_DEC)
                 alu->setOperation(ALU::Operation::DEC);
                 // alu.perform(ALU::Operation::DEC, true);
@@ -644,7 +642,6 @@ void CU::instructionTick() {
             break;
 
         case OP_LD:
-            //TODO: think flags in nop, i.e. ld value; jz ...
             switch (microstep) {
                 case 0:
                     mux1->select(2);

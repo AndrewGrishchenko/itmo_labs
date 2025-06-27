@@ -539,15 +539,13 @@ class InterruptHandler {
 class IOSimulator {
     public:
         IOSimulator() {
-                inputSchedule.push_back({0, 'h'});
-                inputSchedule.push_back({200, 'e'});
-                inputSchedule.push_back({400, 'l'});
-                inputSchedule.push_back({600, 'l'});
-                inputSchedule.push_back({800, 'o'});
-                inputSchedule.push_back({1000, '\n'});
-                // inputSchedule.push_back({40, 'l'});
-                // inputSchedule.push_back({50, 'o'});
-                // inputSchedule.push_back({60, '\n'});
+                inputSchedule.push_back({1700, 'a'});
+                inputSchedule.push_back({1900, 'n'});
+                inputSchedule.push_back({2100, 'd'});
+                inputSchedule.push_back({2300, 'r'});
+                inputSchedule.push_back({2500, 'e'});
+                inputSchedule.push_back({2700, 'w'});
+                inputSchedule.push_back({2900, '\n'});
             }
         ~IOSimulator() { }
 
