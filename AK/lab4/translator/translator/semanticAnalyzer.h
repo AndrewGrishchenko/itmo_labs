@@ -6,7 +6,7 @@
 #include <string>
 #include <algorithm>
 
-#include "ASTNode.h"
+#include "ASTNode.hpp"
 
 class SemanticAnalyzer {
     public:

@@ -7,7 +7,7 @@
 
 #include <iostream>
 
-#include "ASTNode.h"
+#include "ASTNode.hpp"
 #include "semanticAnalyzer.h"
 
 enum class TokenType {
@@ -109,7 +109,6 @@ class TreeGenerator {
         ASTNode* parseUnary(std::vector<Token> tokens, size_t& pos);
         ASTNode* parsePrimary(std::vector<Token> tokens, size_t& pos);
 
-        void printTree(ASTNode* root);
         std::string tokenStr(Token token);
 
         bool isAlpha(char c) {

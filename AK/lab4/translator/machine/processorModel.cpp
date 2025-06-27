@@ -47,7 +47,6 @@ ProcessorModel::ProcessorModel(MachineConfig cfg)
         return this->memory.atRef(this->registers.getRef(Registers::AR));
     };
 
-    // latchMEM_IR.setSourceGetter(memory.makeGetterAtRef(registers.getRef(Registers::AR)));
     latchMEM_IR.setSourceGetter(memoryGetter);
     latchMEM_IR.setTarget(registers.getRef(Registers::IR));
 
@@ -57,22 +56,13 @@ ProcessorModel::ProcessorModel(MachineConfig cfg)
     latchDR_MEM.setSource(registers.getRef(Registers::DR));
     latchDR_MEM.setTargetGetter(memoryGetter);
 
-    // latchRouter.setInput(alu.getResultRef());
-    // latchRouter.addOutput(registers.getRef(Registers::ACC));
-    // latchRouter.addOutput(registers.getRef(Registers::AR));
-    // latchRouter.addOutput(registers.getRef(Registers::DR));
-    // latchRouter.addOutput(registers.getRef(Registers::IP));
-    // latchRouter.addOutput(registers.getRef(Registers::SP));
-
     latchSPC_PC.setSource(interruptHandler.getSPCRef());
     latchSPC_PC.setTarget(registers.getRef(Registers::IP));
 
     latchVec_PC.setTarget(registers.getRef(Registers::IP));
 
     interruptHandler.connect(latchALU_SPC, latchSPC_PC, latchVec_PC);
-    // interruptHandler.TEMP_CONNECT(registers);
     
-
     iosim.connect(interruptHandler, memory);
 
     cu.connect(interruptHandler, mux1, mux2, alu, latchRouter, latchMEM_IR, latchMEM_DR, latchDR_MEM);
@@ -124,14 +114,6 @@ void ProcessorModel::parseInput() {
 }
 
 void ProcessorModel::process() {
-    // memory.reset();
-    // registers.reset();
-    // operand = 0;
-    // textSize = dataSize = dataStart = 0;
-    // halted = false;
-    // tickCount = 0;
-    // microstep = 0;
-
     if (!binaryLoaded)
         throw std::runtime_error("Binary not loaded");
 
@@ -143,8 +125,6 @@ void ProcessorModel::process() {
     logData << "Output tokens:" << std::endl;
     logData << iosim.getTokenOutput() << std::endl;
 
-    // allDump();
-    // iosim.printOutput();
     std::cout << "Completed in " << tickCount << " ticks\n";
 
     if (!cfg.output_file.empty()) {
@@ -152,6 +132,8 @@ void ProcessorModel::process() {
         if (outputFile) outputFile << outputData.str();
         else std::cerr << "Unable to open " << cfg.output_file << std::endl;
         outputFile.close();
+        std::cout << "Wrote output to " << cfg.output_file << " in "
+                  << (cfg.mixed ? "mixed" : "normal") << " mode " << std::endl;
     }
 
     if (!cfg.log_file.empty()) {
@@ -159,6 +141,7 @@ void ProcessorModel::process() {
         if (logFile) logFile << logData.str();
         else std::cerr << "Unable to open " << cfg.log_file << std::endl;
         logFile.close();
+        std::cout << "Wrote log to " << cfg.log_file << std::endl;
     }
 }
 
@@ -191,8 +174,6 @@ void ProcessorModel::loadBinary(const std::string& filename) {
         memory[addr] = (buf[0] << 16) | (buf[1] << 8) | buf[2];
     }
 
-    registers.set(Registers::IP, 0); //TODO: remove
-
     this->textSize = textSize;
     this->dataSize = dataSize;
     this->dataStart = textSize;
@@ -203,12 +184,6 @@ void ProcessorModel::loadBinary(const std::string& filename) {
     uint32_t inputVector = memory[dataStart + 1];
 
     interruptHandler.setVectorTable(defaultVector, inputVector);
-
-    // std::cout << "Loaded binary:\n";
-    // std::cout << "Code size: 0x" << std::hex << textSize << std::dec << "\n";
-    // std::cout << "Data size: 0x" << std::hex << dataSize << std::dec << "\n";
-    // std::cout << "Interrupt vectors: default=0x" << std::hex << defaultVector 
-            //   << ", input=0x" << inputVector << std::dec << "\n";
 }
 
 
@@ -229,21 +204,6 @@ void ProcessorModel::memDump() {
     }
 
     std::cout << "\n\n";
-}
-
-void ProcessorModel::allDump() {
-    std::cout << "\nALL DUMP:\n";
-    
-    std::cout << "REGISTERS:\n";
-    std::cout << "ACC: " << std::hex << "0x" << registers.get(Registers::ACC) << std::dec << "\n";
-    std::cout << "IR: " << std::hex << "0x" << registers.get(Registers::IR) << std::dec << "\n";
-    std::cout << "AR: " << std::hex << "0x" << registers.get(Registers::AR) << std::dec << "\n";
-    std::cout << "DR: " << std::hex << "0x" << registers.get(Registers::DR) << std::dec << "\n";
-    std::cout << "IP: " << std::hex << "0x" << registers.get(Registers::IP) << std::dec << "\n";
-    std::cout << "SP: " << std::hex << "0x" << registers.get(Registers::SP) << std::dec << "\n";
-    std::cout << "\n";
-
-    memDump();
 }
 
 std::string ProcessorModel::registerDump() {
@@ -324,7 +284,6 @@ void CU::decode() {
 
     if ((interruptHandler->shouldInterrupt() || interruptHandler->isEnteringInterrupt()) && state == CPUState::FetchAR) {
         interruptHandler->step();
-        //latch here
         return;
     }
 
@@ -434,17 +393,12 @@ void CU::instructionTick() {
             alu->setWriteFlags(true);
             if (opcode == OP_INC)
                 alu->setOperation(ALU::Operation::INC);
-                // alu.perform(ALU::Operation::INC, true);
             else if (opcode == OP_DEC)
                 alu->setOperation(ALU::Operation::DEC);
-                // alu.perform(ALU::Operation::DEC, true);
             else if (opcode == OP_NOT)
                 alu->setOperation(ALU::Operation::NOT);
-                // alu.perform(ALU::Operation::NOT, true);
 
             latchRouter->setLatchState(0, 1);
-            // latchRouter->setLatchStates({1, 0, 0, 0, 0});
-            // latchRouter->propagate();
 
             instructionDone = true;
             break;
@@ -454,11 +408,8 @@ void CU::instructionTick() {
             mux2->select(0);
 
             alu->setOperation(ALU::Operation::NOP);
-            // alu.perform(ALU::Operation::NOP);
 
             latchRouter->setLatchState(0, 1);
-            // latchRouter->setLatchStates({1, 0, 0, 0, 0});
-            // latchRouter->propagate();
 
             instructionDone = true;
             break;
@@ -468,11 +419,8 @@ void CU::instructionTick() {
             mux2->select(0);
 
             alu->setOperation(ALU::Operation::DEC);
-            // alu.perform(ALU::Operation::DEC);
 
             latchRouter->setLatchState(3, 1);
-            // latchRouter->setLatchStates({0, 0, 0, 1, 0});
-            // latchRouter->propagate();
 
             instructionDone = true;
             break;
@@ -483,16 +431,11 @@ void CU::instructionTick() {
 
             if (*Z) {
                 latchRouter->setLatchState(3, 1);
-                // latchRouter->setLatchStates({0, 0, 0, 1, 0});
                 alu->setOperation(ALU::Operation::DEC);
-                // alu.perform(ALU::Operation::DEC);
             } else {
                 latchRouter->setLatchStates({0, 0, 0, 0, 0, 0});
                 alu->setOperation(ALU::Operation::NOP);
-                // alu.perform(ALU::Operation::NOP);
             }
-            
-            // latchRouter->propagate();
 
             instructionDone = true;
             break;
@@ -503,16 +446,11 @@ void CU::instructionTick() {
 
             if (!*Z) {
                 latchRouter->setLatchState(3, 1);
-                // latchRouter->setLatchStates({0, 0, 0, 1, 0});
                 alu->setOperation(ALU::Operation::DEC);
-                // alu.perform(ALU::Operation::DEC);
             } else {
                 latchRouter->setLatchStates({0, 0, 0, 0, 0, 0});
                 alu->setOperation(ALU::Operation::NOP);
-                // alu.perform(ALU::Operation::NOP);
             }
-            
-            // latchRouter->propagate();
 
             instructionDone = true;
             break;
@@ -523,16 +461,11 @@ void CU::instructionTick() {
 
             if (!*Z && *N == *V) {
                 latchRouter->setLatchState(3, 1);
-                // latchRouter->setLatchStates({0, 0, 0, 1, 0});
-                // alu.perform(ALU::Operation::DEC);
                 alu->setOperation(ALU::Operation::DEC);
             } else {
                 latchRouter->setLatchStates({0, 0, 0, 0, 0, 0});
                 alu->setOperation(ALU::Operation::NOP);
-                // alu.perform(ALU::Operation::NOP);
             }
-
-            // latchRouter->propagate();
 
             instructionDone = true;
             break;
@@ -543,16 +476,11 @@ void CU::instructionTick() {
 
             if (*N == *V) {
                 latchRouter->setLatchState(3, 1);
-                // latchRouter->setLatchStates({0, 0, 0, 1, 0});
-                // alu.perform(ALU::Operation::DEC);
                 alu->setOperation(ALU::Operation::DEC);
             } else {
                 latchRouter->setLatchStates({0, 0, 0, 0, 0, 0});
-                // alu.perform(ALU::Operation::NOP);
                 alu->setOperation(ALU::Operation::NOP);
             }
-
-            // latchRouter->propagate();
 
             instructionDone = true;
             break;
@@ -563,16 +491,11 @@ void CU::instructionTick() {
 
             if (*N != *V) {
                 latchRouter->setLatchState(3, 1);
-                // latchRouter->setLatchStates({0, 0, 0, 1, 0});
-                // alu.perform(ALU::Operation::DEC);
                 alu->setOperation(ALU::Operation::DEC);
             } else {
                 latchRouter->setLatchStates({0, 0, 0, 0, 0, 0});
-                // alu.perform(ALU::Operation::NOP);
                 alu->setOperation(ALU::Operation::NOP);
             }
-
-            // latchRouter->propagate();
 
             instructionDone = true;
             break;
@@ -583,16 +506,11 @@ void CU::instructionTick() {
 
             if (*Z || *N != *V) {
                 latchRouter->setLatchState(3, 1);
-                // latchRouter->setLatchStates({0, 0, 0, 1, 0});
-                // alu.perform(ALU::Operation::DEC);
                 alu->setOperation(ALU::Operation::DEC);
             } else {
                 latchRouter->setLatchStates({0, 0, 0, 0, 0, 0});
-                // alu.perform(ALU::Operation::NOP);
                 alu->setOperation(ALU::Operation::NOP);
             }
-
-            // latchRouter->propagate();
 
             instructionDone = true;
             break;
@@ -604,12 +522,8 @@ void CU::instructionTick() {
                     mux2->select(3);
 
                     alu->setOperation(ALU::Operation::NOP);
-                    // alu.perform(ALU::Operation::NOP);
-
                     latchRouter->setLatchState(1, 1);
-                    // latchRouter->setLatchStates({0, 1, 0, 0, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 1:
@@ -617,16 +531,12 @@ void CU::instructionTick() {
                     mux2->select(0);
 
                     alu->setOperation(ALU::Operation::NOP);
-                    // alu.perform(ALU::Operation::NOP);
-
+                    
                     latchRouter->setLatchState(2, 1);
-                    // latchRouter->setLatchStates({0, 0, 1, 0, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 2:
-                    // memory[registers.get(Registers::AR)] = registers.get(Registers::DR);
                     latchDR_MEM->setEnabled(true);
                     microstep++;
                     break;
@@ -637,11 +547,8 @@ void CU::instructionTick() {
                     mux2->select(3);
 
                     alu->setOperation(ALU::Operation::DEC);
-                    // alu.perform(ALU::Operation::DEC);
-
+                    
                     latchRouter->setLatchState(4, 1);
-                    // latchRouter->setLatchStates({0, 0, 0, 0, 1});
-                    // latchRouter->propagate();
                     
                     microstep = 0;
                     instructionDone = true;
@@ -656,12 +563,9 @@ void CU::instructionTick() {
                     mux2->select(3);
 
                     alu->setOperation(ALU::Operation::INC);
-                    // alu.perform(ALU::Operation::INC);
-
+                    
                     latchRouter->setLatchState(4, 1);
-                    // latchRouter->setLatchStates({0, 0, 0, 0, 1});
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 1:
@@ -669,16 +573,12 @@ void CU::instructionTick() {
                     mux2->select(3);
 
                     alu->setOperation(ALU::Operation::NOP);
-                    // alu.perform(ALU::Operation::NOP);
-
+                    
                     latchRouter->setLatchState(1, 1);
-                    // latchRouter->setLatchStates({0, 1, 0, 0, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 2:
-                    // registers.set(Registers::DR, memory[registers.get(Registers::AR)]);
                     latchMEM_DR->setEnabled(true);
                     microstep++;
                     break;
@@ -689,12 +589,9 @@ void CU::instructionTick() {
                     mux2->select(2);
 
                     alu->setOperation(ALU::Operation::NOP);
-                    // alu.perform(ALU::Operation::NOP);
-
+                    
                     latchRouter->setLatchState(0, 1);
-                    // latchRouter->setLatchStates({1, 0, 0, 0, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep = 0;
                     instructionDone = true;
                     break;
@@ -708,16 +605,12 @@ void CU::instructionTick() {
                     mux2->select(0);
 
                     alu->setOperation(ALU::Operation::NOP);
-                    // alu.perform(ALU::Operation::NOP);
-
+                    
                     latchRouter->setLatchState(1, 1);
-                    // latchRouter->setLatchStates({0, 1, 0, 0, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 1:
-                    // registers.set(Registers::DR, memory[registers.get(Registers::AR)]);
                     latchMEM_DR->setEnabled(true);
                     microstep++;
                     break;
@@ -729,11 +622,8 @@ void CU::instructionTick() {
 
                     alu->setOperation(ALU::Operation::NOP);
                     alu->setWriteFlags(true);
-                    // alu.perform(ALU::Operation::NOP);
 
                     latchRouter->setLatchState(0, 1);
-                    // latchRouter->setLatchStates({1, 0, 0, 0, 0});
-                    // latchRouter->propagate();
 
                     microstep = 0;
                     instructionDone = true;
@@ -748,17 +638,13 @@ void CU::instructionTick() {
                     mux2->select(0);
 
                     alu->setOperation(ALU::Operation::NOP);
-                    // alu.perform(ALU::Operation::NOP);
 
                     latchRouter->setLatchState(1, 1);
-                    // latchRouter->setLatchStates({0, 1, 0, 0, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 1:
                     latchMEM_DR->setEnabled(true);
-                    // registers.set(Registers::DR, memory[registers.get(Registers::AR)]);
                     microstep++;
                     break;
                 case 2:
@@ -768,17 +654,13 @@ void CU::instructionTick() {
                     mux2->select(2);
 
                     alu->setOperation(ALU::Operation::NOP);
-                    // alu.perform(ALU::Operation::NOP);
-
+                    
                     latchRouter->setLatchState(1, 1);
-                    // latchRouter->setLatchStates({0, 1, 0, 0, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 3:
                     latchMEM_DR->setEnabled(true);
-                    // registers.set(Registers::DR, memory[registers.get(Registers::AR)]);
                     microstep++;
                     break;
                 case 4:
@@ -789,12 +671,9 @@ void CU::instructionTick() {
 
                     alu->setOperation(ALU::Operation::NOP);
                     alu->setWriteFlags(true);
-                    // alu.perform(ALU::Operation::NOP);
-
+                    
                     latchRouter->setLatchState(0, 1);
-                    // latchRouter->setLatchStates({1, 0, 0, 0, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep = 0;
                     instructionDone = true;
                     break;
@@ -806,11 +685,8 @@ void CU::instructionTick() {
             mux2->select(0);
 
             alu->setOperation(ALU::Operation::NOP);
-            // alu.perform(ALU::Operation::NOP);
 
             latchRouter->setLatchState(0, 1);
-            // latchRouter->setLatchStates({1, 0, 0, 0, 0});
-            // latchRouter->propagate();
 
             instructionDone = true;
             break;
@@ -822,12 +698,9 @@ void CU::instructionTick() {
                     mux2->select(0);
 
                     alu->setOperation(ALU::Operation::NOP);
-                    // alu.perform(ALU::Operation::NOP);
 
                     latchRouter->setLatchState(1, 1);
-                    // latchRouter->setLatchStates({0, 1, 0, 0, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 1:
@@ -835,17 +708,13 @@ void CU::instructionTick() {
                     mux2->select(0);
 
                     alu->setOperation(ALU::Operation::NOP);
-                    // alu.perform(ALU::Operation::NOP);
-
+                    
                     latchRouter->setLatchState(2, 1);
-                    // latchRouter->setLatchStates({0, 0, 1, 0, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 2:
                     latchDR_MEM->setEnabled(true);
-                    // memory[registers.get(Registers::AR)] = registers.get(Registers::DR);
                     microstep = 0;
                     instructionDone = true;
                     break;
@@ -859,17 +728,13 @@ void CU::instructionTick() {
                     mux2->select(0);
 
                     alu->setOperation(ALU::Operation::NOP);
-                    // alu.perform(ALU::Operation::NOP);
-
+                    
                     latchRouter->setLatchState(1, 1);
-                    // latchRouter->setLatchStates({0, 1, 0, 0, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 1:
                     latchMEM_DR->setEnabled(true);
-                    // registers.set(Registers::DR, memory[registers.get(Registers::AR)]);
                     microstep++;
                     break;
                 case 2:
@@ -879,12 +744,9 @@ void CU::instructionTick() {
                     mux2->select(2);
 
                     alu->setOperation(ALU::Operation::NOP);
-                    // alu.perform(ALU::Operation::NOP);
 
                     latchRouter->setLatchState(1, 1);
-                    // latchRouter->setLatchStates({0, 1, 0, 0, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 3:
@@ -892,16 +754,12 @@ void CU::instructionTick() {
                     mux2->select(0);
 
                     alu->setOperation(ALU::Operation::NOP);
-                    // alu.perform(ALU::Operation::NOP);
-
+                    
                     latchRouter->setLatchState(2, 1);
-                    // latchRouter->setLatchStates({0, 0, 1, 0, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 4:
-                    // memory[registers.get(Registers::AR)] = registers.get(Registers::DR);
                     latchDR_MEM->setEnabled(true);
                     microstep = 0;
                     instructionDone = true;
@@ -916,12 +774,9 @@ void CU::instructionTick() {
                     mux2->select(3);
 
                     alu->setOperation(ALU::Operation::NOP);
-                    // alu.perform(ALU::Operation::NOP);
-
+                    
                     latchRouter->setLatchState(1, 1);
-                    // latchRouter->setLatchStates({0, 1, 0, 0, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 1:
@@ -929,16 +784,12 @@ void CU::instructionTick() {
                     mux2->select(0);
 
                     alu->setOperation(ALU::Operation::NOP);
-                    // alu.perform(ALU::Operation::NOP);
-
+                    
                     latchRouter->setLatchState(2, 1);
-                    // latchRouter->setLatchStates({0, 0, 1, 0, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 2:
-                    // memory[registers.get(Registers::AR)] = registers.get(Registers::DR);
                     latchDR_MEM->setEnabled(true);
                     microstep++;
                     break;
@@ -949,12 +800,9 @@ void CU::instructionTick() {
                     mux2->select(3);
 
                     alu->setOperation(ALU::Operation::DEC);
-                    // alu.perform(ALU::Operation::DEC);
-
+                    
                     latchRouter->setLatchState(4, 1);
-                    // latchRouter->setLatchStates({0, 0, 0, 0, 1});
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 4:
@@ -962,12 +810,9 @@ void CU::instructionTick() {
                     mux2->select(0);
 
                     alu->setOperation(ALU::Operation::DEC);
-                    // alu.perform(ALU::Operation::DEC);
-
+                    
                     latchRouter->setLatchState(3, 1);
-                    // latchRouter->setLatchStates({0, 0, 0, 1, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep = 0;
                     instructionDone = true;
                     break;
@@ -981,12 +826,9 @@ void CU::instructionTick() {
                     mux2->select(3);
 
                     alu->setOperation(ALU::Operation::INC);
-                    // alu.perform(ALU::Operation::INC);
-
+                    
                     latchRouter->setLatchState(4, 1);
-                    // latchRouter->setLatchStates({0, 0, 0, 0, 1});
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 1:
@@ -994,16 +836,12 @@ void CU::instructionTick() {
                     mux2->select(3);
 
                     alu->setOperation(ALU::Operation::NOP);
-                    // alu.perform(ALU::Operation::NOP);
-
+                    
                     latchRouter->setLatchState(1, 1);
-                    // latchRouter->setLatchStates({0, 1, 0, 0, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 2:
-                    // registers.set(Registers::DR, memory[registers.get(Registers::AR)]);
                     latchMEM_DR->setEnabled(true);
                     microstep++;
                     break;
@@ -1014,12 +852,9 @@ void CU::instructionTick() {
                     mux2->select(2);
 
                     alu->setOperation(ALU::Operation::NOP);
-                    // alu.perform(ALU::Operation::NOP);
-
+                    
                     latchRouter->setLatchState(3, 1);
-                    // latchRouter->setLatchStates({0, 0, 0, 1, 0});
-                    // latchRouter->propagate();
-
+                    
                     microstep = 0;
                     instructionDone = true;
                     break;
@@ -1028,7 +863,6 @@ void CU::instructionTick() {
 
         case OP_EI:
             interruptHandler->getIERef() = true;
-            //TODO: redo kostyl
             instructionDone = true;
             break;
 
@@ -1050,6 +884,6 @@ void CU::instructionTick() {
             break;
 
         default:
-            throw std::runtime_error("not implemented");
+            throw std::runtime_error("Unknown opcode");
     }
 }

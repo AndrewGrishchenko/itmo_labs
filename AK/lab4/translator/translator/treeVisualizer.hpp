@@ -1,7 +1,6 @@
-#ifndef _TREE_VISUALIZER_H
-#define _TREE_VISUALIZER_H
+#pragma once
 
-#include "ASTNode.h"
+#include "ASTNode.hpp"
 
 #include <iostream>
 #include <unordered_map>
@@ -295,5 +294,3 @@ class TreeVisualizer {
             }
         }
 };
-
-#endif

@@ -63,7 +63,6 @@ class Memory {
                 throw std::runtime_error("Memory access out of bounds");
             return data[addressRef];
         }
-        //TODO: think need i const
 
         std::function<uint32_t&()> makeGetterAtRef(const size_t& addressRef) {
             return [this, &addressRef]() -> uint32_t& {
@@ -149,7 +148,6 @@ class ALU {
 
         void setOperation(Operation operation) {
             this->operation = operation;
-            // std::cout << "alu set op " << opStr(operation) << "\n";
         }
 
         void setWriteFlags(bool writeFlags) {
@@ -157,10 +155,6 @@ class ALU {
         }
 
         void perform() {
-            // std::cout << "alu performing\n";
-            // std::cout << "current left: 0x" << std::hex << leftGetter() << std::dec << "\n";
-            // std::cout << "current right: 0x" << std::hex << rightGetter() << std::dec << "\n";
-
             uint32_t left = leftGetter();
             uint32_t right = rightGetter();
             uint32_t value = 0;
@@ -179,14 +173,12 @@ class ALU {
                     value = tmp & 0xFFFFFFFF;
                     C = left >= right;
                     V = ((left ^ right) & (left ^ value)) >> 31;
-                    // V = (((left ^ right) & (left ^ value)) & 0x80000000) != 0;
                     break;
                 }
                 case Operation::MUL:
                     value = left * right;
                     C = false;
                     V = false;
-                    //TODO: think about C & V
                     break;
                 case Operation::DIV:
                     value = right ? left / right : 0;
@@ -228,7 +220,6 @@ class ALU {
             N = value >> 31;
             Z = value == 0;
 
-            // result = { value, N, Z, V, C };
             result = value;
             if (writeFlags) {
                 *flagRefs[0] = N;
@@ -236,25 +227,7 @@ class ALU {
                 *flagRefs[2] = V;
                 *flagRefs[3] = C;
             }
-
-            // std::cout << "ALU: 0x" << std::hex << left << " " << opStr(operation) << " 0x" << right << " = 0x" << value << std::dec << "\n";
-            // std::cout << "NZVC: " << (*flagRefs[0] ? 1 : 0) << (*flagRefs[1] ? 1 : 0) << (*flagRefs[2] ? 1 : 0) << (*flagRefs[3] ? 1 : 0) << "\n";
-
-            // std::cout << "ALU PERFORMED WITH RESULT = " << result << "\n";
         }
-
-        // struct Result {
-        //     uint32_t value;
-        //     bool N, Z, V, C;
-        // };
-
-        // Result getResult() const {
-        //     return result;
-        // }
-
-        // uint32_t& getResultValueRef() {
-        //     return result.value;
-        // }
 
         uint32_t getResult() const {
             return result;
@@ -274,12 +247,11 @@ class ALU {
     private:
         std::function<uint32_t&()> leftGetter;
         std::function<uint32_t&()> rightGetter;
-        // Result result;
+        
         Operation operation;
         uint32_t result = 0;
         bool* flagRefs[4];
-        bool writeFlags; //TODO: redo as latch
-        //TODO: smth to do w dummies
+        bool writeFlags;
 };
 
 class MUX {
@@ -300,7 +272,6 @@ class MUX {
         void select(size_t index) {
             if (index >= inputs.size()) throw std::out_of_range("MUX select out of range");
             selectedIndex = index;
-            // std::cout << "MUX SELECTED " << index << " (" << inputs[selectedIndex].get() << ")\n";
         }
 
         uint32_t& getSelected() const {
@@ -424,11 +395,8 @@ class Latch {
         }
 
         void propagate() {
-            // if (enabled)
-                // std::cout << " 0x" << std::hex << targetGetter() << " = 0x" << sourceGetter() << std::dec;
             if (enabled)
                 targetGetter() = sourceGetter();
-            // std::cout << "\n";
         }
 
     private:
@@ -497,15 +465,11 @@ class InterruptHandler {
             IO_INPUT = 1
         };
 
-        // IRQType getIRQ() const { return irq; }
         void setIRQ(IRQType irq) { 
             if (!ipc)
                 this->irq = irq;
-            // if (!ipc)
-                // std::cout << "set irq to " << (irq == IRQType::IO_INPUT ? 1 : 0) << "\n";
         }
 
-        // IRQType& getIRQRef() { return irq; }
         bool& getIERef() { return ie; }
         bool& getIPCRef() { return ipc; }
 
@@ -547,8 +511,6 @@ class InterruptHandler {
             Restoring
         };
         InterruptState intState = InterruptState::SavingPC;
-
-        // Registers* registers = nullptr; //TODO: REMOVE!!!!!!!
 };
 
 class IOSimulator {
@@ -619,13 +581,6 @@ class IOSimulator {
                 *outputData << token;
                 if (token == '\n')
                     state = 0;
-
-                // if (state == 1)
-                //     (*outputData) << "\n";
-                // if (state != 2)
-                //     (*outputData) << "> ";
-                // state = 2;
-                // (*outputData) << static_cast<char>(token);
             }
         }
 
@@ -657,7 +612,6 @@ class IOSimulator {
         
         const size_t input_address = 0x10;
         const size_t output_address = 0x11;
-        //TODO: redo kostyl
 
         std::ostringstream* outputData = nullptr;
         bool mixed = false;
@@ -678,7 +632,6 @@ class CU {
             this->latchMEM_IR = &latchMEM_IR;
             this->latchMEM_DR = &latchMEM_DR;
             this->latchDR_MEM = &latchDR_MEM;
-            //TODO: make norm
             
             this->mux1->replaceInput(2, operand);
         }
@@ -796,8 +749,6 @@ class CU {
             if (logData) (*logData) << line << "\n";
         }
 };
-
-//RN: interrupt handler in asm + interrupt handler here
 
 class ProcessorModel {
     public:

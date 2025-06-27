@@ -20,7 +20,6 @@ class Binarizer {
 
         void parse(const std::string& data);
         void writeToFile(const std::string& filename) const;
-        std::string toAsm() const;
         void dump();
     private:
         struct Instruction {
@@ -58,10 +57,6 @@ class Binarizer {
             {"di",   0b11010},
             {"iret", 0b11011},
             {"halt", 0b11100}
-        };
-
-        const std::unordered_set<std::string> noOperandMnemonics = { //TODO: remove
-            "inc", "dec", "not", "cla", "push", "pop", "in", "out", "ret", "halt"
         };
 
         enum class Section {None, Text, Data, InterruptTable};

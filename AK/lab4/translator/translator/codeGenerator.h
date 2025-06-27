@@ -1,7 +1,7 @@
 #ifndef _CODE_GENERATOR_H
 #define _CODE_GENERATOR_H
 
-#include "ASTNode.h"
+#include "ASTNode.hpp"
 #include "semanticAnalyzer.h"
 
 #include <unordered_map>
@@ -67,7 +67,6 @@ class CodeGenerator {
         int strCounter = 0;
         int arrCounter = 0;
         int bufferCounter = 0;
-        int stackOffset = 0; //TODO: why
 
         std::shared_ptr<FunctionData> currentFunction;
 
@@ -110,58 +109,6 @@ class CodeGenerator {
 
         void processIntArrayLiteral(ASTNode* node);
         void processArrayGet(ASTNode* node);
-
-        std::string buffer_read = "buffer_read:\n"
-                                  "  ld buffer_start\n"
-                                  "  st buffer\n"
-                                  "buffer_read_do:\n"
-                                  "  in\n"
-                                  "  sta buffer\n\n"
-                                  "  sub end_symb\n"
-                                  "  jz buffer_read_end\n\n"
-                                  "  ld buffer\n"
-                                  "  inc\n"
-                                  "  st buffer\n\n"
-                                  "  jmp buffer_read_do\n"
-                                  "buffer_read_end:\n"
-                                  "  ret\n\n";
-        
-        std::string buffer_write = "buffer_write:\n"
-                                   "  ld buffer_start\n"
-                                   "  st buffer\n"
-                                   "buffer_write_do:\n"
-                                   "  lda buffer\n"
-                                   "  out\n\n"
-                                   "  sub end_symb\n"
-                                   "  jz buffer_write_end\n\n"
-                                   "  ld buffer\n"
-                                   "  inc\n"
-                                   "  st buffer\n\n"
-                                   "  jmp buffer_write_do\n"
-                                   "buffer_write_end:\n"
-                                   "  ret\n\n";
-
-        std::string str_copy = "str_copy:\n"
-                               "  ld source_str\n"
-                               "  st buffer_start\n\n"
-                               "  ld target_str\n"
-                               "  st target_buffer\n"
-                               "str_copy_do:\n"
-                               "  lda buffer_start\n"
-                               "  sta target_buffer\n\n"
-                               "  ld target_buffer\n"
-                               "  inc\n"
-                               "  st target_buffer\n\n"
-                               "  sub end_symb\n"
-                               "  jz str_copy_end\n\n"
-                               "  ld buffer_start\n"
-                               "  inc\n"
-                               "  st buffer_start\n\n"
-                               "  jmp str_copy_do\n"
-                               "str_copy_end:\n"
-                               "  lda str_end\n"
-                               "  sta target_buffer\n"
-                               "  ret\n\n";
 
         std::string data = ".data\n"
                            "  default_vector: default_interrupt\n"
@@ -258,11 +205,6 @@ class CodeGenerator {
                                    "  jmp write_string_do\n"
                                    "write_string_ret:\n"
                                    "  ret\n\n";
-
-        std::unordered_map<std::string, std::string> interruptTableEntries = {
-            {"default_vector", "default_interrupt"},
-            {"input_vector", "input_interrupt"}
-        };
 
         std::string assembleCode();
 };

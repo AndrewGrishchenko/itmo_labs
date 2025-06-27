@@ -4,10 +4,6 @@ TreeGenerator::TreeGenerator() { }
 
 TreeGenerator::~TreeGenerator() { }
 
-void TreeGenerator::printTree(ASTNode* root) {    
-    root->print();
-}
-
 std::string TreeGenerator::tokenStr(Token token) {
     switch (token.type) {
         case TokenType::KeywordIf:
@@ -90,19 +86,11 @@ ASTNode* TreeGenerator::makeTree(std::string data) {
 
     std::vector<Token> tokens = tokenize(data);
 
-    std::cout << "TOKENS:\n";
-    for (auto token : tokens) {
-        std::cout << tokenStr(token);
-    }
-    std::cout << "\n\n";
-
     size_t pos = 0;
 
     while (pos < tokens.size() && tokens[pos].type != TokenType::EndOfFile) {
         root->addChild(parseStatement(tokens, pos));
     }
-
-    std::cout << "Tree parse success\n";
 
     return root;
 }
@@ -201,7 +189,6 @@ ASTNode* TreeGenerator::parseStatement(std::vector<Token> tokens, size_t& pos) {
     } else if (tokens[pos].type == TokenType::KeywordReturn) {
         return parseReturn(tokens, pos);
     } else if (tokens[pos].type == TokenType::Identifier) {
-        std::cout << "identifier\n";
         if (pos + 1 < tokens.size() &&
             tokens[pos + 1].type == TokenType::LParen) {
             ASTNode* node = parseFunctionCall(tokens, pos);
@@ -212,7 +199,6 @@ ASTNode* TreeGenerator::parseStatement(std::vector<Token> tokens, size_t& pos) {
             
             return node;
         } else {
-            std::cout << "parseassign " << pos << "\n";
             return parseAssignStatement(tokens, pos);
         }
 

@@ -34,14 +34,6 @@ std::string SemanticAnalyzer::lookupVariable(const std::string& name) {
             return scopes[i][name].type;
     }
 
-    std::cout << "Seman didnt found var " << name << "\n";
-    for (size_t i = 0; i < scopes.size(); i++) {
-        std::cout << "SCOPE #" << i << std::endl;
-        for (auto& p : scopes[i]) {
-            std::cout << "  " << p.first << ": " << p.second.type << std::endl;
-        }
-    }
-
     throw std::runtime_error("Undeclared variable: " + name);
 }
 

@@ -75,8 +75,6 @@ void Binarizer::parse(const std::string& inputData) {
 
     dataStart = textStart + textSize;
 
-    
-    // instructions.resize(textStart + textSize, {0,0});
     instructions.resize(textSize);
     dataSection.resize(dataSize);
     iss.clear();
@@ -86,11 +84,6 @@ void Binarizer::parse(const std::string& inputData) {
     size_t textCursor = 0;
     size_t dataCursor = 0;
 
-    std::cout << "dataStart: 0x" << std::hex << dataStart << std::dec << "\n";
-    std::cout << "textStart: 0x" << std::hex << textStart << std::dec << "\n";
-    std::cout << "instruction size " << instructions.size() << "\n";
-    std::cout << "data size " << dataSection.size() << "\n";
-    
     while (std::getline(iss, line)) {
         stripComment(line);
         trim(line);
@@ -103,7 +96,6 @@ void Binarizer::parse(const std::string& inputData) {
         }
         else if (line == ".data") {
             current = Section::Data;
-            // dataCursor = 0;
             continue;
         }
 
@@ -153,11 +145,6 @@ void Binarizer::parse(const std::string& inputData) {
                 }
             }
 
-            // size_t absoluteAddr = textStart + textCursor;
-            // if (instructions.size() <= absoluteAddr)
-                // instructions.resize(absoluteAddr + 1, {0,0});
-
-            // instructions[absoluteAddr] = {opcode, operand};
             instructions[textCursor] = {opcode, operand};
             textCursor++;
         }
@@ -179,27 +166,20 @@ void Binarizer::parse(const std::string& inputData) {
                     throw std::runtime_error("Invalid .zero count: " + valueStr);
 
                 size_t index = dataCursor;
-                // if (dataSection.size() < index + count)
-                //     dataSection.resize(index + count, 0);
-                // dataCursor += count;
                 dataAddress[label] = dataStart + index;
-                std::cout << "dataCursor = 0x" << std::hex << dataCursor + dataStart << " + " << std::dec << count << " = ";
                 dataCursor += count;
-                std::cout << std::hex << "0x" << dataCursor + dataStart << std::dec << "\n";
-
             }
             else if (isNumber(valueStr)) {
                 value = parseNumber(valueStr);
                 size_t index = dataCursor;
                 if (dataSection.size() <= index)
                     dataSection.resize(index + 1);
-                // std::cout << "dataSection at 0x" << std::hex << dataStart + index << std::dec << std::endl;
                 dataSection[index] = value;
                 dataAddress[label] = dataStart + index;
                 dataCursor++;
             }
             else if (valueStr.front() == '"' && valueStr.back() == '"') {
-                std::string str = valueStr.substr(1, valueStr.size() - 2); // убрать кавычки
+                std::string str = valueStr.substr(1, valueStr.size() - 2);
                 std::vector<uint8_t> bytes;
 
                 for (size_t i = 0; i < str.size(); ++i) {
@@ -291,24 +271,6 @@ void Binarizer::parse(const std::string& inputData) {
 
     if (instructions.size() < 1)
         instructions.resize(1, {0,0});
-    // instructions[0] = {jmpOpcode, startAddr};
-    std::cout << "JUMP BLYAT 0x" << std::hex << static_cast<int>(instructions[0].opcode) << " 0x" << instructions[0].operand << "\n";
-
-    std::cout << "Sections start addresses:\n";
-    std::cout << " textStart = 0x" << std::hex << textStart << "\n";
-    std::cout << " dataStart = 0x" << dataStart << std::dec << "\n";
-
-    std::cout << "Labels:\n";
-    for (auto& [name, addr] : labelAddress)
-        std::cout << " " << name << " = 0x" << std::hex << addr << std::dec << "\n";
-
-    std::cout << "Instructions (" << instructions.size() << "):\n";
-    for (size_t i = 0; i < instructions.size(); i++)
-        std::cout << std::hex << i << ": opcode=" << (int)instructions[i].opcode << " operand=" << instructions[i].operand << std::dec << "\n";
-
-    std::cout << "Data (" << dataSection.size() << "):\n";
-    for (size_t i = 0; i < dataSection.size(); i++)
-        std::cout << std::hex << (i) << ": " << dataSection[i] << std::dec << "\n";
 }
 
 void Binarizer::writeToFile(const std::string& filename) const {
@@ -334,140 +296,26 @@ void Binarizer::writeToFile(const std::string& filename) const {
 
     uint32_t startAddr = labelAddress.at("_start");
     uint8_t jmpOpcode = opcodeMap.at("jmp");
-    std::cout << "jmp opcode: 0x" << std::hex << static_cast<int>(jmpOpcode) << std::dec << "\n";
     mem[0] = (jmpOpcode << 19) | (startAddr & 0x7FFFF);
 
-    //.text
-    // for (const auto& instr : instructions) {
-    //     uint32_t raw = (instr.opcode << 19) | (instr.operand & 0x7FFFF);
-    //     out.put((raw >> 16) & 0xFF);
-    //     out.put((raw >> 8) & 0xFF);
-    //     out.put(raw & 0xFF);
-    // }
     for (size_t i = 0; i < instructions.size(); i++) {
         uint32_t raw = (instructions[i].opcode << 19) | (instructions[i].operand & 0x7FFFF);
         mem[textStart + i] = raw;
-        // std::cout << "at address 0x" << std::hex << (textStart + i) << std::dec << "\n";
-        // std::cout << "raw instr: 0x" << std::hex << raw << std::dec << "\n";
-        // std::cout << "instr opcode 0x" << std::hex << instructions[i].opcode << " operand 0x" << instructions[i].operand << "\n";
     }
 
-    //.data
-    // for (uint32_t value : dataSection) {
-    //     if (value >= (1 << 24))
-    //         throw std::runtime_error("Data value too big for 3 bytes");
-        
-    //     out.put((value >> 16) & 0xFF);
-    //     out.put((value >> 8) & 0xFF);
-    //     out.put(value & 0xFF);
-    // }
     for (size_t i = 0; i < dataSection.size(); i++) {
         uint32_t value = dataSection[i];
         if (value >= (1 << 24))
             throw std::runtime_error("Data value too big for 3 bytes");
         mem[dataStart + i] = value;
-        // std::cout << "at address 0x" << std::hex << (dataStart + i) << std::dec << "\n";
-        // std::cout << "raw data: 0x" << std::hex << value << std::dec << "\n";
     }
 
-    size_t i = 0;
     for (uint32_t val : mem) {
         out.put((val >> 16) & 0xFF);
         out.put((val >> 8) & 0xFF);
         out.put(val & 0xFF);
-        std::cout << "MEM[0x" << std::hex << i << "] = 0x" << val << std::dec << "\n";
-        i++;
     }
 }
-
-std::string Binarizer::toAsm() const {
-    std::stringstream oss;
-
-    if (!dataSection.empty()) {
-        oss << ".data\n";
-
-        std::unordered_map<size_t, std::string> dataAddrToLabel;
-        for (const auto& [label, addr] : dataAddress) {
-            dataAddrToLabel[addr] = label;
-        }
-
-        for (size_t i = 0; i < dataSection.size(); ++i) {
-            if (dataAddrToLabel.count(i))
-                oss << "   " << dataAddrToLabel[i] << ":";
-            oss << " 0x" << std::uppercase << std::hex << dataSection[i] << "\n";
-        }
-    }
-
-    if (!instructions.empty()) {
-        oss << "\n.text\n";
-
-        std::unordered_map<size_t, std::string> textAddrToLabel;
-        for (const auto& [label, addr] : labelAddress) {
-            textAddrToLabel[addr] = label;
-        }
-
-        for (size_t i = 0; i < instructions.size(); ++i) {
-            if (textAddrToLabel.count(i))
-                oss << textAddrToLabel[i] << ":\n";
-
-            const auto& instr = instructions[i];
-
-            std::string name = "UNKNOWN";
-            for (const auto& [mnemonic, opcode] : opcodeMap) {
-                if (opcode == instr.opcode) {
-                    name = mnemonic;
-                    break;
-                }
-            }
-
-            oss << "   " << name;
-            if (noOperandMnemonics.find(name) == noOperandMnemonics.end()) {
-                oss << " 0x" << std::uppercase << std::hex << instr.operand;
-            }
-            oss << "\n";
-        }
-    }
-
-    return oss.str();
-}
-
-// void Binarizer::dump() {
-//     std::ifstream in("program.bin", std::ios::binary);
-//     if (!in.is_open())
-//         throw std::runtime_error("Failed to open binary file");
-
-//     uint8_t buf[3];
-
-//     //header
-//     if (!in.read(reinterpret_cast<char*>(buf), 3))
-//         throw std::runtime_error("Failed to read header\n");
-
-//     uint32_t codeSize = (buf[0] << 16) | (buf[1] << 8) | buf[2];
-//     std::cout << "HEADER: codeSize = 0x" << std::hex << codeSize << std::dec << "\n";
-
-//     if (!in.read(reinterpret_cast<char*>(buf), 3))
-//         throw std::runtime_error("Failed to read header\n");
-    
-//     uint32_t dataSize = (buf[0] << 16) | (buf[1] << 8) | buf[2];
-//     std::cout << "HEADER: dataSize = 0x" << std::hex << dataSize << std::dec << "\n";
-
-//     int addr = 0;
-//     while (in.read(reinterpret_cast<char*>(buf), 3)) {
-//         uint32_t raw = (buf[0] << 16) | (buf[1] << 8) | buf[2];
-//         std::cout << std::setw(4) << std::setfill('0') << std::hex << addr << ": ";
-
-//         std::cout << "raw=0x" << std::hex << raw << std::dec << " ";
-//         if (addr < codeSize) {
-//             uint8_t opcode = raw >> 19;
-//             uint32_t operand = raw & 0x7FFFF;
-//             std::cout << "opcode=0x" << std::hex << +opcode << " operand=0x" << operand << "\n";
-//         } else {
-//             std::cout << "DATA=0x" << std::uppercase << std::hex << raw << "\n";
-//         }
-
-//         ++addr;
-//     }
-// }
 
 void Binarizer::dump() {
     std::ifstream in("program.bin", std::ios::binary);
