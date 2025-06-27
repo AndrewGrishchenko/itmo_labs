@@ -561,6 +561,10 @@ class IOSimulator {
             this->memory = &memory;
         }
 
+        void connectOutput(std::ostringstream& outputData) {
+            this->outputData = &outputData;
+        }
+
         struct IOScheduleEntry {
             size_t tick;
             int token;
@@ -570,26 +574,59 @@ class IOSimulator {
             inputSchedule.push_back(entry);
         }
 
+        void setMixedOutput(bool mixed) {
+            this->mixed = mixed;
+        }
+
         void check(size_t tick) {
             for (const auto& entry : inputSchedule) {
                 if (entry.tick == tick) {
                     interruptHandler->setIRQ(InterruptHandler::IRQType::IO_INPUT);
                     memory->write(input_address, entry.token);
+
+                    if (!mixed) break;
+
+                    if (state != 2) {
+                        if (state == 1)
+                            *outputData << '\n';
+                        *outputData << "> ";
+                        state = 2;
+                    }
+
+                    *outputData << static_cast<char>(entry.token);
+                    if (entry.token == '\n')
+                        state = 0;
                 }
             }
 
             if (memory->read(output_address) != 0x0) {
-                outputSchedule.push_back({tick, static_cast<int>(memory->read(output_address))});
+                char token = memory->read(output_address);
+                outputSchedule.push_back({tick, static_cast<int>(token)});
                 memory->write(output_address, 0);
-            }
-        }
 
-        std::string getOutput() {
-            std::string data;
-            for (auto& entry : outputSchedule) {
-                data += entry.token;
+                if (!mixed) {
+                    *outputData << token;
+                    return;
+                }
+
+                if (state != 1) {
+                    if (state == 2)
+                        *outputData << '\n';
+                    *outputData << "< ";
+                    state = 1;
+                }
+
+                *outputData << token;
+                if (token == '\n')
+                    state = 0;
+
+                // if (state == 1)
+                //     (*outputData) << "\n";
+                // if (state != 2)
+                //     (*outputData) << "> ";
+                // state = 2;
+                // (*outputData) << static_cast<char>(token);
             }
-            return data;
         }
 
         std::string getTokenOutput() {
@@ -621,6 +658,10 @@ class IOSimulator {
         const size_t input_address = 0x10;
         const size_t output_address = 0x11;
         //TODO: redo kostyl
+
+        std::ostringstream* outputData = nullptr;
+        bool mixed = false;
+        int state = 0;
 };
 
 class CU {

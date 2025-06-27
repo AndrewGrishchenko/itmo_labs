@@ -3,6 +3,8 @@
 ProcessorModel::ProcessorModel(MachineConfig cfg)
     : cfg(cfg) {
     parseInput();
+    iosim.connectOutput(outputData);
+    iosim.setMixedOutput(cfg.mixed);
 
     mux1.addInput(zero);
     mux1.addInput(registers.getRef(Registers::ACC));
@@ -138,7 +140,6 @@ void ProcessorModel::process() {
         tickCount++;
     }
 
-    outputData << iosim.getOutput();
     logData << "Output tokens:" << std::endl;
     logData << iosim.getTokenOutput() << std::endl;
 
