@@ -482,8 +482,12 @@ class InterruptHandler {
         InterruptHandler() { }
         ~InterruptHandler() { }
 
-        void TEMP_CONNECT(Registers& registers) {
-            this->registers = &registers;
+        void connect(Latch& latchALU_SPC, Latch& latchSPC_PC, Latch& latchVec_PC) {
+            this->latchALU_SPC = &latchALU_SPC;
+            this->latchSPC_PC = &latchSPC_PC;
+            this->latchVec_PC = &latchVec_PC;
+            
+            this->latchVec_PC->setSource(inputVec);
         }
 
         enum class IRQType {
@@ -503,6 +507,8 @@ class InterruptHandler {
         bool& getIERef() { return ie; }
         bool& getIPCRef() { return ipc; }
 
+        uint32_t& getSPCRef() { return SPC; }
+
         void setVectorTable(uint32_t defaultVec, uint32_t inputVec) {
             this->defaultVec = defaultVec;
             this->inputVec = inputVec;
@@ -513,7 +519,7 @@ class InterruptHandler {
         }
 
         bool isEnteringInterrupt() {
-            return intState == InterruptState::Jumping;
+            return intState == InterruptState::Executing;
         }
 
         void step();
@@ -523,17 +529,24 @@ class InterruptHandler {
         bool ie = false;
         bool ipc = false;
 
+        uint32_t dummyInput = 0;
+        std::reference_wrapper<uint32_t> PC = dummyInput;
+
         uint32_t defaultVec, inputVec;
-        uint32_t savedPC;
+        
+        Latch* latchALU_SPC = nullptr;
+        Latch* latchSPC_PC = nullptr;
+        Latch* latchVec_PC = nullptr;
+        uint32_t SPC;
 
         enum class InterruptState {
             SavingPC,
-            Jumping,
-            InInterrupt
+            Executing,
+            Restoring
         };
         InterruptState intState = InterruptState::SavingPC;
 
-        Registers* registers = nullptr; //TODO: REMOVE!!!!!!!
+        // Registers* registers = nullptr; //TODO: REMOVE!!!!!!!
 };
 
 class IOSimulator {
@@ -753,9 +766,12 @@ class ProcessorModel {
         ALU alu;
         MUX mux1, mux2;
         
-        Latch latchALU_DR, latchALU_AR, latchALU_SP, latchALU_AC, latchALU_PC, latchMEM_IR, latchMEM_DR, latchDR_MEM;
+        Latch latchALU_DR, latchALU_AR, latchALU_SP, latchALU_AC, latchALU_PC, latchALU_SPC;
         LatchRouter latchRouter;
-
+        Latch latchMEM_IR, latchMEM_DR, latchDR_MEM;
+        Latch latchSPC_PC;
+        Latch latchVec_PC;
+        
         CU cu;
         InterruptHandler interruptHandler;
 
