@@ -1,10 +1,12 @@
 #include "processorModel.h"
+#include "configParser.hpp"
 
 int main(int argc, char* argv[]) {
-    if (argc != 2)
-        throw std::runtime_error("Usage: ./machine <filename>");
+    if (argc != 3)
+        throw std::runtime_error("Usage: ./machine <config> <binary>");
 
-    ProcessorModel processorModel;
-    processorModel.loadBinary(argv[1]);
+    MachineConfig cfg = parseConfig(argv[1]);
+    ProcessorModel processorModel(cfg);
+    processorModel.loadBinary(argv[2]);
     processorModel.process();
 }

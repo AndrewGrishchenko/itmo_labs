@@ -1,6 +1,9 @@
 #include "processorModel.h"
 
-ProcessorModel::ProcessorModel() {
+ProcessorModel::ProcessorModel(MachineConfig cfg)
+    : cfg(cfg) {
+    parseInput();
+
     mux1.addInput(zero);
     mux1.addInput(registers.getRef(Registers::ACC));
     mux1.addInput(zero);
@@ -80,6 +83,44 @@ ProcessorModel::ProcessorModel() {
 
 ProcessorModel::~ProcessorModel() { }
 
+void ProcessorModel::parseInput() {
+    if (cfg.input_file.empty()) return;
+    std::ifstream inputFile(cfg.input_file);
+    if (!inputFile.is_open()) throw std::runtime_error("Unable to open " + cfg.input_file);
+    if (cfg.input_mode == InputMode::NONE) throw std::runtime_error("input_mode not specified");
+
+    if (cfg.input_mode == InputMode::MODE_STREAM) {
+        if (cfg.schedule_start == -1) throw std::runtime_error("schedule_start not specified");
+        if (cfg.schedule_offset == -1) throw std::runtime_error("schedule_offset not specified");
+
+        char token;
+        size_t currentTick = cfg.schedule_start;
+        while (inputFile.get(token)) {
+            iosim.addInput({currentTick, token});
+            currentTick += cfg.schedule_offset;
+        }
+    } else if (cfg.input_mode == InputMode::MODE_TOKEN) {
+        std::string line;
+        while (std::getline(inputFile, line)) {
+            if (line.empty()) continue;
+
+            std::istringstream iss(line);
+            size_t tick;
+            std::string tokenStr;
+            char token;
+
+            if (!(iss >> tick >> tokenStr))
+                throw std::runtime_error("Input file parse error");
+            
+            if (tokenStr == "\\n") token = '\n';
+            else if (tokenStr == "\\t") token = '\t';
+            else if (tokenStr.size() == 1) token = tokenStr[0];
+            
+            iosim.addInput({tick, token});
+        }
+    }
+}
+
 void ProcessorModel::process() {
     // memory.reset();
     // registers.reset();
@@ -97,9 +138,27 @@ void ProcessorModel::process() {
         tickCount++;
     }
 
-    allDump();
-    iosim.printOutput();
+    outputData << iosim.getOutput();
+    logData << "Output tokens:" << std::endl;
+    logData << iosim.getTokenOutput() << std::endl;
+
+    // allDump();
+    // iosim.printOutput();
     std::cout << "Completed in " << tickCount << " ticks\n";
+
+    if (!cfg.output_file.empty()) {
+        std::ofstream outputFile(cfg.output_file);
+        if (outputFile) outputFile << outputData.str();
+        else std::cerr << "Unable to open " << cfg.output_file << std::endl;
+        outputFile.close();
+    }
+
+    if (!cfg.log_file.empty()) {
+        std::ofstream logFile(cfg.log_file);
+        if (logFile) logFile << logData.str();
+        else std::cerr << "Unable to open " << cfg.log_file << std::endl;
+        logFile.close();
+    }
 }
 
 void ProcessorModel::loadBinary(const std::string& filename) {
@@ -144,11 +203,11 @@ void ProcessorModel::loadBinary(const std::string& filename) {
 
     interruptHandler.setVectorTable(defaultVector, inputVector);
 
-    std::cout << "Loaded binary:\n";
-    std::cout << "Code size: 0x" << std::hex << textSize << std::dec << "\n";
-    std::cout << "Data size: 0x" << std::hex << dataSize << std::dec << "\n";
-    std::cout << "Interrupt vectors: default=0x" << std::hex << defaultVector 
-              << ", input=0x" << inputVector << std::dec << "\n";
+    // std::cout << "Loaded binary:\n";
+    // std::cout << "Code size: 0x" << std::hex << textSize << std::dec << "\n";
+    // std::cout << "Data size: 0x" << std::hex << dataSize << std::dec << "\n";
+    // std::cout << "Interrupt vectors: default=0x" << std::hex << defaultVector 
+            //   << ", input=0x" << inputVector << std::dec << "\n";
 }
 
 
@@ -186,8 +245,24 @@ void ProcessorModel::allDump() {
     memDump();
 }
 
+std::string ProcessorModel::registerDump() {
+    std::ostringstream result;
+    result << std::hex;
+    result << "AC: 0x" << registers.get(Registers::ACC) << std::endl;
+    result << "IR: 0x" << registers.get(Registers::IR) << std::endl;
+    result << "AR: 0x" << registers.get(Registers::AR) << std::endl;
+    result << "DR: 0x" << registers.get(Registers::DR) << std::endl;
+    result << "PC: 0x" << registers.get(Registers::IP) << std::endl;
+    result << "SP: 0x" << registers.get(Registers::SP) << std::endl;
+    result << "NZVC: " << registers.getN()
+                       << registers.getZ()
+                       << registers.getV()
+                       << registers.getC() << std::endl;
+    return result.str();
+}
+
 void ProcessorModel::tick() {
-    std::cout << "tick #" << tickCount << "\n";
+    logData << "tick #" << tickCount << "\n";
     
     iosim.check(tickCount);
     cu.decode();
@@ -212,37 +287,24 @@ void ProcessorModel::tick() {
     alu.setWriteFlags(false);
     latchRouter.setLatchStates({0, 0, 0, 0, 0, 0});
 
-    allDump();
+    logData << registerDump() << std::endl;
 }
 
 void InterruptHandler::step() {
-    std::cout << "interrupt step\n";
-
     switch (irq) {
         case IRQType::IO_INPUT: {
             switch (intState) {
                 case InterruptState::SavingPC:
                     ipc = true;
-                    // savedPC = registers->get(Registers::IP);
-                    // latchPC_SPC->setEnabled(true);
                     latchALU_SPC->setEnabled(true);
-                    //RN: set (s)pc - (s)pc latches disabled and propagate
-                    //RN: inputvec fetch as jmp in a couple of ticks tho
-
-                    // std::cout << "saved ip as 0x" << std::hex << savedPC << std::dec << "\n";
                     intState = InterruptState::Executing;
                     break;
                 case InterruptState::Executing:
-                    // registers->set(Registers::IP, inputVec);
                     latchVec_PC->setEnabled(true);
-                    std::cout << "input vec: 0x" << std::hex << inputVec << std::dec << "\n";
                     intState = InterruptState::Restoring;
                     break;
                 case InterruptState::Restoring:
-                    // registers->set(Registers::IP, savedPC - 1);
-                    //TODO: rename to return from interrupt etc
                     latchSPC_PC->setEnabled(true);
-                    // std::cout << "restored ip as 0x" << std::hex << savedPC - 1 << std::dec << "\n";
                     ipc = false;
                     irq = IRQType::NONE;
                     intState = InterruptState::SavingPC;
@@ -252,13 +314,12 @@ void InterruptHandler::step() {
         }
 
         case IRQType::NONE:
-            std::cout << "lol wha\n";
             break;
     }
 }
 
 void CU::decode() {
-    std::cout << "ticking state " << stateStr() << "\n";
+    log("State " + stateStr());
 
     if ((interruptHandler->shouldInterrupt() || interruptHandler->isEnteringInterrupt()) && state == CPUState::FetchAR) {
         interruptHandler->step();
@@ -272,39 +333,19 @@ void CU::decode() {
             mux2->select(0);
 
             alu->setOperation(ALU::Operation::NOP);
-            // alu.perform(ALU::Operation::NOP);
-
-            // latchRouter->setLatchStates({0, 1, 0, 0, 0});
+            
             latchRouter->setLatchState(1, 1);
-            // latchRouter->propagate();
-
+            
             state = CPUState::FetchIR;
             break;
         }
         case CPUState::FetchIR: {
-            // uint32_t instr = memory[registers.get(Registers::AR)];
-            // registers.set(Registers::IR, instr);
-
             latchMEM_IR->setEnabled(true);
-
-            // opcode = (instr >> 19) & 0x1F;
-            // operand = instr & 0x7FFFF;
-            
-            //TODO: where do i calc opcode & operand? add to scheme tho
-            // updateOperand();
 
             state = CPUState::Decode;
             break;
         }
         case CPUState::Decode: {
-            //decode
-
-            // std::cout << "instr = 0x" << std::hex << static_cast<int>(registers.get(Registers::IR)) << std::dec << "\n";
-            // std::cout << "opcode = 0x" << std::hex << static_cast<int>(opcode) << std::dec << "\n";
-            // std::cout << "operand = 0x" << std::hex << static_cast<int>(operand) << std::dec << "\n";
-            
-            // latchMEM_DR->setEnabled(false);
-
             opcode = ((*IR) >> 19) & 0x1F;
             operand = (*IR) & 0x7FFFF;
 
@@ -321,11 +362,8 @@ void CU::decode() {
             mux2->select(0);
 
             alu->setOperation(ALU::Operation::INC);
-            // alu.perform(ALU::Operation::INC);
-
-            // latchRouter->setLatchStates({0, 0, 0, 1, 0});
+            
             latchRouter->setLatchState(3, 1);
-            // latchRouter->propagate();
             
             state = CPUState::FetchAR;
             break;
@@ -337,9 +375,8 @@ void CU::decode() {
 }
 
 void CU::instructionTick() {
-    std::cout << "microstep #" << microstep << "\n";
-    // std::cout << "tick #" << microstep << " of opcode = " << std::hex << "0x" << static_cast<int>(opcode) << " & operand = " << operand << std::dec << "\n";
-
+    log("Instruction step #" + microstep);
+    
     switch(opcode) {
         case OP_ADD:
         case OP_SUB:
@@ -352,16 +389,12 @@ void CU::instructionTick() {
                     mux2->select(0);
 
                     alu->setOperation(ALU::Operation::NOP);
-                    // alu.perform(ALU::Operation::NOP);
-
-                    // latchRouter->setLatchStates({0, 1, 0, 0, 0});
+                    
                     latchRouter->setLatchState(1, 1);
-                    // latchRouter->propagate();
-
+                    
                     microstep++;
                     break;
                 case 1:
-                    // registers.set(Registers::DR, memory[registers.get(Registers::AR)]);
                     latchMEM_DR->setEnabled(true);
                     microstep++;
                     break;
@@ -374,23 +407,16 @@ void CU::instructionTick() {
                     alu->setWriteFlags(true);
                     if (opcode == OP_ADD)
                         alu->setOperation(ALU::Operation::ADD);
-                        // alu.perform(ALU::Operation::ADD, true);
                     else if (opcode == OP_SUB)
                         alu->setOperation(ALU::Operation::SUB);
-                        // alu.perform(ALU::Operation::SUB, true);
                     else if (opcode == OP_DIV)
                         alu->setOperation(ALU::Operation::DIV);
-                        // alu.perform(ALU::Operation::DIV, true);
                     else if (opcode == OP_MUL)
                         alu->setOperation(ALU::Operation::MUL);
-                        // alu.perform(ALU::Operation::MUL, true);
                     else if (opcode == OP_REM)
                         alu->setOperation(ALU::Operation::REM);
-                        // alu.perform(ALU::Operation::REM, true);
 
                     latchRouter->setLatchState(0, 1);
-                    // latchRouter->setLatchStates({1, 0, 0, 0, 0});
-                    // latchRouter->propagate();
 
                     microstep = 0;
                     instructionDone = true;
@@ -554,7 +580,6 @@ void CU::instructionTick() {
             mux1->select(2);
             mux2->select(0);
 
-            std::cout << "СЮДА БЛЯТЬ\n";
             if (*Z || *N != *V) {
                 latchRouter->setLatchState(3, 1);
                 // latchRouter->setLatchStates({0, 0, 0, 1, 0});
@@ -1026,8 +1051,4 @@ void CU::instructionTick() {
         default:
             throw std::runtime_error("not implemented");
     }
-}
-
-void ProcessorModel::updateOperand() {
-    // operand = registers.get(Registers::IR) & 0x7FFFF;
 }

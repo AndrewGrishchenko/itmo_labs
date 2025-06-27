@@ -12,6 +12,8 @@
 #include <iostream>
 #include <iomanip>
 
+#include "configParser.hpp"
+
 constexpr size_t MEM_SIZE = 1 << 19;
 
 class Memory {
@@ -147,7 +149,7 @@ class ALU {
 
         void setOperation(Operation operation) {
             this->operation = operation;
-            std::cout << "alu set op " << opStr(operation) << "\n";
+            // std::cout << "alu set op " << opStr(operation) << "\n";
         }
 
         void setWriteFlags(bool writeFlags) {
@@ -155,9 +157,9 @@ class ALU {
         }
 
         void perform() {
-            std::cout << "alu performing\n";
-            std::cout << "current left: 0x" << std::hex << leftGetter() << std::dec << "\n";
-            std::cout << "current right: 0x" << std::hex << rightGetter() << std::dec << "\n";
+            // std::cout << "alu performing\n";
+            // std::cout << "current left: 0x" << std::hex << leftGetter() << std::dec << "\n";
+            // std::cout << "current right: 0x" << std::hex << rightGetter() << std::dec << "\n";
 
             uint32_t left = leftGetter();
             uint32_t right = rightGetter();
@@ -235,8 +237,8 @@ class ALU {
                 *flagRefs[3] = C;
             }
 
-            std::cout << "ALU: 0x" << std::hex << left << " " << opStr(operation) << " 0x" << right << " = 0x" << value << std::dec << "\n";
-            std::cout << "NZVC: " << (*flagRefs[0] ? 1 : 0) << (*flagRefs[1] ? 1 : 0) << (*flagRefs[2] ? 1 : 0) << (*flagRefs[3] ? 1 : 0) << "\n";
+            // std::cout << "ALU: 0x" << std::hex << left << " " << opStr(operation) << " 0x" << right << " = 0x" << value << std::dec << "\n";
+            // std::cout << "NZVC: " << (*flagRefs[0] ? 1 : 0) << (*flagRefs[1] ? 1 : 0) << (*flagRefs[2] ? 1 : 0) << (*flagRefs[3] ? 1 : 0) << "\n";
 
             // std::cout << "ALU PERFORMED WITH RESULT = " << result << "\n";
         }
@@ -422,11 +424,11 @@ class Latch {
         }
 
         void propagate() {
-            if (enabled)
-                std::cout << " 0x" << std::hex << targetGetter() << " = 0x" << sourceGetter() << std::dec;
+            // if (enabled)
+                // std::cout << " 0x" << std::hex << targetGetter() << " = 0x" << sourceGetter() << std::dec;
             if (enabled)
                 targetGetter() = sourceGetter();
-            std::cout << "\n";
+            // std::cout << "\n";
         }
 
     private:
@@ -499,8 +501,8 @@ class InterruptHandler {
         void setIRQ(IRQType irq) { 
             if (!ipc)
                 this->irq = irq;
-            if (!ipc)
-                std::cout << "set irq to " << (irq == IRQType::IO_INPUT ? 1 : 0) << "\n";
+            // if (!ipc)
+                // std::cout << "set irq to " << (irq == IRQType::IO_INPUT ? 1 : 0) << "\n";
         }
 
         // IRQType& getIRQRef() { return irq; }
@@ -551,15 +553,7 @@ class InterruptHandler {
 
 class IOSimulator {
     public:
-        IOSimulator() {
-                inputSchedule.push_back({1700, 'a'});
-                inputSchedule.push_back({1900, 'n'});
-                inputSchedule.push_back({2100, 'd'});
-                inputSchedule.push_back({2300, 'r'});
-                inputSchedule.push_back({2500, 'e'});
-                inputSchedule.push_back({2700, 'w'});
-                inputSchedule.push_back({2900, '\n'});
-            }
+        IOSimulator() { }
         ~IOSimulator() { }
 
         void connect(InterruptHandler& interruptHandler, Memory& memory) {
@@ -572,8 +566,8 @@ class IOSimulator {
             int token;
         };
 
-        void addOutput(IOScheduleEntry entry) {
-            outputSchedule.push_back(entry);
+        void addInput(IOScheduleEntry entry) {
+            inputSchedule.push_back(entry);
         }
 
         void check(size_t tick) {
@@ -590,19 +584,31 @@ class IOSimulator {
             }
         }
 
-        void printOutput() {
-            if (outputSchedule.empty()) return;
-            std::cout << "OUTPUT SCHEDULE:\n[";
+        std::string getOutput() {
+            std::string data;
             for (auto& entry : outputSchedule) {
-                char symb = entry.token;
-                std::cout << "(" << entry.tick << ", ";
-                if (static_cast<int>(symb) == 10)
-                    std::cout << "'\\n'";
-                else
-                    std::cout << static_cast<char>(entry.token);
-                std::cout << "), ";
+                data += entry.token;
             }
-            std::cout << "]\n";
+            return data;
+        }
+
+        std::string getTokenOutput() {
+            std::ostringstream data;
+            data << "[";
+            for (size_t i = 0; i < outputSchedule.size(); i++) {
+                data << "(" << outputSchedule[i].tick << ", '";
+                char token = static_cast<char>(outputSchedule[i].token);
+                if (token == '\n')
+                    data << "\\n";
+                else if (token == '\t')
+                    data << "\\t";
+                else
+                    data << token;
+                data << "')";
+                if (i < outputSchedule.size() - 1) data << ", ";
+            }
+            data << "]";
+            return data.str();
         }
 
     private:
@@ -634,6 +640,10 @@ class CU {
             //TODO: make norm
             
             this->mux1->replaceInput(2, operand);
+        }
+
+        void setLog(std::ostringstream& logData) {
+            this->logData = &logData;
         }
 
         void setIRInput(const uint32_t& IR) {
@@ -738,18 +748,26 @@ class CU {
             OP_IRET = 0b11011,
             OP_HALT = 0b11100
         };
+
+        std::ostringstream* logData = nullptr;
+
+        void log(std::string line) {
+            if (logData) (*logData) << line << "\n";
+        }
 };
 
 //RN: interrupt handler in asm + interrupt handler here
 
 class ProcessorModel {
     public:
-        ProcessorModel();
+        ProcessorModel(MachineConfig cfg);
         ~ProcessorModel();
 
         void loadBinary(const std::string& filename);
         void process();
     private:
+        MachineConfig cfg;
+
         size_t textSize = 0;
         size_t dataStart = 0;
         size_t dataSize = 0;
@@ -778,10 +796,18 @@ class ProcessorModel {
         IOSimulator iosim;
 
         void tick();
-        void updateOperand();
 
         void memDump();
+        std::string registerDump();
         void allDump();
+
+        void parseInput();
+  
+        std::ostringstream outputData;
+        std::ostringstream logData;
+
+        void writeOutput(std::string& line) { outputData << line << "\n"; }
+        void writeLog(std::string& line) { logData << line << "\n"; }
 };
 
 #endif
