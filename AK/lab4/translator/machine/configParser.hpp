@@ -72,6 +72,6 @@ inline MachineConfig parseConfig(std::string fileName) {
             throw std::runtime_error("Unknown config key: " + key);
         }
     }
-
+    
     return config;
 }

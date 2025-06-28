@@ -222,6 +222,9 @@ void CodeGenerator::processNode(ASTNode* node) {
         case ASTNodeType::ArrayGet:
             processArrayGet(node);
             break;
+        case ASTNodeType::ArraySize:
+            processArraySize(node);
+            break;
         default:
             throw std::runtime_error("Unknown node");
     }
@@ -297,21 +300,6 @@ void CodeGenerator::processVarDecl(ASTNode* node) {
     if (varDeclNode->type == "int[]") {
         emitData(varLabel + "_size: 0");
         if (varDeclNode->value->nodeType == ASTNodeType::FunctionCall) {
-            // emitCode("ld token_buffer_i");
-            // emitCode("sub token_i");
-            // emitCode("dec");
-            // emitCode("st " + varLabel + "_size");
-            // emitCode("ldi token_buffer");
-            // emitCode("add token_i");
-            // emitCode("st " + varLabel);
-            // emitCode("ldi token_i");
-            // emitCode("ldi token_buffer");
-            // emitCode("add token_buffer_i");
-            // emitCode("sub token_i");
-            // emitCode("halt");
-            // emitCode("sub token_buffer_i");
-            // emitCode("add token_i");
-            
             emitCode("st " + varLabel);
             emitCode("ldi token_buffer");
             emitCode("add token_buffer_i");
@@ -324,13 +312,7 @@ void CodeGenerator::processVarDecl(ASTNode* node) {
             emitCode("st " + varLabel + "_size");
         }
         emitCode("");
-        // emitCode("ld arr_" + std::to_string(arrCounter - 1) + "_size");
-        // emitCode("st " + varLabel + "_size");
     } else if (varDeclNode->type == "string") {
-        if (varDeclNode->value->nodeType == ASTNodeType::FunctionCall) {
-            // emitCode("ldi token_buffer");
-            // emitCode("add token_i");
-        }
         emitCode("st " + varLabel);
     } else {
         emitCode("st " + varLabel);
@@ -339,39 +321,36 @@ void CodeGenerator::processVarDecl(ASTNode* node) {
 
 void CodeGenerator::processAssignment(ASTNode* node) {
     AssignNode* assignNode = static_cast<AssignNode*>(node);
-    IdentifierNode* var1Node = static_cast<IdentifierNode*>(assignNode->var1);
-    IdentifierNode* var2Node = static_cast<IdentifierNode*>(assignNode->var2);
 
-    std::string var1Name = var1Node->name;
-    std::string var2Name = var2Node->name;
-    std::string var1Label = getVarLabel(var1Name);
-    std::string var2Label = getVarLabel(var2Name);
+    IdentifierNode* var1Node = static_cast<IdentifierNode*>(assignNode->var1);
+    std::string var1Label = getVarLabel(var1Node->name);
 
     processNode(assignNode->var2);
 
     if (evalType(assignNode->var1) == "string") {
-        if (var2Node->nodeType == ASTNodeType::StringLiteral) {
+        if (assignNode->var2->nodeType == ASTNodeType::StringLiteral) {
             emitCode("ld str_" + std::to_string(strCounter - 1));
-            emitCode("st " + getVarLabel(var1Name));
+            emitCode("st " + var1Label);
         } else {
-            emitCode("st " + getVarLabel(var1Name));
+            emitCode("st " + var1Label);
         }
     } else if (assignNode->var1->nodeType == ASTNodeType::ArrayGet) {
         ArrayGetNode* leftVar = static_cast<ArrayGetNode*>(assignNode->var1);
         emitCode("push");
-        emitCode("ldi " + std::to_string(leftVar->index));
+
+        processNode(leftVar->index);
+
         emitCode("st temp_right");
         emitCode("ld " + getVarLabel(leftVar->name));
         emitCode("add temp_right");
         emitCode("st temp_right");
         emitCode("pop");
         emitCode("sta temp_right");
-        // emitCode("st " + var1Label);
     } else {
         if (variables.find(var1Label) != variables.end())
             emitCode("st " + var1Label);
         else
-            throw std::runtime_error("Could not find variable " + var1Name);
+            throw std::runtime_error("Could not find variable " + var1Label);
     }
 }
 
@@ -553,7 +532,7 @@ void CodeGenerator::processReservedFunction(ASTNode* node) {
             processNode(functionCallNode->parameters[0]);
 
         emitCode("st token_count");
-        emitCode("call read_string"); //TODO: TOKEN I 
+        emitCode("call read_string"); 
     } else if (funcName == "out") {
         processNode(functionCallNode->parameters[0]);
         
@@ -696,14 +675,21 @@ void CodeGenerator::processArrayGet(ASTNode* node) {
     ArrayGetNode* arrayGetNode = static_cast<ArrayGetNode*>(node);
 
     std::string arrayName = arrayGetNode->name;
-    size_t index = arrayGetNode->index;
+    processNode(arrayGetNode->index);
 
-    emitCode("ldi " + std::to_string(index));
     emitCode("st temp_right");
     emitCode("ld " + getVarLabel(arrayName));
     emitCode("add temp_right");
     emitCode("st temp_right");
     emitCode("lda temp_right");
+}
+
+void CodeGenerator::processArraySize(ASTNode* node) {
+    ArraySizeNode* arraySizeNode = static_cast<ArraySizeNode*>(node);
+
+    std::string arrayName = arraySizeNode->name;
+
+    emitCode("ld " + getVarLabel(arrayName) + "_size");
 }
 
 std::string CodeGenerator::assembleCode() {

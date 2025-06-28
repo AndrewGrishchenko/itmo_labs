@@ -792,6 +792,8 @@ class ProcessorModel {
         std::string memDump();
         std::string registerDump();
 
+        bool isNumberArray(const std::string& s);
+        std::vector<int> parseStreamLine(const std::string& line);
         void parseInput();
   
         std::ostringstream outputData;

@@ -50,9 +50,6 @@ bool SemanticAnalyzer::isReserved(const std::string& name, FunctionSignature sig
 }
 
 std::string SemanticAnalyzer::findFunction(const std::string& name, std::vector<std::string> paramTypes, std::string& expected) {
-    std::cout << "finding function " << name << "\n";
-    std::cout << "expecting " << expected << "\n";
-
     auto search = [&](const std::vector<FunctionSignature>& candidates) -> std::string {
         for (const auto& fn : candidates) {
             if (fn.paramTypes == paramTypes) {
@@ -200,6 +197,11 @@ SemanticAnalyzer::VariableData SemanticAnalyzer::analyzeExpression(ASTNode* node
 
         case ASTNodeType::ArrayGet: {
             auto arrayGet = static_cast<ArrayGetNode*>(node);
+            return {"int"};
+        }
+
+        case ASTNodeType::ArraySize: {
+            auto arraySize = static_cast<ArraySizeNode*>(node);
             return {"int"};
         }
 

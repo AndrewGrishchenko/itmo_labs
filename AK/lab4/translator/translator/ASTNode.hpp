@@ -13,6 +13,7 @@ enum class ASTNodeType {
     VoidLiteral,
     IntArrayLiteral,
     ArrayGet,
+    ArraySize,
     
     Identifier,
     Assignment,
@@ -84,10 +85,17 @@ struct IntArrayLiteralNode : ASTNode {
 
 struct ArrayGetNode : ASTNode {
     std::string name;
-    size_t index;
+    ASTNode* index;
 
-    ArrayGetNode(std::string name, size_t index)
+    ArrayGetNode(std::string name, ASTNode* index)
         : ASTNode(ASTNodeType::ArrayGet), name(name), index(index) { }
+};
+
+struct ArraySizeNode : ASTNode {
+    std::string name;
+
+    ArraySizeNode(std::string name)
+        : ASTNode(ASTNodeType::ArraySize), name(name) { }
 };
 
 struct IdentifierNode : ASTNode {

@@ -101,21 +101,17 @@ ASTNode* TreeGenerator::parseAssignStatement(std::vector<Token> tokens, size_t& 
     std::string varName = tokens[pos].value;
     pos++;
 
-    // ASTNode* var = new IdentifierNode(tokens[pos].value);
     ASTNode* var;
     if (tokens[pos].type == TokenType::LBracket) {
         pos++;
 
-        if (tokens[pos].type != TokenType::Number)
-            throw std::runtime_error("Expected number");
-        int index = std::stoi(tokens[pos].value);
-        pos++;
-
+        ASTNode* expr = parseExpression(tokens, pos);
+        
         if (tokens[pos].type != TokenType::RBracket)
             throw std::runtime_error("Expected ']'");
         pos++;
 
-        var = new ArrayGetNode(varName, index);
+        var = new ArrayGetNode(varName, expr);
     } else {
         var = new IdentifierNode(varName);
     }
@@ -279,7 +275,7 @@ ASTNode* TreeGenerator::parseBlock(std::vector<Token> tokens, size_t& pos) {
 
     BlockNode* block = new BlockNode();
 
-    while (pos < tokens.size() && tokens[pos].type != TokenType::RBrace) {
+    while (pos < tokens.size() && tokens[pos].type != TokenType::RBrace && tokens[pos].type != TokenType::EndOfFile) {
         block->children.push_back(parseStatement(tokens, pos));
     }
 
@@ -401,16 +397,40 @@ ASTNode* TreeGenerator::parseArrayGet(std::vector<Token> tokens, size_t& pos) {
         throw std::runtime_error("Expected '['");
     pos++;
 
-    if (tokens[pos].type != TokenType::Number)
-        throw std::runtime_error("Expected number");
-    size_t index = static_cast<size_t>(std::stoull(tokens[pos].value));
-    pos++;
-
+    ASTNode* expr = parseExpression(tokens, pos);
+    
     if (tokens[pos].type != TokenType::RBracket)
         throw std::runtime_error("Expected ']'");
     pos++;
 
-    return new ArrayGetNode(name, index);
+    return new ArrayGetNode(name, expr);
+}
+
+ASTNode* TreeGenerator::parseArraySize(std::vector<Token> tokens, size_t& pos) {
+    if (tokens[pos].type != TokenType::Identifier)
+        throw std::runtime_error("Expected identifier");
+    std::string name = tokens[pos].value;
+    pos++;
+
+    if (tokens[pos].type != TokenType::Dot)
+        throw std::runtime_error("Expected dot");
+    pos++;
+
+    if (tokens[pos].type != TokenType::Identifier)
+        throw std::runtime_error("Expected identifier");
+    if (tokens[pos].value != "size")
+        throw std::runtime_error("Expected 'size'");
+    pos++;
+
+    if (tokens[pos].type != TokenType::LParen)
+        throw std::runtime_error("Expected '('");
+    pos++;
+
+    if (tokens[pos].type != TokenType::RParen)
+        throw std::runtime_error("Expected ')'");
+    pos++;
+
+    return new ArraySizeNode(name);
 }
 
 ASTNode* TreeGenerator::parseExpression(std::vector<Token> tokens, size_t& pos) {
@@ -528,6 +548,8 @@ ASTNode* TreeGenerator::parsePrimary(std::vector<Token> tokens, size_t& pos) {
             return parseFunctionCall(tokens, pos);
         } else if (pos + 1 < tokens.size() && tokens[pos + 1].type == TokenType::LBracket) {
             return parseArrayGet(tokens, pos);
+        } else if (pos + 1 < tokens.size() && tokens[pos + 1].type == TokenType::Dot) {
+            return parseArraySize(tokens, pos);
         } else {
             std::string name = tokens[pos].value;
             pos++;
@@ -645,6 +667,10 @@ std::vector<Token> TreeGenerator::tokenize(const std::string& input) {
                 break;
             case ';':
                 tokens.push_back({TokenType::Semicolon, ";"});
+                pos++;
+                break;
+            case '.':
+                tokens.push_back({TokenType::Dot, "."});
                 pos++;
                 break;
             case ',':

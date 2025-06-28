@@ -69,8 +69,6 @@ int main(int argc, char* argv[]) {
 
             CodeGenerator codeGenerator;
             code = codeGenerator.generateCode(tree);
-            std::cout << "CODE:\n";
-            std::cout << code << std::endl;
 
             if (args.vizFile) {
                 TreeVisualizer tv;

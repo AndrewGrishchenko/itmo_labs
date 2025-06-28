@@ -39,6 +39,7 @@ enum class TokenType {
     LBracket,
     RBracket,
     Semicolon,
+    Dot,
     Comma,
 
     // Logic operators
@@ -99,6 +100,7 @@ class TreeGenerator {
         ASTNode* parseExpression(std::vector<Token> tokens, size_t& pos);
         ASTNode* parseArray(std::vector<Token> tokens, size_t& pos);
         ASTNode* parseArrayGet(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseArraySize(std::vector<Token> tokens, size_t& pos);
         ASTNode* parseTerm(std::vector<Token> tokens, size_t& pos);
         ASTNode* parseFactor(std::vector<Token> tokens, size_t& pos);
 

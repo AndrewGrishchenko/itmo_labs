@@ -112,6 +112,7 @@ class CodeGenerator {
 
         void processIntArrayLiteral(ASTNode* node);
         void processArrayGet(ASTNode* node);
+        void processArraySize(ASTNode* node);
 
         std::string data = ".data\n"
                            "  default_vector: default_interrupt\n"
@@ -151,8 +152,6 @@ class CodeGenerator {
                                  "  ret\n\n";
 
         std::string read_string = "read_string:\n"
-                                //   "  ld token_buffer_i\n"
-                                //   "  st token_i\n"
                                   "  ldi token_buffer\n"
                                   "  add token_buffer_i\n"
                                   "  st token_i\n"
@@ -217,40 +216,6 @@ class CodeGenerator {
                                    "  jmp write_string_do\n"
                                    "write_string_ret:\n"
                                    "  ret\n\n";
-
-        // std::string write_number = "write_number:\n"
-        //                            "  ldi 0\n"
-        //                            "  st output_number_buf_i\n"
-        //                            "write_number_fill:\n"
-        //                            "  ldi output_number_buf\n"
-        //                            "  add output_number_buf_i\n"
-        //                            "  st temp_right\n\n"
-        //                            "  ld output_number\n"
-        //                            "  rem end_symb\n"
-        //                            "  jz write_number_write\n"
-        //                            "  add number_offset\n"
-        //                            "  sta temp_right\n\n"
-        //                            "  ld output_number\n"
-        //                            "  div end_symb\n"
-        //                            "  st output_number\n\n"
-        //                            "  ld output_number_buf_i\n"
-        //                            "  inc\n"
-        //                            "  st output_number_buf_i\n\n"
-        //                            "  jmp write_number_fill\n"
-        //                            "write_number_write:\n"
-        //                            "  ldi output_number_buf\n"
-        //                            "  add output_number_buf_i\n"
-        //                            "  st temp_right\n\n"
-        //                            "  lda temp_right\n"
-        //                            "  st token\n"
-        //                            "  call write_token\n\n"
-        //                            "  ld output_number_buf_i\n"
-        //                            "  jz write_number_ret\n"
-        //                            "  dec\n"
-        //                            "  st output_number_buf_i\n"
-        //                            "  jmp write_number_write\n"
-        //                            "write_number_ret:\n"
-        //                            "  ret\n\n";
 
         std::string write_number = "write_number:\n"
                                    "  ldi 0\n"

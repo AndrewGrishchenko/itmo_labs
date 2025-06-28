@@ -138,7 +138,18 @@ class TreeVisualizer {
 
                     emitObject(objName);
                     emitObjectData(objName, "name", arrayGetNode->name);
-                    emitObjectData(objName, "index", std::to_string(arrayGetNode->index));
+
+                    std::string indexName = processNode(arrayGetNode->index);
+                    emitObjectAssociation(objName, indexName, "index");
+                    
+                    return objName;
+                }
+                case ASTNodeType::ArraySize: {
+                    ArraySizeNode* arraySizeNode = static_cast<ArraySizeNode*>(node);
+                    std::string objName = "ArraySize" + std::to_string(labelCount(node->nodeType));
+
+                    emitObject(objName);
+                    emitObjectData(objName, "name", arraySizeNode->name);
 
                     return objName;
                 }

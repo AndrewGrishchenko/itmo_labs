@@ -75,39 +75,64 @@ ProcessorModel::ProcessorModel(MachineConfig cfg)
 
 ProcessorModel::~ProcessorModel() { }
 
+bool ProcessorModel::isNumberArray(const std::string& s) {
+    std::istringstream iss(s);
+    std::string token;
+    while (iss >> token) {
+        try {
+            size_t idx;
+            std::stoi(token, &idx);
+            if (idx != token.size()) return false;
+        } catch (...) {
+            return false;
+        }
+    }
+    return true;
+}
+
+std::vector<int> ProcessorModel::parseStreamLine(const std::string& line) {
+    std::vector<int> result;
+
+    if (isNumberArray(line)) {
+        std::istringstream iss(line);
+        std::string token;
+        while (iss >> token) {
+            result.push_back(std::stoi(token));
+        }
+    } else {
+        for (char c : line) {
+            result.push_back(static_cast<unsigned char>(c));
+        }
+    }
+    return result;
+}
+
 void ProcessorModel::parseInput() {
     if (cfg.input_file.empty()) return;
     std::ifstream inputFile(cfg.input_file);
     if (!inputFile.is_open()) throw std::runtime_error("Unable to open " + cfg.input_file);
     if (cfg.input_mode == InputMode::NONE) throw std::runtime_error("input_mode not specified");
 
-    // auto parseTokenStr = [](const std::string& tokenStr) -> int {
-    //     if (tokenStr == "\\n") return '\n';
-    //     if (tokenStr == "\\t") return '\t';
-    //     if (tokenStr.size() == 3 && tokenStr.front() == '\'' && tokenStr.back() == '\'')
-    //         return tokenStr[1];
-    //     // if (tokenStr.size() == 1)
-    //     //     return tokenStr[0];
-
-    //     try {
-    //         return std::stoi(tokenStr);
-    //     } catch (...) {
-    //         throw std::runtime_error("Invalid token: " + tokenStr);
-    //     }
-    // };
-
     auto parseTokenStr = [](const std::string& tokenStr) -> std::vector<int> {
         if (tokenStr == "\\n") return { '\n' };
         if (tokenStr == "\\t") return { '\t' };
 
-        try {
-            return { std::stoi(tokenStr) };
-        } catch (...) {
-            // Не число → строка → разбиваем на символы
-            std::vector<int> result;
-            for (char ch : tokenStr) result.push_back(static_cast<unsigned char>(ch));
-            return result;
+        if (tokenStr.size() == 3 && tokenStr.front() == '\'' && tokenStr.back() == '\'') {
+            return { tokenStr[1] };
         }
+
+        try {
+            size_t idx = 0;
+            int val = std::stoi(tokenStr, &idx);
+            if (idx == tokenStr.size())
+                return { val };
+        } catch (...) {
+        }
+
+        std::vector<int> result;
+        for (char ch : tokenStr)
+            result.push_back(static_cast<unsigned char>(ch));
+        return result;
     };
 
     if (cfg.input_mode == InputMode::MODE_STREAM) {
@@ -118,27 +143,17 @@ void ProcessorModel::parseInput() {
         size_t currentTick = cfg.schedule_start;
 
         while (std::getline(inputFile, line)) {
-            std::istringstream iss(line);
-            std::string tokenStr;
-
-            while (iss >> tokenStr) {
-                // int value = parseTokenStr(tokenStr);
-                // iosim.addInput({currentTick, value});
-                // currentTick += cfg.schedule_offset;
-                // std::cout << "added " << currentTick << " " << value << "\n";
-                auto values = parseTokenStr(tokenStr);
-                for (int val : values) {
-                    iosim.addInput({currentTick, val});
-                    std::cout << "added " << currentTick << " " << val << "\n";
-                    currentTick += cfg.schedule_offset;
-                }
+            auto values = parseStreamLine(line);
+            for (int val : values) {
+                iosim.addInput({currentTick, val});
+                currentTick += cfg.schedule_offset;
             }
-
-            iosim.addInput({currentTick, 10});
+            
+            iosim.addInput({currentTick, '\n'});
+            currentTick += cfg.schedule_offset;
         }
     } else if (cfg.input_mode == InputMode::MODE_TOKEN) {
         std::string line;
-
         while (std::getline(inputFile, line)) {
             if (line.empty()) continue;
 
@@ -149,12 +164,9 @@ void ProcessorModel::parseInput() {
             if (!(iss >> tick >> tokenStr))
                 throw std::runtime_error("Input file parse error");
 
-            // int value = parseTokenStr(tokenStr);
-            // iosim.addInput({tick, value});
             auto values = parseTokenStr(tokenStr);
             for (int val : values) {
                 iosim.addInput({tick, val});
-                std::cout << "added " << tick << " " << val << "\n";
             }
         }
     }
