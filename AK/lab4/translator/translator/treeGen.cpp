@@ -98,8 +98,27 @@ ASTNode* TreeGenerator::makeTree(std::string data) {
 ASTNode* TreeGenerator::parseAssignStatement(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::Identifier)
         throw std::runtime_error("Expected variable name");
-    ASTNode* var = new IdentifierNode(tokens[pos].value);
+    std::string varName = tokens[pos].value;
     pos++;
+
+    // ASTNode* var = new IdentifierNode(tokens[pos].value);
+    ASTNode* var;
+    if (tokens[pos].type == TokenType::LBracket) {
+        pos++;
+
+        if (tokens[pos].type != TokenType::Number)
+            throw std::runtime_error("Expected number");
+        int index = std::stoi(tokens[pos].value);
+        pos++;
+
+        if (tokens[pos].type != TokenType::RBracket)
+            throw std::runtime_error("Expected ']'");
+        pos++;
+
+        var = new ArrayGetNode(varName, index);
+    } else {
+        var = new IdentifierNode(varName);
+    }
 
     if (tokens[pos].type != TokenType::Equals)
         throw std::runtime_error("Expected '=', got " + tokenStr(tokens[pos]));

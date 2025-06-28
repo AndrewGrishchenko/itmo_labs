@@ -293,7 +293,48 @@ void CodeGenerator::processVarDecl(ASTNode* node) {
     variables[varLabel] = varDeclNode->type;
 
     processNode(varDeclNode->value);
-    emitCode("st " + varLabel);
+
+    if (varDeclNode->type == "int[]") {
+        emitData(varLabel + "_size: 0");
+        if (varDeclNode->value->nodeType == ASTNodeType::FunctionCall) {
+            // emitCode("ld token_buffer_i");
+            // emitCode("sub token_i");
+            // emitCode("dec");
+            // emitCode("st " + varLabel + "_size");
+            // emitCode("ldi token_buffer");
+            // emitCode("add token_i");
+            // emitCode("st " + varLabel);
+            // emitCode("ldi token_i");
+            // emitCode("ldi token_buffer");
+            // emitCode("add token_buffer_i");
+            // emitCode("sub token_i");
+            // emitCode("halt");
+            // emitCode("sub token_buffer_i");
+            // emitCode("add token_i");
+            
+            emitCode("st " + varLabel);
+            emitCode("ldi token_buffer");
+            emitCode("add token_buffer_i");
+            emitCode("sub token_i");
+            emitCode("dec");
+            emitCode("st " + varLabel + "_size");
+        } else {
+            emitCode("st " + varLabel);
+            emitCode("pop");
+            emitCode("st " + varLabel + "_size");
+        }
+        emitCode("");
+        // emitCode("ld arr_" + std::to_string(arrCounter - 1) + "_size");
+        // emitCode("st " + varLabel + "_size");
+    } else if (varDeclNode->type == "string") {
+        if (varDeclNode->value->nodeType == ASTNodeType::FunctionCall) {
+            // emitCode("ldi token_buffer");
+            // emitCode("add token_i");
+        }
+        emitCode("st " + varLabel);
+    } else {
+        emitCode("st " + varLabel);
+    }
 }
 
 void CodeGenerator::processAssignment(ASTNode* node) {
@@ -308,15 +349,24 @@ void CodeGenerator::processAssignment(ASTNode* node) {
 
     processNode(assignNode->var2);
 
-    if (evalType(var1Node) == "string") {
+    if (evalType(assignNode->var1) == "string") {
         if (var2Node->nodeType == ASTNodeType::StringLiteral) {
             emitCode("ld str_" + std::to_string(strCounter - 1));
             emitCode("st " + getVarLabel(var1Name));
         } else {
             emitCode("st " + getVarLabel(var1Name));
         }
-    } else if (evalType(var1Node) == "int[]") {
-        emitCode("st " + var1Label);
+    } else if (assignNode->var1->nodeType == ASTNodeType::ArrayGet) {
+        ArrayGetNode* leftVar = static_cast<ArrayGetNode*>(assignNode->var1);
+        emitCode("push");
+        emitCode("ldi " + std::to_string(leftVar->index));
+        emitCode("st temp_right");
+        emitCode("ld " + getVarLabel(leftVar->name));
+        emitCode("add temp_right");
+        emitCode("st temp_right");
+        emitCode("pop");
+        emitCode("sta temp_right");
+        // emitCode("st " + var1Label);
     } else {
         if (variables.find(var1Label) != variables.end())
             emitCode("st " + var1Label);
@@ -503,16 +553,18 @@ void CodeGenerator::processReservedFunction(ASTNode* node) {
             processNode(functionCallNode->parameters[0]);
 
         emitCode("st token_count");
-        emitCode("call read_string");
+        emitCode("call read_string"); //TODO: TOKEN I 
     } else if (funcName == "out") {
         processNode(functionCallNode->parameters[0]);
         
         if (paramTypes[0] == "int") {
-            emitCode("st temp_right");
-            emitCode("ldi 48");
-            emitCode("add temp_right");
-            emitCode("st token");
-            emitCode("call write_token");
+            emitCode("st output_number");
+            emitCode("call write_number");
+        } else if (paramTypes[0] == "int[]") {
+            emitCode("st output_arr");
+            emitCode("pop");
+            emitCode("st output_arr_size");
+            emitCode("call write_arr");
         } else if (paramTypes[0] == "string") {
             emitCode("st output_string");
             emitCode("call write_string");
@@ -580,8 +632,15 @@ std::string CodeGenerator::getVarLabel(const std::string& varName) {
 void CodeGenerator::processIdentifier(ASTNode* node) {
     IdentifierNode* identifierNode = static_cast<IdentifierNode*>(node);
 
-    std::string varName = identifierNode->name;
-    emitCode("ld " + getVarLabel(varName));
+    std::string varLabel = getVarLabel(identifierNode->name);
+
+    if (variables[varLabel] == "int[]") {
+        emitCode("ld " + varLabel + "_size");
+        emitCode("push");
+        emitCode("ld " + varLabel);
+    } else {
+        emitCode("ld " + varLabel);
+    }
 }
 
 void CodeGenerator::processNumberLiteral(ASTNode* node) {
@@ -628,6 +687,8 @@ void CodeGenerator::processIntArrayLiteral(ASTNode* node) {
 
     emitData(data);
     emitData(dataLabel + "_size: " + std::to_string(intArrayLiteralNode->values.size()));
+    emitCode("ld " + dataLabel + "_size");
+    emitCode("push");
     emitCode("ldi " + dataLabel);
 }
 
@@ -661,6 +722,8 @@ std::string CodeGenerator::assembleCode() {
     result << read_string;
     result << write_token;
     result << write_string;
+    result << write_number;
+    result << write_arr;
     
     for (const auto& line : funcSection) {
         result << line << "\n";

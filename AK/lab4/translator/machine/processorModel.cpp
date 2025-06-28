@@ -81,34 +81,81 @@ void ProcessorModel::parseInput() {
     if (!inputFile.is_open()) throw std::runtime_error("Unable to open " + cfg.input_file);
     if (cfg.input_mode == InputMode::NONE) throw std::runtime_error("input_mode not specified");
 
+    // auto parseTokenStr = [](const std::string& tokenStr) -> int {
+    //     if (tokenStr == "\\n") return '\n';
+    //     if (tokenStr == "\\t") return '\t';
+    //     if (tokenStr.size() == 3 && tokenStr.front() == '\'' && tokenStr.back() == '\'')
+    //         return tokenStr[1];
+    //     // if (tokenStr.size() == 1)
+    //     //     return tokenStr[0];
+
+    //     try {
+    //         return std::stoi(tokenStr);
+    //     } catch (...) {
+    //         throw std::runtime_error("Invalid token: " + tokenStr);
+    //     }
+    // };
+
+    auto parseTokenStr = [](const std::string& tokenStr) -> std::vector<int> {
+        if (tokenStr == "\\n") return { '\n' };
+        if (tokenStr == "\\t") return { '\t' };
+
+        try {
+            return { std::stoi(tokenStr) };
+        } catch (...) {
+            // Не число → строка → разбиваем на символы
+            std::vector<int> result;
+            for (char ch : tokenStr) result.push_back(static_cast<unsigned char>(ch));
+            return result;
+        }
+    };
+
     if (cfg.input_mode == InputMode::MODE_STREAM) {
         if (cfg.schedule_start == -1) throw std::runtime_error("schedule_start not specified");
         if (cfg.schedule_offset == -1) throw std::runtime_error("schedule_offset not specified");
 
-        char token;
+        std::string line;
         size_t currentTick = cfg.schedule_start;
-        while (inputFile.get(token)) {
-            iosim.addInput({currentTick, token});
-            currentTick += cfg.schedule_offset;
+
+        while (std::getline(inputFile, line)) {
+            std::istringstream iss(line);
+            std::string tokenStr;
+
+            while (iss >> tokenStr) {
+                // int value = parseTokenStr(tokenStr);
+                // iosim.addInput({currentTick, value});
+                // currentTick += cfg.schedule_offset;
+                // std::cout << "added " << currentTick << " " << value << "\n";
+                auto values = parseTokenStr(tokenStr);
+                for (int val : values) {
+                    iosim.addInput({currentTick, val});
+                    std::cout << "added " << currentTick << " " << val << "\n";
+                    currentTick += cfg.schedule_offset;
+                }
+            }
+
+            iosim.addInput({currentTick, 10});
         }
     } else if (cfg.input_mode == InputMode::MODE_TOKEN) {
         std::string line;
+
         while (std::getline(inputFile, line)) {
             if (line.empty()) continue;
 
             std::istringstream iss(line);
             size_t tick;
             std::string tokenStr;
-            char token;
 
             if (!(iss >> tick >> tokenStr))
                 throw std::runtime_error("Input file parse error");
-            
-            if (tokenStr == "\\n") token = '\n';
-            else if (tokenStr == "\\t") token = '\t';
-            else if (tokenStr.size() == 1) token = tokenStr[0];
-            
-            iosim.addInput({tick, token});
+
+            // int value = parseTokenStr(tokenStr);
+            // iosim.addInput({tick, value});
+            auto values = parseTokenStr(tokenStr);
+            for (int val : values) {
+                iosim.addInput({tick, val});
+                std::cout << "added " << tick << " " << val << "\n";
+            }
         }
     }
 }
@@ -124,11 +171,13 @@ void ProcessorModel::process() {
 
     logData << "Output tokens:" << std::endl;
     logData << iosim.getTokenOutput() << std::endl;
+    
+    logData << "\n" << memDump();
 
     std::cout << "Completed in " << tickCount << " ticks\n";
 
     if (!cfg.output_file.empty()) {
-        std::ofstream outputFile(cfg.output_file);
+        std::ofstream outputFile(cfg.output_file, std::ios::out);
         if (outputFile) outputFile << outputData.str();
         else std::cerr << "Unable to open " << cfg.output_file << std::endl;
         outputFile.close();
@@ -187,23 +236,25 @@ void ProcessorModel::loadBinary(const std::string& filename) {
 }
 
 
-void ProcessorModel::memDump() {
-    std::cout << "MEMDUMP:\n";
-    std::cout << "textSize: " << std::hex << textSize << std::dec << std::endl;
-    std::cout << "dataSize: " << std::hex << dataSize << std::dec << std::endl;
+std::string ProcessorModel::memDump() {
+    std::ostringstream os;
+    os << "MEMDUMP:\n";
+    os << "textSize: " << std::hex << textSize << std::dec << std::endl;
+    os << "dataSize: " << std::hex << dataSize << std::dec << std::endl;
     size_t address = 0;
     while (address < textSize + dataSize) {
-        std::cout << "MEM[" << std::hex << address << "] = 0x" << memory[address++] << std::dec << "\n";
+        os << "MEM[" << std::hex << address << "] = 0x" << memory[address++] << std::dec << "\n";
     }
 
     address = 0x7FFFF;
     int count = 5;
     while (count >= 0) {
-        std::cout << "MEM[" << std::hex << address << "] = 0x" << memory[address--] << std::dec << "\n";
+        os << "MEM[" << std::hex << address << "] = 0x" << memory[address--] << std::dec << "\n";
         count--;
     }
 
-    std::cout << "\n\n";
+    os << "\n";
+    return os.str();
 }
 
 std::string ProcessorModel::registerDump() {

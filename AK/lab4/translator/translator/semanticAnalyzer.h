@@ -26,7 +26,7 @@ class SemanticAnalyzer {
         };
 
         void analyze(ASTNode* node);
-        VariableData analyzeExpression(ASTNode* node);
+        VariableData analyzeExpression(ASTNode* node, std::string expected = "");
     private:
         struct FunctionSignature {
             std::string returnType;
@@ -44,16 +44,19 @@ class SemanticAnalyzer {
         const std::unordered_map<std::string, std::vector<FunctionSignature>> reservedFunctions = {
             {"in", {
                 {"string", {"int"}},
-                {"string", {}}
+                {"string", {}},
+                {"int[]", {"int"}},
+                {"int[]", {}}
             }},
             {"out", {
                 {"void", {"int"}},
+                {"void", {"int[]"}},
                 {"void", {"string"}}
             }}
         };
 
         bool isReserved(const std::string& name, FunctionSignature sig);
-        std::string findFunction(const std::string& name, std::vector<std::string> paramTypes);
+        std::string findFunction(const std::string& name, std::vector<std::string> paramTypes, std::string& expected);
 
         void enterScope();
         void exitScope();

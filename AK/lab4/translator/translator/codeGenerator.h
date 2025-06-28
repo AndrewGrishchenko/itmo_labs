@@ -55,10 +55,13 @@ class CodeGenerator {
         const std::unordered_map<std::string, std::vector<FunctionSignature>> reservedFunctions = {
             {"in", {
                 {"string", {"int"}},
-                {"string", {}}
+                {"string", {}},
+                {"int[]", {"int"}},
+                {"int[]", {}}
             }},
             {"out", {
                 {"void", {"int"}},
+                {"void", {"int[]"}},
                 {"void", {"string"}}
             }}
         };
@@ -116,9 +119,16 @@ class CodeGenerator {
                            "  end_symb: 10\n"
                            "  temp_right: 0\n"
                            "  input_addr: 0x10\n"
-                           "  output_addr: 0x11\n"
+                           "  output_addr: 0x11\n\n"
                            "  output_string: 0\n"
-                           "  output_string_i: 0\n"
+                           "  output_string_i: 0\n\n"
+                           "  output_number_buf_i: 0\n"
+                           "  output_number_buf: .zero 10\n"
+                           "  output_number: 0\n"
+                           "  number_offset: 48\n\n"
+                           "  output_arr: 0\n"
+                           "  output_arr_i: 0\n"
+                           "  output_arr_size: 0\n\n"
                            "  token: 0\n"
                            "  token_i: 0\n"
                            "  token_count: 0\n"
@@ -141,6 +151,8 @@ class CodeGenerator {
                                  "  ret\n\n";
 
         std::string read_string = "read_string:\n"
+                                //   "  ld token_buffer_i\n"
+                                //   "  st token_i\n"
                                   "  ldi token_buffer\n"
                                   "  add token_buffer_i\n"
                                   "  st token_i\n"
@@ -205,6 +217,102 @@ class CodeGenerator {
                                    "  jmp write_string_do\n"
                                    "write_string_ret:\n"
                                    "  ret\n\n";
+
+        // std::string write_number = "write_number:\n"
+        //                            "  ldi 0\n"
+        //                            "  st output_number_buf_i\n"
+        //                            "write_number_fill:\n"
+        //                            "  ldi output_number_buf\n"
+        //                            "  add output_number_buf_i\n"
+        //                            "  st temp_right\n\n"
+        //                            "  ld output_number\n"
+        //                            "  rem end_symb\n"
+        //                            "  jz write_number_write\n"
+        //                            "  add number_offset\n"
+        //                            "  sta temp_right\n\n"
+        //                            "  ld output_number\n"
+        //                            "  div end_symb\n"
+        //                            "  st output_number\n\n"
+        //                            "  ld output_number_buf_i\n"
+        //                            "  inc\n"
+        //                            "  st output_number_buf_i\n\n"
+        //                            "  jmp write_number_fill\n"
+        //                            "write_number_write:\n"
+        //                            "  ldi output_number_buf\n"
+        //                            "  add output_number_buf_i\n"
+        //                            "  st temp_right\n\n"
+        //                            "  lda temp_right\n"
+        //                            "  st token\n"
+        //                            "  call write_token\n\n"
+        //                            "  ld output_number_buf_i\n"
+        //                            "  jz write_number_ret\n"
+        //                            "  dec\n"
+        //                            "  st output_number_buf_i\n"
+        //                            "  jmp write_number_write\n"
+        //                            "write_number_ret:\n"
+        //                            "  ret\n\n";
+
+        std::string write_number = "write_number:\n"
+                                   "  ldi 0\n"
+                                   "  st output_number_buf_i\n"
+                                   "write_number_fill:\n"
+                                   "  ldi output_number_buf\n"
+                                   "  add output_number_buf_i\n"
+                                   "  st temp_right\n"
+                                   "  ld output_number\n"
+                                   "  jz write_number_write\n"
+                                   "  ld output_number\n"
+                                   "  rem end_symb\n"
+                                   "  add number_offset\n"
+                                   "  sta temp_right\n"
+                                   "  ld output_number\n"
+                                   "  div end_symb\n"
+                                   "  st output_number\n"
+                                   "  ld output_number_buf_i\n"
+                                   "  inc\n"
+                                   "  st output_number_buf_i\n"
+                                   "  jmp write_number_fill\n"
+                                   "write_number_write:\n"
+                                   "  ldi output_number_buf\n"
+                                   "  add output_number_buf_i\n"
+                                   "  dec\n"
+                                   "  st temp_right\n"
+                                   "  lda temp_right\n"
+                                   "  st token\n"
+                                   "  call write_token\n"
+                                   "  ld output_number_buf_i\n"
+                                   "  dec\n"
+                                   "  st output_number_buf_i\n"
+                                   "  jz write_number_ret\n"
+                                   "  jmp write_number_write\n"
+                                   "write_number_ret:\n"
+                                   "  ret\n\n";
+
+
+        std::string write_arr = "write_arr:\n"
+                                "  ldi 0\n\n"
+                                "  st output_arr_i\n"
+                                "write_arr_do:\n"
+                                "  ld output_arr_size\n"
+                                "  sub output_arr_i\n"
+                                "  jz write_arr_ret\n\n"
+                                "  ld output_arr\n"
+                                "  add output_arr_i\n"
+                                "  st temp_right\n"
+                                "  lda temp_right\n"
+                                "  st output_number\n"
+                                "  call write_number\n\n"
+                                "  ld output_arr_i\n"
+                                "  inc\n"
+                                "  st output_arr_i\n\n"
+                                "  sub output_arr_size\n"
+                                "  jz write_arr_do\n\n"
+                                "  ldi 32\n"
+                                "  st token\n"
+                                "  call write_token\n\n"
+                                "  jmp write_arr_do\n"
+                                "write_arr_ret:\n"
+                                "  ret\n";
 
         std::string assembleCode();
 };

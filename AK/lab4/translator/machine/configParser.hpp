@@ -29,6 +29,12 @@ inline std::string trim(const std::string& s) {
     return (start == std::string::npos) ? "" : s.substr(start, end - start + 1);
 }
 
+inline std::string unquote(const std::string& s) {
+    if (s.size() >= 2 && s.front() == '"' && s.back() == '"')
+        return s.substr(1, s.size() - 2);
+    return s;
+}
+
 inline MachineConfig parseConfig(std::string fileName) {
     std::ifstream in(fileName);
     if (!in.is_open()) {
@@ -42,7 +48,7 @@ inline MachineConfig parseConfig(std::string fileName) {
         if (colon == std::string::npos) continue;
 
         std::string key = trim(line.substr(0, colon));
-        std::string value = trim(line.substr(colon + 1));
+        std::string value = unquote(trim(line.substr(colon + 1)));
 
         if (key == "input_file") {
             config.input_file = value;

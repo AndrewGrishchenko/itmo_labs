@@ -789,9 +789,8 @@ class ProcessorModel {
 
         void tick();
 
-        void memDump();
+        std::string memDump();
         std::string registerDump();
-        void allDump();
 
         void parseInput();
   

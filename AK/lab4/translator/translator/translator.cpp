@@ -69,6 +69,8 @@ int main(int argc, char* argv[]) {
 
             CodeGenerator codeGenerator;
             code = codeGenerator.generateCode(tree);
+            std::cout << "CODE:\n";
+            std::cout << code << std::endl;
 
             if (args.vizFile) {
                 TreeVisualizer tv;
@@ -81,7 +83,7 @@ int main(int argc, char* argv[]) {
             std::ifstream asm_file(args.inputFile);
             std::stringstream buffer;
             buffer << asm_file.rdbuf();
-            std::string code = buffer.str();
+            code = buffer.str();
         }
 
         Binarizer binarizer;
