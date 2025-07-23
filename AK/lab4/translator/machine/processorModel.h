@@ -165,14 +165,16 @@ class ALU {
                     uint64_t tmp = static_cast<uint64_t>(left) + right;
                     value = tmp & 0xFFFFFFFF;
                     C = tmp > 0xFFFFFFFF;
-                    V = ((left ^ value) & (right ^ value)) >> 31;
+                    // V = ((left ^ value) & (right ^ value)) >> 31;
+                    V = (((left ^ value) & (right ^ value)) & 0x80000000) != 0;
                     break;
                 }
                 case Operation::SUB: {
                     uint64_t tmp = static_cast<uint64_t>(left) - right;
                     value = tmp & 0xFFFFFFFF;
                     C = left >= right;
-                    V = ((left ^ right) & (left ^ value)) >> 31;
+                    // V = ((left ^ right) & (left ^ value)) >> 31;
+                    V = (((left ^ right) & (left ^ value)) & 0x80000000) != 0;
                     break;
                 }
                 case Operation::MUL:
@@ -523,8 +525,8 @@ class IOSimulator {
             this->memory = &memory;
         }
 
-        void connectOutput(std::ostringstream& outputData) {
-            this->outputData = &outputData;
+        void connectOutput(std::ofstream& outputFile) {
+            this->outputFile = &outputFile;
         }
 
         struct IOScheduleEntry {
@@ -534,10 +536,21 @@ class IOSimulator {
 
         void addInput(IOScheduleEntry entry) {
             inputSchedule.push_back(entry);
+            std::cout << "added input " << entry.token << " at tick " << entry.tick << "\n";
         }
 
         void setMixedOutput(bool mixed) {
             this->mixed = mixed;
+        }
+
+        void output(const std::string& data) {
+            if (outputFile)
+                (*outputFile) << data;
+        }
+
+        void output(char c) {
+            if (outputFile)
+                (*outputFile) << c;
         }
 
         void check(size_t tick) {
@@ -550,37 +563,38 @@ class IOSimulator {
 
                     if (state != 2) {
                         if (state == 1)
-                            *outputData << '\n';
-                        *outputData << "> ";
+                            output("\n");
+                        output("> ");
                         state = 2;
                     }
 
-                    *outputData << static_cast<char>(entry.token);
+                    output(static_cast<char>(entry.token));
                     if (entry.token == '\n')
                         state = 0;
                 }
             }
 
             if (memory->read(output_address) != 0x0) {
-                char token = memory->read(output_address);
-                outputSchedule.push_back({tick, static_cast<int>(token)});
+                int token = memory->read(output_address);
+                std::cout << "got token " << static_cast<char>(token) << std::endl;
+                outputSchedule.push_back({tick, static_cast<char>(token)});
                 memory->write(output_address, 0);
 
-                if (!mixed) {
-                    *outputData << token;
-                    return;
-                }
+                // if (!mixed) {
+                //     *outputData << token;
+                //     return;
+                // }
 
-                if (state != 1) {
-                    if (state == 2)
-                        *outputData << '\n';
-                    *outputData << "< ";
-                    state = 1;
-                }
+                // if (state != 1) {
+                //     if (state == 2)
+                //         *outputData << '\n';
+                //     *outputData << "< ";
+                //     state = 1;
+                // }
 
-                *outputData << token;
-                if (token == '\n')
-                    state = 0;
+                // *outputData << token;
+                // if (token == '\n')
+                //     state = 0;
             }
         }
 
@@ -613,7 +627,7 @@ class IOSimulator {
         const size_t input_address = 0x10;
         const size_t output_address = 0x11;
 
-        std::ostringstream* outputData = nullptr;
+        std::ofstream* outputFile = nullptr;
         bool mixed = false;
         int state = 0;
 };
@@ -636,8 +650,8 @@ class CU {
             this->mux1->replaceInput(2, operand);
         }
 
-        void setLog(std::ostringstream& logData) {
-            this->logData = &logData;
+        void setLog(std::ofstream& logFile) {
+            this->logFile = &logFile;
         }
 
         void setIRInput(const uint32_t& IR) {
@@ -722,31 +736,32 @@ class CU {
             OP_NOT  = 0b00111,
             OP_CLA  = 0b01000,
             OP_JMP  = 0b01001,
-            OP_JZ   = 0b01010,
-            OP_JNZ  = 0b01011,
-            OP_JG   = 0b01100,
-            OP_JGE  = 0b01101,
-            OP_JL   = 0b01110,
-            OP_JLE  = 0b01111,
-            OP_PUSH = 0b10000,
-            OP_POP  = 0b10001,
-            OP_LD   = 0b10010,
-            OP_LDA  = 0b10011,
-            OP_LDI  = 0b10100,
-            OP_ST   = 0b10101,
-            OP_STA  = 0b10110,
-            OP_CALL = 0b10111,
-            OP_RET  = 0b11000,
-            OP_EI   = 0b11001,
-            OP_DI   = 0b11010,
-            OP_IRET = 0b11011,
-            OP_HALT = 0b11100
+            OP_CMP  = 0b01010,
+            OP_JZ   = 0b01011,
+            OP_JNZ  = 0b01100,
+            OP_JG   = 0b01101,
+            OP_JGE  = 0b01110,
+            OP_JL   = 0b01111,
+            OP_JLE  = 0b10000,
+            OP_PUSH = 0b10001,
+            OP_POP  = 0b10010,
+            OP_LD   = 0b10011,
+            OP_LDA  = 0b10100,
+            OP_LDI  = 0b10101,
+            OP_ST   = 0b10110,
+            OP_STA  = 0b10111,
+            OP_CALL = 0b11000,
+            OP_RET  = 0b11001,
+            OP_EI   = 0b11010,
+            OP_DI   = 0b11011,
+            OP_IRET = 0b11100,
+            OP_HALT = 0b11101
         };
 
-        std::ostringstream* logData = nullptr;
+        std::ofstream* logFile = nullptr;
 
         void log(std::string line) {
-            if (logData) (*logData) << line << "\n";
+            if (logFile) (*logFile) << line << "\n";
         }
 };
 
@@ -796,11 +811,11 @@ class ProcessorModel {
         std::vector<int> parseStreamLine(const std::string& line);
         void parseInput();
   
-        std::ostringstream outputData;
-        std::ostringstream logData;
+        std::ofstream logFile;
+        std::ofstream outputFile;
 
-        void writeOutput(std::string& line) { outputData << line << "\n"; }
-        void writeLog(std::string& line) { logData << line << "\n"; }
+        void writeOutput(std::string& line) { outputFile << line << "\n"; }
+        void writeLog(std::string& line) { logFile << line << "\n"; }
 };
 
 #endif

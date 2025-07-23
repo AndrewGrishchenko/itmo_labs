@@ -15,6 +15,7 @@ enum class TokenType {
     KeywordIf,
     KeywordElse,
     KeywordWhile,
+    KeywordBreak,
     KeywordReturn,
     KeywordVoid,
 
@@ -90,6 +91,7 @@ class TreeGenerator {
         ASTNode* parseStatement(std::vector<Token> tokens, size_t& pos);
         ASTNode* parseIf(std::vector<Token> tokens, size_t& pos);
         ASTNode* parseWhile(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseBreak(std::vector<Token> tokens, size_t& pos);
 
         ASTNode* parseParameter(std::vector<Token> tokens, size_t& pos);
         ASTNode* parseFunction(std::vector<Token> tokens, size_t& pos);
@@ -101,6 +103,7 @@ class TreeGenerator {
         ASTNode* parseArray(std::vector<Token> tokens, size_t& pos);
         ASTNode* parseArrayGet(std::vector<Token> tokens, size_t& pos);
         ASTNode* parseArraySize(std::vector<Token> tokens, size_t& pos);
+        ASTNode* parseMethodCall(std::vector<Token> tokens, size_t& pos);
         ASTNode* parseTerm(std::vector<Token> tokens, size_t& pos);
         ASTNode* parseFactor(std::vector<Token> tokens, size_t& pos);
 

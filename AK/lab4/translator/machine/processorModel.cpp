@@ -3,7 +3,7 @@
 ProcessorModel::ProcessorModel(MachineConfig cfg)
     : cfg(cfg) {
     parseInput();
-    iosim.connectOutput(outputData);
+    iosim.connectOutput(outputFile);
     iosim.setMixedOutput(cfg.mixed);
 
     mux1.addInput(zero);
@@ -65,12 +65,19 @@ ProcessorModel::ProcessorModel(MachineConfig cfg)
     
     iosim.connect(interruptHandler, memory);
 
+    cu.setLog(logFile);
     cu.connect(interruptHandler, mux1, mux2, alu, latchRouter, latchMEM_IR, latchMEM_DR, latchDR_MEM);
     cu.setFlagsInput(registers.getNRef(),
                      registers.getZRef(),
                      registers.getVRef(),
                      registers.getCRef());
     cu.setIRInput(registers.getRef(Registers::IR));
+
+    if (!cfg.log_file.empty())
+        logFile.open(cfg.log_file, std::ios::out);
+
+    if (!cfg.output_file.empty())
+        outputFile.open(cfg.output_file, std::ios::out);
 }
 
 ProcessorModel::~ProcessorModel() { }
@@ -139,19 +146,30 @@ void ProcessorModel::parseInput() {
         if (cfg.schedule_start == -1) throw std::runtime_error("schedule_start not specified");
         if (cfg.schedule_offset == -1) throw std::runtime_error("schedule_offset not specified");
 
-        std::string line;
+        // std::string line;
         size_t currentTick = cfg.schedule_start;
 
-        while (std::getline(inputFile, line)) {
-            auto values = parseStreamLine(line);
-            for (int val : values) {
-                iosim.addInput({currentTick, val});
-                currentTick += cfg.schedule_offset;
-            }
+        // while (std::getline(inputFile, line)) {
+        //     auto values = parseStreamLine(line);
+        //     for (int val : values) {
+        //         iosim.addInput({currentTick, val});
+        //         currentTick += cfg.schedule_offset;
+        //     }
             
-            iosim.addInput({currentTick, '\n'});
+        //     iosim.addInput({currentTick, 10});
+        //     currentTick += cfg.schedule_offset;
+        // }
+
+        std::stringstream buffer;
+        buffer << inputFile.rdbuf();
+        std::string data = buffer.str();
+
+        for (const auto& ch : data) {
+            iosim.addInput({currentTick, static_cast<int>(ch)});
             currentTick += cfg.schedule_offset;
         }
+
+        iosim.addInput({currentTick, 4});
     } else if (cfg.input_mode == InputMode::MODE_TOKEN) {
         std::string line;
         while (std::getline(inputFile, line)) {
@@ -181,26 +199,20 @@ void ProcessorModel::process() {
         tickCount++;
     }
 
-    logData << "Output tokens:" << std::endl;
-    logData << iosim.getTokenOutput() << std::endl;
+    logFile << "Output tokens:" << std::endl;
+    logFile << iosim.getTokenOutput() << std::endl;
     
-    logData << "\n" << memDump();
+    logFile << "\n" << memDump();
 
     std::cout << "Completed in " << tickCount << " ticks\n";
 
     if (!cfg.output_file.empty()) {
-        std::ofstream outputFile(cfg.output_file, std::ios::out);
-        if (outputFile) outputFile << outputData.str();
-        else std::cerr << "Unable to open " << cfg.output_file << std::endl;
         outputFile.close();
         std::cout << "Wrote output to " << cfg.output_file << " in "
                   << (cfg.mixed ? "mixed" : "normal") << " mode " << std::endl;
     }
 
     if (!cfg.log_file.empty()) {
-        std::ofstream logFile(cfg.log_file);
-        if (logFile) logFile << logData.str();
-        else std::cerr << "Unable to open " << cfg.log_file << std::endl;
         logFile.close();
         std::cout << "Wrote log to " << cfg.log_file << std::endl;
     }
@@ -286,7 +298,7 @@ std::string ProcessorModel::registerDump() {
 }
 
 void ProcessorModel::tick() {
-    logData << "tick #" << tickCount << "\n";
+    logFile << "tick #" << tickCount << "\n";
     
     iosim.check(tickCount);
     cu.decode();
@@ -311,7 +323,8 @@ void ProcessorModel::tick() {
     alu.setWriteFlags(false);
     latchRouter.setLatchStates({0, 0, 0, 0, 0, 0});
 
-    logData << registerDump() << std::endl;
+    logFile << registerDump() << std::endl;
+    // logData << "\n" << memDump() << std::endl; //remove
 }
 
 void InterruptHandler::step() {
@@ -344,7 +357,7 @@ void InterruptHandler::step() {
 
 void CU::decode() {
     log("State " + stateStr());
-
+    
     if ((interruptHandler->shouldInterrupt() || interruptHandler->isEnteringInterrupt()) && state == CPUState::FetchAR) {
         interruptHandler->step();
         return;
@@ -398,7 +411,7 @@ void CU::decode() {
 }
 
 void CU::instructionTick() {
-    log("Instruction step #" + microstep);
+    log("Instruction step #" + std::to_string(microstep));
     
     switch(opcode) {
         case OP_ADD:
@@ -486,6 +499,35 @@ void CU::instructionTick() {
             latchRouter->setLatchState(3, 1);
 
             instructionDone = true;
+            break;
+
+        case OP_CMP:
+            switch (microstep) {
+                case 0:
+                    mux1->select(2);
+                    mux2->select(0);
+
+                    alu->setOperation(ALU::Operation::NOP);
+                    
+                    latchRouter->setLatchState(1, 1);
+                    
+                    microstep++;
+                    break;
+                case 1:
+                    latchMEM_DR->setEnabled(true);
+                    microstep++;
+                    break;
+                case 2:
+                    mux1->select(1);
+                    mux2->select(2);
+
+                    alu->setWriteFlags(true);
+                    alu->setOperation(ALU::Operation::SUB);
+
+                    microstep = 0;
+                    instructionDone = true;
+                    break;
+            }
             break;
 
         case OP_JZ:
@@ -747,6 +789,7 @@ void CU::instructionTick() {
             mux1->select(2);
             mux2->select(0);
 
+            alu->setWriteFlags(true);
             alu->setOperation(ALU::Operation::NOP);
 
             latchRouter->setLatchState(0, 1);

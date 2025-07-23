@@ -2,6 +2,7 @@
 #define _CODE_GENERATOR_H
 
 #include "ASTNode.hpp"
+#include "ASTVisitor.hpp"
 #include "semanticAnalyzer.h"
 
 #include <unordered_map>
@@ -10,13 +11,35 @@
 #include <algorithm>
 #include <memory>
 
-class CodeGenerator {
+class CodeGenerator : ASTVisitor {
     public:
         CodeGenerator();
         ~CodeGenerator();
 
         std::string generateCode(ASTNode* root);
+
+        void visit(VarDeclNode& node) override;
+        void visit(NumberLiteralNode& node) override;
+        void visit(StringLiteralNode& node) override;
+        void visit(BooleanLiteralNode& node) override;
+        void visit(VoidLiteralNode& node) override;
+        void visit(IntArrayLiteralNode& node) override;
+        void visit(ArrayGetNode& node) override;
+        void visit(MethodCallNode& node) override;
+        void visit(IdentifierNode& node) override;
+        void visit(AssignNode& node) override;
+        void visit(BinaryOpNode& node) override;
+        void visit(UnaryOpNode& node) override;
+        void visit(IfNode& node) override;
+        void visit(WhileNode& node) override;
+        void visit(BreakNode& node) override;
+        void visit(BlockNode& node) override;
+        void visit(ParameterNode& node) override;
+        void visit(FunctionNode& node) override;
+        void visit(FunctionCallNode& node) override;
+        void visit(ReturnNode& node) override;
     private:
+        void visitWithLabels(ASTNode* node, const std::string& trueL, const std::string& falseL);
         std::string evalType(ASTNode* node);
 
         struct FunctionSignature {
@@ -42,7 +65,12 @@ class CodeGenerator {
         };
 
         FunctionData* findFunction(const std::string& name, std::vector<std::string> paramTypes);
-        const FunctionSignature* findReservedFunction(const std::string& name, std::vector<std::string> paramTypes);
+        const FunctionSignature* findReservedFunction(const std::string& name, const std::vector<std::string>& paramTypes, const std::string& expectedReturnType);
+
+        void processReservedFunctionCall(FunctionCallNode& node);
+        void processRegularFunctionCall(FunctionCallNode& node);
+
+        std::vector<std::string> breakLabels;
 
         std::vector<std::string> dataSection;
         std::vector<std::string> codeSection;
@@ -57,12 +85,20 @@ class CodeGenerator {
                 {"string", {"int"}},
                 {"string", {}},
                 {"int[]", {"int"}},
-                {"int[]", {}}
+                {"int[]", {}},
+                {"int", {"int"}},
+                {"int", {}}
             }},
             {"out", {
                 {"void", {"int"}},
                 {"void", {"int[]"}},
                 {"void", {"string"}}
+            }}
+        };
+
+        const std::unordered_map<std::string, std::unordered_map<std::string, FunctionSignature>> typeMethods = {
+            {"int[]", {
+                {"size", {"int", {}}}
             }}
         };
 
@@ -73,69 +109,73 @@ class CodeGenerator {
 
         std::shared_ptr<FunctionData> currentFunction;
 
+        std::string currentTrueLabel;
+        std::string currentFalseLabel;
+
         std::string getNewLabel();
+
+        std::string mangleFunctionName(const std::string& name, const std::vector<std::string>& paramTypes);
 
         std::string nodeStr(ASTNode* node);
 
-        void processNode(ASTNode* node);
+        // void processNode(ASTNode* node);
 
         void emitCode(const std::string& line);
         void emitCodeLabel(const std::string& label);
         void emitData(const std::string& line);
 
-        void processRoot(ASTNode* node);
-        void processFunction(ASTNode* node);
-        void processVarDecl(ASTNode* node);
-        void processAssignment(ASTNode* node);
-        void processBinaryOp(ASTNode* node);
+        // void processRoot(ASTNode* node);
+        // void processFunction(ASTNode* node);
+        // void processVarDecl(ASTNode* node);
+        // void processAssignment(ASTNode* node);
+        // void processBinaryOp(ASTNode* node);
 
         void pushToStack();
         void popFromStack();
-        void processUnaryOp(ASTNode* node);
-        void processIf(ASTNode* node);
+        // void processUnaryOp(ASTNode* node);
+        // void processIf(ASTNode* node);
         
         std::string getNotConditionJump(ASTNode* node);
-        
-        void processWhile(ASTNode* node);
-        void processBlock(ASTNode* node);
-        void processReservedFunction(ASTNode* node);
-        void processFunctionCall(ASTNode* node);
-        void processReturn(ASTNode* node);
+
+        // void processWhile(ASTNode* node);
+        // void processBlock(ASTNode* node);
+        // void processReservedFunction(ASTNode* node);
+        // void processFunctionCall(ASTNode* node);
+        // void processReturn(ASTNode* node);
 
         std::string getVarLabel(const std::string& varName);
 
-        void processIdentifier(ASTNode* node);
-        void processNumberLiteral(ASTNode* node);
-        void processBooleanLiteral(ASTNode* node);
-        void processStringLiteral(ASTNode* node);
-        void processVoidLiteral(ASTNode* node);
+        // void processIdentifier(ASTNode* node);
+        // void processNumberLiteral(ASTNode* node);
+        // void processBooleanLiteral(ASTNode* node);
+        // void processStringLiteral(ASTNode* node);
+        // void processVoidLiteral(ASTNode* node);
 
-        void processIntArrayLiteral(ASTNode* node);
-        void processArrayGet(ASTNode* node);
-        void processArraySize(ASTNode* node);
+        // void processIntArrayLiteral(ASTNode* node);
+        // void processArrayGet(ASTNode* node);
 
         std::string data = ".data\n"
                            "  default_vector: default_interrupt\n"
                            "  input_vector: input_interrupt\n\n"
-                           "  end_symb: 10\n"
                            "  temp_right: 0\n"
+                           "  temp_ret_addr: 0\n"
                            "  input_addr: 0x10\n"
                            "  output_addr: 0x11\n\n"
-                           "  output_string: 0\n"
-                           "  output_string_i: 0\n\n"
-                           "  output_number_buf_i: 0\n"
-                           "  output_number_buf: .zero 10\n"
-                           "  output_number: 0\n"
-                           "  number_offset: 48\n\n"
-                           "  output_arr: 0\n"
-                           "  output_arr_i: 0\n"
-                           "  output_arr_size: 0\n\n"
-                           "  token: 0\n"
-                           "  token_i: 0\n"
-                           "  token_count: 0\n"
-                           "  token_buffer_count: 20\n"
-                           "  token_buffer_i: 0\n"
-                           "  token_buffer: .zero 20\n";
+                           "  const_eot: 4\n"
+                           "  const_space: 32\n\n"
+                           "  const_10: 10\n"
+                           "  const_48: 48\n\n"
+                           "  token: 0\n\n"
+                           "  read_int_val: 0\n"
+                           "  read_delim: 10\n"
+                           "  read_arr_stop: 0\n\n"
+                           "  write_int_count: 0\n"
+                           "  write_i: 0\n\n"
+                           "  input_count: 0\n"
+                           "  input_ptr: 0\n\n"
+                           "  input_buffer_i: 0\n"
+                           "  input_buffer_size: 10\n"
+                           "  input_buffer: .zero 10\n";
 
         std::string interrupts = "default_interrupt:\n"
                                  "  iret\n"
@@ -151,133 +191,200 @@ class CodeGenerator {
                                  "  di\n"
                                  "  ret\n\n";
 
+        std::string read_int = "read_int:\n"
+                               "  ldi 0\n"
+                               "  st read_int_val\n"
+                               "read_int_do:\n"
+                               "  call read_token\n \n"
+                               "  ld token\n"
+                               "  cmp const_eot\n"
+                               "  jz read_int_stop\n\n"
+                               "  cmp read_delim\n"
+                               "  jz read_int_stop\n\n"
+                               "  cmp const_space\n"
+                               "  jz read_int_ret\n\n"
+                               "  cmp const_10\n"
+                               "  jz read_int_ret\n\n"
+                               "  ld read_int_val\n"
+                               "  mul const_10\n"
+                               "  st read_int_val\n\n"
+                               "  ld token\n"
+                               "  sub const_48\n"
+                               "  add read_int_val\n"
+                               "  st read_int_val\n\n"
+                               "  ldi 0\n"
+                               "  st token\n\n"
+                               "  jmp read_int_do\n"
+                               "read_int_stop:\n"
+                               "  ldi 1\n"
+                               "  st read_arr_stop\n"
+                               "read_int_ret:\n"
+                               "  ldi 0\n"
+                               "  st token\n\n"
+                               "  ld read_int_val\n"
+                               "  ret\n\n";
+
+        std::string write_to_buf = "write_to_buf:\n"
+                                   "  push\n\n"
+                                   "  ldi input_buffer\n"
+                                   "  add input_buffer_i\n"
+                                   "  st temp_right\n\n"
+                                   "  pop\n"
+                                   "  sta temp_right\n\n"
+                                   "  ld input_buffer_i\n"
+                                   "  inc\n"
+                                   "  st input_buffer_i\n\n"
+                                   "  ret\n\n";
+
         std::string read_string = "read_string:\n"
-                                  "  ldi token_buffer\n"
-                                  "  add token_buffer_i\n"
-                                  "  st token_i\n"
+                                  "  ldi input_buffer\n"
+                                  "  add input_buffer_i\n"
+                                  "  st input_ptr\n"
                                   "read_string_do:\n"
-                                  "  ld token_buffer_i\n"
-                                  "  sub token_buffer_count\n"
+                                  "  ld input_buffer_i\n"
+                                  "  cmp input_buffer_size\n"
                                   "  jz read_string_overflow\n\n"
                                   "  call read_token\n\n"
                                   "  ld token\n"
-                                  "  sub end_symb\n"
+                                  "  cmp const_eot\n"
                                   "  jz read_string_ret\n\n"
-                                  "  ldi token_buffer\n"
-                                  "  add token_buffer_i\n"
-                                  "  st temp_right\n"
-                                  "  ld token\n"
-                                  "  sta temp_right\n\n"
-                                  "  ld token_buffer_i\n"
-                                  "  inc\n"
-                                  "  st token_buffer_i\n\n"
+                                  "  cmp read_delim\n"
+                                  "  jz read_string_ret\n\n"
+                                  "  call write_to_buf\n\n"
                                   "  ldi 0\n"
                                   "  st token\n\n"
-                                  "  ldi token_buffer\n"
-                                  "  add token_buffer_i\n"
-                                  "  sub token_i\n"
-                                  "  sub token_count\n"
+                                  "  ldi input_buffer\n"
+                                  "  add input_buffer_i\n"
+                                  "  sub input_ptr\n"
+                                  "  sub input_count\n"
                                   "  jz read_string_ret\n\n"
                                   "  jmp read_string_do\n"
-                                  "read_string_ret:\n"
-                                  "  ldi token_buffer\n"
-                                  "  add token_buffer_i\n"
-                                  "  st temp_right\n"
-                                  "  ldi 0\n"
-                                  "  sta temp_right\n"
-                                  "  st token\n\n"
-                                  "  ld token_buffer_i\n"
-                                  "  inc\n"
-                                  "  st token_buffer_i\n\n"
-                                  "  ld token_i\n"
-                                  "  ret\n"
                                   "read_string_overflow:\n"
-                                  "  halt\n\n";
-
-        std::string write_token = "write_token:\n"
-                                  "  ld token\n"
-                                  "  sta output_addr\n"
+                                  "  halt\n"
+                                  "read_string_ret:\n"
+                                  "  ldi 0\n"
+                                  "  st token\n"
+                                  "  st input_count\n"
+                                  "  call write_to_buf\n\n"
+                                  "  ld input_ptr\n\n"
                                   "  ret\n\n";
-        
+
+        std::string read_arr = "read_arr:\n"
+                               "  ldi input_buffer\n"
+                               "  add input_buffer_i\n"
+                               "  st input_ptr\n\n"                      
+                               "  ldi 0\n"
+                               "  st read_arr_stop\n"
+                               "read_arr_do:\n"
+                               "  ld input_buffer_i\n"
+                               "  cmp input_buffer_size\n"
+                               "  jz read_arr_overflow\n\n"
+                               "  call read_int\n\n"
+                               "  call write_to_buf\n\n"
+                               "  ld read_arr_stop\n"
+                               "  jnz read_arr_ret\n\n"
+                               "  ldi input_buffer\n"
+                               "  add input_buffer_i\n"
+                               "  sub input_ptr\n"
+                               "  sub input_count\n"
+                               "  jz read_arr_ret\n\n"
+                               "  jmp read_arr_do\n"
+                               "read_arr_overflow:\n"
+                               "  halt\n"
+                               "read_arr_ret:\n"
+                               "  ldi 0\n"
+                               "  st input_count\n"
+                               "  call write_to_buf\n\n"
+                               "  ld input_ptr\n\n"
+                               "  ret\n\n";
+
+        std::string write_int = "write_int:\n"
+                                "  st read_int_val\n"
+                                "  ldi 0\n"
+                                "  st write_int_count\n"
+                                "write_int_div:\n"
+                                "  ld read_int_val\n"
+                                "  jz write_int_write\n"
+                                "  rem const_10\n"
+                                "  push\n\n"
+                                "  ld read_int_val\n"
+                                "  div const_10\n"
+                                "  st read_int_val\n\n"
+                                "  ld write_int_count\n"
+                                "  inc\n"
+                                "  st write_int_count\n\n"
+                                "  jmp write_int_div\n"
+                                "write_int_write:\n"
+                                "  ld write_int_count\n"
+                                "  jz write_int_ret\n"
+                                "  dec\n"
+                                "  st write_int_count\n\n"
+                                "  pop\n"
+                                "  add const_48\n"
+                                "  sta output_addr\n\n"
+                                "  jmp write_int_write\n"
+                                "write_int_ret:\n"
+                                "  ret\n\n";
+
         std::string write_string = "write_string:\n"
+                                   "  st input_ptr\n"
                                    "  ldi 0\n"
-                                   "  st output_string_i\n"
+                                   "  st write_i\n"
                                    "write_string_do:\n"
-                                   "  ld output_string\n"
-                                   "  add output_string_i\n"
+                                   "  ld input_ptr\n"
+                                   "  add write_i\n"
                                    "  st temp_right\n"
-                                   "  lda temp_right\n"
-                                   "  st token\n"
+                                   "  lda temp_right\n\n"
                                    "  jz write_string_ret\n"
-                                   "  call write_token\n\n"
-                                   "  ld output_string_i\n"
+                                   "  sta output_addr\n\n"
+                                   "  ld write_i\n"
                                    "  inc\n"
-                                   "  st output_string_i\n\n"
+                                   "  st write_i\n\n"
                                    "  jmp write_string_do\n"
                                    "write_string_ret:\n"
                                    "  ret\n\n";
 
-        std::string write_number = "write_number:\n"
-                                   "  ldi 0\n"
-                                   "  st output_number_buf_i\n"
-                                   "write_number_fill:\n"
-                                   "  ldi output_number_buf\n"
-                                   "  add output_number_buf_i\n"
-                                   "  st temp_right\n"
-                                   "  ld output_number\n"
-                                   "  jz write_number_write\n"
-                                   "  ld output_number\n"
-                                   "  rem end_symb\n"
-                                   "  add number_offset\n"
-                                   "  sta temp_right\n"
-                                   "  ld output_number\n"
-                                   "  div end_symb\n"
-                                   "  st output_number\n"
-                                   "  ld output_number_buf_i\n"
-                                   "  inc\n"
-                                   "  st output_number_buf_i\n"
-                                   "  jmp write_number_fill\n"
-                                   "write_number_write:\n"
-                                   "  ldi output_number_buf\n"
-                                   "  add output_number_buf_i\n"
-                                   "  dec\n"
-                                   "  st temp_right\n"
-                                   "  lda temp_right\n"
-                                   "  st token\n"
-                                   "  call write_token\n"
-                                   "  ld output_number_buf_i\n"
-                                   "  dec\n"
-                                   "  st output_number_buf_i\n"
-                                   "  jz write_number_ret\n"
-                                   "  jmp write_number_write\n"
-                                   "write_number_ret:\n"
-                                   "  ret\n\n";
-
-
         std::string write_arr = "write_arr:\n"
-                                "  ldi 0\n\n"
-                                "  st output_arr_i\n"
+                                "  st input_ptr\n\n"
+                                "  lda input_ptr\n"
+                                "  jz write_arr_ret\n"
+                                "  call write_int\n\n"
+                                "  ldi 1\n"
+                                "  st write_i\n"
                                 "write_arr_do:\n"
-                                "  ld output_arr_size\n"
-                                "  sub output_arr_i\n"
-                                "  jz write_arr_ret\n\n"
-                                "  ld output_arr\n"
-                                "  add output_arr_i\n"
+                                "  ld input_ptr\n"
+                                "  add write_i\n"
                                 "  st temp_right\n"
                                 "  lda temp_right\n"
-                                "  st output_number\n"
-                                "  call write_number\n\n"
-                                "  ld output_arr_i\n"
+                                "  jz write_arr_ret\n\n"
+                                "  ld const_space\n"
+                                "  sta output_addr\n\n"
+                                "  lda temp_right\n"
+                                "  call write_int\n\n"
+                                "  ld write_i\n"
                                 "  inc\n"
-                                "  st output_arr_i\n\n"
-                                "  sub output_arr_size\n"
-                                "  jz write_arr_do\n\n"
-                                "  ldi 32\n"
-                                "  st token\n"
-                                "  call write_token\n\n"
+                                "  st write_i\n\n"
                                 "  jmp write_arr_do\n"
                                 "write_arr_ret:\n"
-                                "  ret\n";
+                                "  ret\n\n";
+
+        std::string arr_size = "arr_size:\n"
+                               "  st input_ptr\n\n"
+                               "  ldi 0\n"
+                               "  st write_i\n"
+                               "arr_size_do:\n"
+                               "  ld input_ptr\n"
+                               "  add write_i\n"
+                               "  st temp_right\n"
+                               "  lda temp_right\n"
+                               "  jz arr_size_ret\n\n"
+                               "  ld write_i\n"
+                               "  inc\n"
+                               "  st write_i\n\n"
+                               "  jmp arr_size_do\n"
+                               "arr_size_ret:\n"
+                               "  ld write_i\n"
+                               "  ret\n\n";
 
         std::string assembleCode();
 };

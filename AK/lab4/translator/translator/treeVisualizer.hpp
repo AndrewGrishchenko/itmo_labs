@@ -20,7 +20,7 @@ class TreeVisualizer {
             std::string result = "";
             processNode(node);
 
-            result += "@startuml\n\n";
+            result += "@startuml ast\n\n";
             for (auto o : objects) {
                 result += o + "\n";
             }
@@ -89,6 +89,7 @@ class TreeVisualizer {
                     std::string objName = "NumberLiteral" + std::to_string(labelCount(node->nodeType));
 
                     emitObject(objName);
+                    emitObjectData(objName, "resolvedType", numberLiteralNode->resolvedType);
                     emitObjectData(objName, "value", std::to_string(numberLiteralNode->number));
 
                     return objName;
@@ -98,6 +99,7 @@ class TreeVisualizer {
                     std::string objName = "StringLiteral" + std::to_string(labelCount(node->nodeType));
 
                     emitObject(objName);
+                    emitObjectData(objName, "resolvedType", stringLiteralNode->resolvedType);
                     emitObjectData(objName, "value", stringLiteralNode->value);
 
                     return objName;
@@ -107,6 +109,7 @@ class TreeVisualizer {
                     std::string objName = "BooleanLiteral" + std::to_string(labelCount(node->nodeType));
 
                     emitObject(objName);
+                    emitObjectData(objName, "resolvedType", booleanLiteralNode->resolvedType);
                     emitObjectData(objName, "value", booleanLiteralNode->value ? "true" : "false");
 
                     return objName;
@@ -116,6 +119,7 @@ class TreeVisualizer {
                     std::string objName = "VoidLiteral" + std::to_string(labelCount(node->nodeType));
 
                     emitObject(objName);
+                    emitObjectData(objName, "resolvedType", voidLiteralNode->resolvedType);
 
                     return objName;
                 }
@@ -124,6 +128,7 @@ class TreeVisualizer {
                     std::string objName = "IntArrayLiteral" + std::to_string(labelCount(node->nodeType));
 
                     emitObject(objName);
+                    emitObjectData(objName, "resolvedType", intArrayLiteralNode->resolvedType);
 
                     for (auto* value : intArrayLiteralNode->values) {
                         std::string valueName = processNode(value);
@@ -137,19 +142,32 @@ class TreeVisualizer {
                     std::string objName = "ArrayGet" + std::to_string(labelCount(node->nodeType));
 
                     emitObject(objName);
-                    emitObjectData(objName, "name", arrayGetNode->name);
+                    emitObjectData(objName, "resolvedType", arrayGetNode->resolvedType);
+
+                    std::string objectName = processNode(arrayGetNode->object);
+                    emitObjectAssociation(objName, objectName, "object");
 
                     std::string indexName = processNode(arrayGetNode->index);
                     emitObjectAssociation(objName, indexName, "index");
                     
                     return objName;
                 }
-                case ASTNodeType::ArraySize: {
-                    ArraySizeNode* arraySizeNode = static_cast<ArraySizeNode*>(node);
-                    std::string objName = "ArraySize" + std::to_string(labelCount(node->nodeType));
+                case ASTNodeType::MethodCall: {
+                    MethodCallNode* methodCallNode = static_cast<MethodCallNode*>(node);
+                    std::string objName = "MethodCall" + std::to_string(labelCount(node->nodeType));
 
                     emitObject(objName);
-                    emitObjectData(objName, "name", arraySizeNode->name);
+                    emitObjectData(objName, "resolvedType", methodCallNode->resolvedType);
+                    
+                    std::string objectName = processNode(methodCallNode->object);
+                    emitObjectAssociation(objName, objectName, "object");
+
+                    emitObjectData(objName, "methodName", methodCallNode->methodName);
+
+                    for (auto& arg : methodCallNode->arguments) {
+                        std::string argName = processNode(arg);
+                        emitObjectAssociation(objName, argName, "arg");
+                    }
 
                     return objName;
                 }
@@ -158,6 +176,7 @@ class TreeVisualizer {
                     std::string objName = "Identifier" + std::to_string(labelCount(node->nodeType));
 
                     emitObject(objName);
+                    emitObjectData(objName, "resolvedType", identifierNode->resolvedType);
                     emitObjectData(objName, "name", identifierNode->name);
 
                     return objName;
@@ -181,6 +200,7 @@ class TreeVisualizer {
                     std::string objName = "BinaryOp" + std::to_string(labelCount(node->nodeType));
 
                     emitObject(objName);
+                    emitObjectData(objName, "resolvedType", binaryOpNode->resolvedType);
                     emitObjectData(objName, "op", binaryOpNode->op);
 
                     std::string leftName = processNode(binaryOpNode->left);
@@ -196,6 +216,7 @@ class TreeVisualizer {
                     std::string objName = "UnaryOp" + std::to_string(labelCount(node->nodeType));
 
                     emitObject(objName);
+                    emitObjectData(objName, "resolvedType", unaryOpNode->resolvedType);
                     emitObjectData(objName, "op", unaryOpNode->op);
 
                     std::string operandName = processNode(unaryOpNode->operand);
@@ -280,6 +301,7 @@ class TreeVisualizer {
                     std::string objName = "FunctionCall" + std::to_string(labelCount(node->nodeType));
 
                     emitObject(objName);
+                    emitObjectData(objName, "resolvedType", functionCall->resolvedType);
                     emitObjectData(objName, "name", functionCall->name);
 
                     for (auto* p : functionCall->parameters) {

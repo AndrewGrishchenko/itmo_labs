@@ -168,6 +168,7 @@ void Binarizer::parse(const std::string& inputData) {
                 size_t index = dataCursor;
                 dataAddress[label] = dataStart + index;
                 dataCursor += count;
+                dataSection.resize(dataSection.size() + count - 1);
             }
             else if (isNumber(valueStr)) {
                 value = parseNumber(valueStr);

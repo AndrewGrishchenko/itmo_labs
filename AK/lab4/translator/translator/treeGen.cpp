@@ -76,6 +76,8 @@ std::string TreeGenerator::tokenStr(Token token) {
             return "LBracket\n";
         case TokenType::RBracket:
             return "RBracket\n";
+        case TokenType::Dot:
+            return "Dot\n";
         default:
             return "Unknown\n";
     }
@@ -85,6 +87,12 @@ ASTNode* TreeGenerator::makeTree(std::string data) {
     BlockNode* root = new BlockNode();
 
     std::vector<Token> tokens = tokenize(data);
+
+    std::cout << "TOKENS:\n";
+    for (auto& token : tokens) {
+        std::cout << tokenStr(token);
+    }
+    std::cout << std::endl;
 
     size_t pos = 0;
 
@@ -111,7 +119,7 @@ ASTNode* TreeGenerator::parseAssignStatement(std::vector<Token> tokens, size_t& 
             throw std::runtime_error("Expected ']'");
         pos++;
 
-        var = new ArrayGetNode(varName, expr);
+        var = new ArrayGetNode(new IdentifierNode(varName), expr);
     } else {
         var = new IdentifierNode(varName);
     }
@@ -201,6 +209,8 @@ ASTNode* TreeGenerator::parseStatement(std::vector<Token> tokens, size_t& pos) {
         return parseIf(tokens, pos);
     } else if (tokens[pos].type == TokenType::KeywordWhile) {
         return parseWhile(tokens, pos);
+    } else if (tokens[pos].type == TokenType::KeywordBreak) {
+        return parseBreak(tokens, pos);
     } else if (tokens[pos].type == TokenType::KeywordReturn) {
         return parseReturn(tokens, pos);
     } else if (tokens[pos].type == TokenType::Identifier) {
@@ -266,6 +276,18 @@ ASTNode* TreeGenerator::parseWhile(std::vector<Token> tokens, size_t& pos) {
     ASTNode* body = parseBlock(tokens, pos);
 
     return new WhileNode(condition, body);
+}
+
+ASTNode* TreeGenerator::parseBreak(std::vector<Token> tokens, size_t& pos) {
+    if (tokens[pos].type != TokenType::KeywordBreak)
+        throw std::runtime_error("Expected 'break'");
+    pos++;
+
+    if (tokens[pos].type != TokenType::Semicolon)
+        throw std::runtime_error("Expected ';'");
+    pos++;
+
+    return new BreakNode();
 }
 
 ASTNode* TreeGenerator::parseBlock(std::vector<Token> tokens, size_t& pos) {
@@ -390,7 +412,7 @@ ASTNode* TreeGenerator::parseReturn(std::vector<Token> tokens, size_t& pos) {
 ASTNode* TreeGenerator::parseArrayGet(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::Identifier)
         throw std::runtime_error("Expected identifier");
-    std::string name = tokens[pos].value;
+    ASTNode* object = new IdentifierNode(tokens[pos].value);
     pos++;
 
     if (tokens[pos].type != TokenType::LBracket)
@@ -403,13 +425,13 @@ ASTNode* TreeGenerator::parseArrayGet(std::vector<Token> tokens, size_t& pos) {
         throw std::runtime_error("Expected ']'");
     pos++;
 
-    return new ArrayGetNode(name, expr);
+    return new ArrayGetNode(object, expr);
 }
 
-ASTNode* TreeGenerator::parseArraySize(std::vector<Token> tokens, size_t& pos) {
+ASTNode* TreeGenerator::parseMethodCall(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::Identifier)
         throw std::runtime_error("Expected identifier");
-    std::string name = tokens[pos].value;
+    IdentifierNode* objectNode = new IdentifierNode(tokens[pos].value);
     pos++;
 
     if (tokens[pos].type != TokenType::Dot)
@@ -418,19 +440,30 @@ ASTNode* TreeGenerator::parseArraySize(std::vector<Token> tokens, size_t& pos) {
 
     if (tokens[pos].type != TokenType::Identifier)
         throw std::runtime_error("Expected identifier");
-    if (tokens[pos].value != "size")
-        throw std::runtime_error("Expected 'size'");
+    std::string methodName = tokens[pos].value;
     pos++;
 
     if (tokens[pos].type != TokenType::LParen)
         throw std::runtime_error("Expected '('");
     pos++;
 
+    std::vector<ASTNode*> args;
+    while (tokens[pos].type != TokenType::RParen) {
+        args.push_back(parsePrimary(tokens, pos));
+
+        if (tokens[pos].type == TokenType::Comma)
+            pos++;
+    }
+
     if (tokens[pos].type != TokenType::RParen)
         throw std::runtime_error("Expected ')'");
     pos++;
 
-    return new ArraySizeNode(name);
+    // if (tokens[pos].type != TokenType::Semicolon)
+    //     throw std::runtime_error("Expected ';'");
+    // pos++;
+
+    return new MethodCallNode(objectNode, methodName, args);
 }
 
 ASTNode* TreeGenerator::parseExpression(std::vector<Token> tokens, size_t& pos) {
@@ -506,7 +539,6 @@ ASTNode* TreeGenerator::parseEquality(std::vector<Token> tokens, size_t& pos) {
 
 ASTNode* TreeGenerator::parseComparsion(std::vector<Token> tokens, size_t& pos) {
     ASTNode* node = parseTerm(tokens, pos);
-
     while (pos < tokens.size() && 
           (tokens[pos].type == TokenType::LogicGreater || tokens[pos].type == TokenType::LogicGreaterEqual ||
            tokens[pos].type == TokenType::LogicLess || tokens[pos].type == TokenType::LogicLessEqual)) {
@@ -549,7 +581,8 @@ ASTNode* TreeGenerator::parsePrimary(std::vector<Token> tokens, size_t& pos) {
         } else if (pos + 1 < tokens.size() && tokens[pos + 1].type == TokenType::LBracket) {
             return parseArrayGet(tokens, pos);
         } else if (pos + 1 < tokens.size() && tokens[pos + 1].type == TokenType::Dot) {
-            return parseArraySize(tokens, pos);
+            // return parseArraySize(tokens, pos);
+            return parseMethodCall(tokens, pos);
         } else {
             std::string name = tokens[pos].value;
             pos++;
@@ -597,6 +630,8 @@ std::vector<Token> TreeGenerator::tokenize(const std::string& input) {
                 tokens.push_back({TokenType::KeywordElse, word});
             } else if (word == "while") {
                 tokens.push_back({TokenType::KeywordWhile, word});
+            } else if (word == "break") {
+                tokens.push_back({TokenType::KeywordBreak, word});
             } else if (word == "true" || word == "false") {
                 tokens.push_back({TokenType::Boolean, word});
             } else if (word == "void") {
