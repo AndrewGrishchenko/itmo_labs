@@ -78,6 +78,10 @@ std::string TreeGenerator::tokenStr(Token token) {
             return "RBracket\n";
         case TokenType::Dot:
             return "Dot\n";
+        case TokenType::KeywordChar:
+            return "KeywordChar\n";
+        case TokenType::Char:
+            return "Char\n";
         default:
             return "Unknown\n";
     }
@@ -141,6 +145,8 @@ ASTNode* TreeGenerator::parseVarStatement(std::vector<Token> tokens, size_t& pos
     std::string type;
     if (tokens[pos].type == TokenType::KeywordInt)
         type = "int";
+    else if (tokens[pos].type == TokenType::KeywordChar)
+        type = "char";
     else if (tokens[pos].type == TokenType::KeywordString)
         type = "string";
     else if (tokens[pos].type == TokenType::KeywordBool)
@@ -194,6 +200,7 @@ ASTNode* TreeGenerator::parseStatement(std::vector<Token> tokens, size_t& pos) {
     ASTNode* node;
     
     if (tokens[pos].type == TokenType::KeywordInt ||
+        tokens[pos].type == TokenType::KeywordChar ||
         tokens[pos].type == TokenType::KeywordString ||
         tokens[pos].type == TokenType::KeywordBool || 
         tokens[pos].type == TokenType::KeywordVoid ||
@@ -310,6 +317,7 @@ ASTNode* TreeGenerator::parseBlock(std::vector<Token> tokens, size_t& pos) {
 
 ASTNode* TreeGenerator::parseParameter(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::KeywordInt &&
+        tokens[pos].type != TokenType::KeywordChar &&
         tokens[pos].type != TokenType::KeywordString &&
         tokens[pos].type != TokenType::KeywordBool &&
         tokens[pos].type != TokenType::KeywordIntArr)
@@ -327,6 +335,7 @@ ASTNode* TreeGenerator::parseParameter(std::vector<Token> tokens, size_t& pos) {
 
 ASTNode* TreeGenerator::parseFunction(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type != TokenType::KeywordInt &&
+        tokens[pos].type != TokenType::KeywordChar &&
         tokens[pos].type != TokenType::KeywordString &&
         tokens[pos].type != TokenType::KeywordBool &&
         tokens[pos].type != TokenType::KeywordVoid &&
@@ -567,6 +576,10 @@ ASTNode* TreeGenerator::parsePrimary(std::vector<Token> tokens, size_t& pos) {
         int value = std::stoi(tokens[pos].value);
         pos++;
         return new NumberLiteralNode(value);
+    } else if (tokens[pos].type == TokenType::Char) {
+        char value = tokens[pos].value[0];
+        pos++;
+        return new CharLiteralNode(value);
     } else if (tokens[pos].type == TokenType::String) {
         std::string value = tokens[pos].value;
         pos++;
@@ -654,6 +667,8 @@ std::vector<Token> TreeGenerator::tokenize(const std::string& input) {
 
                 tokens.push_back({TokenType::KeywordInt, word});
                 continue;
+            } else if (word == "char") {
+                tokens.push_back({TokenType::KeywordChar, word});
             } else if (word == "string") {
                 tokens.push_back({TokenType::KeywordString, word});
             } else if (word == "bool") {
@@ -687,6 +702,53 @@ std::vector<Token> TreeGenerator::tokenize(const std::string& input) {
                 throw std::runtime_error("Expected \"");
             }
 
+            continue;
+        }
+
+        if (current == '\'') {
+            pos++;
+
+            if (pos >= input.size())
+                throw std::runtime_error("expected \'");
+
+            char char_value;
+
+            if (pos < input.size() && input[pos] == '\\') {
+                pos++;
+
+                if (pos >= input.size())
+                    throw std::runtime_error("incomplete char literal");
+
+                switch (input[pos]) {
+                    case 'n':
+                        char_value = '\n';
+                        break;
+                    case 't':
+                        char_value = '\t';
+                        break;
+                    case '\\':
+                        char_value = '\\';
+                        break;
+                    case '\'':
+                        char_value = '\'';
+                        break;
+                    default:
+                        throw std::runtime_error("unsuppoerted escapte-sequence: " + std::to_string(input[pos]));
+                }
+            } else {
+                if (pos >= input.size())
+                    throw std::runtime_error("incomplete char literal");
+
+                char_value = input[pos];
+            }
+            pos++;
+
+            if (pos >= input.size() || input[pos] != '\'')
+                throw std::runtime_error("expected \'");
+            pos++;
+
+            tokens.push_back({TokenType::Char, std::string(1, char_value)});
+            std::cout << "saved " << std::string(1, char_value) << "\n";
             continue;
         }
 

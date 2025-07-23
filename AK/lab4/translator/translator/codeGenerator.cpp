@@ -60,6 +60,12 @@ void CodeGenerator::visit(NumberLiteralNode& node) {
     emitCode("ldi " + std::to_string(node.number));
 }
 
+void CodeGenerator::visit(CharLiteralNode& node) {
+    int char_code = static_cast<int>(node.value);
+
+    emitCode("ldi " + std::to_string(char_code));
+}
+
 void CodeGenerator::visit(StringLiteralNode& node) {
     std::string strLabel = "str_" + std::to_string(strCounter++);
 
@@ -597,10 +603,7 @@ void CodeGenerator::processReservedFunctionCall(FunctionCallNode& node) {
     std::vector<std::string> argTypes;
     for (const auto& argExpr : node.parameters)
         argTypes.push_back(static_cast<ExpressionNode*>(argExpr)->resolvedType);
-    std::cout << "process reserved\n";
     std::string expectedReturnType = evalType(&node);
-
-    
 
     const FunctionSignature* signature = findReservedFunction(node.name, argTypes, expectedReturnType);
     if (!signature)
@@ -617,6 +620,8 @@ void CodeGenerator::processReservedFunctionCall(FunctionCallNode& node) {
 
         if (returnType == "int") {
             emitCode("call read_int");
+        } else if (returnType == "char") {
+            emitCode("call read_char");
         } else if (returnType == "string") {
             emitCode("call read_string");
         } else if (returnType == "int[]") {
@@ -630,6 +635,8 @@ void CodeGenerator::processReservedFunctionCall(FunctionCallNode& node) {
 
         if (typeToPrint == "int") {
             emitCode("call write_int");
+        } else if (typeToPrint == "char") {
+            emitCode("call write_char");
         } else if (typeToPrint == "string") {
             emitCode("call write_string");
         } else if (typeToPrint == "int[]") {
@@ -686,6 +693,8 @@ std::string CodeGenerator::evalType(ASTNode* node) {
     switch (node->nodeType) {
         case ASTNodeType::NumberLiteral:
             return "int";
+        case ASTNodeType::CharLiteral:
+            return "char";
         case ASTNodeType::StringLiteral:
             return "string";
         case ASTNodeType::BooleanLiteral:
@@ -1316,11 +1325,12 @@ std::string CodeGenerator::assembleCode() {
     result << "\n.text\n";
     result << ".org 0x20\n";
     result << interrupts;
-    result << read_token;
+    result << read_char;
     result << read_int;
     result << write_to_buf;
     result << read_string;
     result << read_arr;
+    result << write_char;
     result << write_int;
     result << write_string;
     result << write_arr;

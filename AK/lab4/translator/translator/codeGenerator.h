@@ -20,6 +20,7 @@ class CodeGenerator : ASTVisitor {
 
         void visit(VarDeclNode& node) override;
         void visit(NumberLiteralNode& node) override;
+        void visit(CharLiteralNode& node) override;
         void visit(StringLiteralNode& node) override;
         void visit(BooleanLiteralNode& node) override;
         void visit(VoidLiteralNode& node) override;
@@ -82,15 +83,17 @@ class CodeGenerator : ASTVisitor {
         
         const std::unordered_map<std::string, std::vector<FunctionSignature>> reservedFunctions = {
             {"in", {
+                {"int", {"int"}},
+                {"int", {}},
+                {"char", {}},
                 {"string", {"int"}},
                 {"string", {}},
                 {"int[]", {"int"}},
-                {"int[]", {}},
-                {"int", {"int"}},
-                {"int", {}}
+                {"int[]", {}}
             }},
             {"out", {
                 {"void", {"int"}},
+                {"void", {"char"}},
                 {"void", {"int[]"}},
                 {"void", {"string"}}
             }}
@@ -98,6 +101,10 @@ class CodeGenerator : ASTVisitor {
 
         const std::unordered_map<std::string, std::unordered_map<std::string, FunctionSignature>> typeMethods = {
             {"int[]", {
+                {"size", {"int", {}}}
+            }},
+
+            {"string", {
                 {"size", {"int", {}}}
             }}
         };
@@ -184,10 +191,10 @@ class CodeGenerator : ASTVisitor {
                                  "  st token\n"
                                  "  iret\n\n";
 
-        std::string read_token = "read_token:\n"
+        std::string read_char = "read_char:\n"
                                  "  ei\n"
                                  "  ld token\n"
-                                 "  jz read_token\n"
+                                 "  jz read_char\n"
                                  "  di\n"
                                  "  ret\n\n";
 
@@ -195,7 +202,7 @@ class CodeGenerator : ASTVisitor {
                                "  ldi 0\n"
                                "  st read_int_val\n"
                                "read_int_do:\n"
-                               "  call read_token\n \n"
+                               "  call read_char\n \n"
                                "  ld token\n"
                                "  cmp const_eot\n"
                                "  jz read_int_stop\n\n"
@@ -244,7 +251,7 @@ class CodeGenerator : ASTVisitor {
                                   "  ld input_buffer_i\n"
                                   "  cmp input_buffer_size\n"
                                   "  jz read_string_overflow\n\n"
-                                  "  call read_token\n\n"
+                                  "  call read_char\n\n"
                                   "  ld token\n"
                                   "  cmp const_eot\n"
                                   "  jz read_string_ret\n\n"
@@ -297,6 +304,10 @@ class CodeGenerator : ASTVisitor {
                                "  call write_to_buf\n\n"
                                "  ld input_ptr\n\n"
                                "  ret\n\n";
+
+        std::string write_char = "write_char:\n"
+                                 "  sta output_addr\n"
+                                 "  ret\n\n";
 
         std::string write_int = "write_int:\n"
                                 "  st read_int_val\n"

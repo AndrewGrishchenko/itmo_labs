@@ -21,6 +21,7 @@ enum class TokenType {
 
     // Data types
     KeywordInt,
+    KeywordChar,
     KeywordString,
     KeywordBool,
     KeywordIntArr,
@@ -29,6 +30,7 @@ enum class TokenType {
     Identifier,
     Equals,
     Number,
+    Char,
     String,
     Boolean,
 

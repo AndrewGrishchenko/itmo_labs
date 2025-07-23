@@ -11,6 +11,7 @@ enum class ASTNodeType {
     VarDecl,
     
     NumberLiteral,
+    CharLiteral,
     StringLiteral,
     BooleanLiteral,
     VoidLiteral,
@@ -72,6 +73,17 @@ struct NumberLiteralNode : ExpressionNode {
     
     NumberLiteralNode(int number)
         : ExpressionNode(ASTNodeType::NumberLiteral), number(number) { }
+
+    void accept(ASTVisitor& visitor) override {
+        visitor.visit(*this);
+    }
+};
+
+struct CharLiteralNode : ExpressionNode {
+    char value;
+
+    CharLiteralNode(char value)
+        : ExpressionNode(ASTNodeType::CharLiteral), value(value) { }
 
     void accept(ASTVisitor& visitor) override {
         visitor.visit(*this);

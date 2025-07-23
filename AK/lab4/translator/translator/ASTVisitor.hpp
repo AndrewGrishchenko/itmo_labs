@@ -2,6 +2,7 @@
 
 struct VarDeclNode;
 struct NumberLiteralNode;
+struct CharLiteralNode;
 struct StringLiteralNode;
 struct BooleanLiteralNode;
 struct VoidLiteralNode;
@@ -26,6 +27,7 @@ class ASTVisitor {
         virtual ~ASTVisitor() = default;
         virtual void visit(VarDeclNode& node) = 0;
         virtual void visit(NumberLiteralNode& node) = 0;
+        virtual void visit(CharLiteralNode& node) = 0;
         virtual void visit(StringLiteralNode& node) = 0;
         virtual void visit(BooleanLiteralNode& node) = 0;
         virtual void visit(VoidLiteralNode& node) = 0;

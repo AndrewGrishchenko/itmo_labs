@@ -30,6 +30,7 @@ class SemanticAnalyzer : ASTVisitor {
 
         void visit(VarDeclNode& node) override;
         void visit(NumberLiteralNode& node) override;
+        void visit(CharLiteralNode& node) override;
         void visit(StringLiteralNode& node) override;
         void visit(BooleanLiteralNode& node) override;
         void visit(VoidLiteralNode& node) override;
@@ -64,15 +65,17 @@ class SemanticAnalyzer : ASTVisitor {
         
         const std::unordered_map<std::string, std::vector<FunctionSignature>> reservedFunctions = {
             {"in", {
+                {"int", {"int"}},
+                {"int", {}},
+                {"char", {}},
                 {"string", {"int"}},
                 {"string", {}},
                 {"int[]", {"int"}},
-                {"int[]", {}},
-                {"int", {"int"}},
-                {"int", {}}
+                {"int[]", {}}
             }},
             {"out", {
                 {"void", {"int"}},
+                {"void", {"char"}},
                 {"void", {"int[]"}},
                 {"void", {"string"}}
             }}
@@ -80,6 +83,10 @@ class SemanticAnalyzer : ASTVisitor {
 
         const std::unordered_map<std::string, std::unordered_map<std::string, FunctionSignature>> typeMethods = {
             {"int[]", {
+                {"size", {"int", {}}}
+            }},
+
+            {"string", {
                 {"size", {"int", {}}}
             }}
         };

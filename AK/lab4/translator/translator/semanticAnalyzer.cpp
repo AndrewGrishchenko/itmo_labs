@@ -37,6 +37,12 @@ void SemanticAnalyzer::visit(NumberLiteralNode& node) {
     this->lastVisitedExpression = &node;
 }
 
+void SemanticAnalyzer::visit(CharLiteralNode& node) {
+    node.resolvedType = "char";
+
+    this->lastVisitedExpression = &node;
+}
+
 void SemanticAnalyzer::visit(StringLiteralNode& node) {
     node.resolvedType = "string";
 
@@ -71,7 +77,8 @@ void SemanticAnalyzer::visit(ArrayGetNode& node) {
     node.object->accept(*this);
     std::string objectType = this->lastVisitedExpression->resolvedType;
 
-    if (objectType != "int[]")
+    if (objectType != "int[]" &&
+        objectType != "string")
         throw std::runtime_error("subscripted value is not array");
     
     node.index->accept(*this);
@@ -80,7 +87,10 @@ void SemanticAnalyzer::visit(ArrayGetNode& node) {
     if (indexType != "int")
         throw std::runtime_error("array subscript is not int");
     
-    node.resolvedType = "int";
+    if (objectType == "int[]")
+        node.resolvedType = "int";
+    else if (objectType == "string")
+        node.resolvedType = "char";
 
     this->lastVisitedExpression = &node;
 }
