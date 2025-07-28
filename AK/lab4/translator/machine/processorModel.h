@@ -544,10 +544,11 @@ class IOSimulator {
         }
 
         void output(const std::string& data) {
+            std::cout << "outputFile: " << outputFile << std::endl;
             if (outputFile)
                 (*outputFile) << data;
         }
-
+        // TODO: redo
         void output(char c) {
             if (outputFile)
                 (*outputFile) << c;
@@ -578,6 +579,7 @@ class IOSimulator {
                 int token = memory->read(output_address);
                 std::cout << "got token " << static_cast<char>(token) << std::endl;
                 outputSchedule.push_back({tick, static_cast<char>(token)});
+                output(static_cast<char>(token));
                 memory->write(output_address, 0);
 
                 // if (!mixed) {

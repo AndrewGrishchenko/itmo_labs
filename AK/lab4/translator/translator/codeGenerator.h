@@ -310,6 +310,7 @@ class CodeGenerator : ASTVisitor {
                                  "  ret\n\n";
 
         std::string write_int = "write_int:\n"
+                                "  jz write_int_zero\n"
                                 "  st read_int_val\n"
                                 "  ldi 0\n"
                                 "  st write_int_count\n"
@@ -334,6 +335,9 @@ class CodeGenerator : ASTVisitor {
                                 "  add const_48\n"
                                 "  sta output_addr\n\n"
                                 "  jmp write_int_write\n"
+                                "write_int_zero:\n"
+                                "  add const_48\n"
+                                "  sta output_addr\n"
                                 "write_int_ret:\n"
                                 "  ret\n\n";
 

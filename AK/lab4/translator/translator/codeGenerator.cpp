@@ -577,12 +577,21 @@ void CodeGenerator::visit(FunctionCallNode& node) {
 }
 
 void CodeGenerator::visit(ReturnNode& node) {
-    emitCode("ld temp_ret_addr");
-    emitCode("push");
+    // emitCode("ld temp_ret_addr");
+    // emitCode("push");
     
+    // if (node.returnValue)
+    //     node.returnValue->accept(*this);
+
+    // emitCode("ret");
+
     if (node.returnValue)
         node.returnValue->accept(*this);
 
+    emitCode("st temp_right");
+    emitCode("ld temp_ret_addr");
+    emitCode("push");
+    emitCode("ld temp_right");
     emitCode("ret");
 }
 
@@ -677,6 +686,8 @@ void CodeGenerator::processRegularFunctionCall(FunctionCallNode& node) {
     emitCode("call " + mangledLabelToCall);
 
     if (currentFunction) {
+        emitCode("st temp_right");
+
         for (int i = currentFunction->params.size() - 1; i >= 0; i--) {
             const auto& param = currentFunction->params[i];
             std::string argLabel = "arg_" + currentFunction->label + "_" + param.second;
@@ -686,6 +697,8 @@ void CodeGenerator::processRegularFunctionCall(FunctionCallNode& node) {
 
         emitCode("pop");
         emitCode("st temp_ret_addr");
+
+        emitCode("ld temp_right");
     }
 }
 
