@@ -1,0 +1,221 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="WebAppLab3" default="build" basedir=".">
+
+    <!-- Подключаем свойства -->
+    <property name="lib.dir" value="lib"/>
+    <property name="src.dir" value="src/main/java"/>
+    <property name="src.test.dir" value="src/test/java"/>
+    <property file="build.properties"/>
+    <property name="build.test.classes.dir" value="${build.dir}/test-classes"/>
+    <property name="build.dir" value="build"/>
+    <property name="build.classes.dir" value="${build.dir}/classes"/>
+    <property name="build.report.dir" value="${build.dir}/report"/>
+
+    <!-- Пути -->
+    <path id="project.classpath">
+        <fileset dir="${lib.dir}" includes="**/*.jar"/>
+    </path>
+
+    <path id="compile.classpath">
+        <fileset dir="${lib.dir}" includes="**/*.jar"/>
+    </path>
+
+    <!-- Класс-патч для тестов (включая скомпилированные классы и библиотеки) -->
+    <path id="test.classpath">
+        <pathelement location="${build.classes.dir}"/>
+        <fileset dir="${lib.dir}" includes="**/*.jar"/>
+    </path>
+
+    <!-- <taskdef name="junit" 
+             classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask">
+        <classpath>
+            <fileset dir="lib">
+                <include name="junit-4.13.2.jar"/>
+                <include name="hamcrest-core-1.3.jar"/>
+                <include name="ant-junit.jar"/>
+                <include name="ant.jar"/>
+            </fileset>
+        </classpath>
+    </taskdef> -->
+
+    <taskdef name="junit" 
+         classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask"
+         classpath="${lib.dir}/ant-junit.jar:${lib.dir}/junit-4.13.2.jar:${lib.dir}/hamcrest-core-1.3.jar"/>
+
+    <!-- <taskdef name="junit" 
+            classname="org.apache.tools.ant.taskdefs.optional.junit.JUnitTask" 
+            classpathref="test.classpath"/> -->
+
+
+
+    <taskdef name="scp" classname="org.apache.tools.ant.taskdefs.optional.ssh.Scp">
+        <classpath>
+            <fileset dir="lib">
+                <include name="jsch-*.jar"/>
+                <include name="ant-jsch-*.jar"/>
+            </fileset>
+        </classpath>
+    </taskdef>
+
+
+    <!-- Компиляция -->
+    <target name="compile">
+        <mkdir dir="${build.classes.dir}" />
+        <javac srcdir="${src.dir}" destdir="${build.classes.dir}" includeantruntime="false" encoding="UTF-8">
+            <classpath refid="compile.classpath"/>
+        </javac>
+        <!-- Копируем ресурсы (например, persistence.xml) -->
+        <copy todir="${build.classes.dir}">
+            <fileset dir="${resources.dir}" />
+        </copy>
+    </target>
+
+    <!-- Сборка jar -->
+    <target name="build" depends="compile">
+        <mkdir dir="${dist.dir}" />
+        <jar destfile="${dist.dir}/webapp-${version}.jar" basedir="${classes.dir}">
+            <manifest>
+                <attribute name="Main-Class" value="${main.class}" />
+                <attribute name="Implementation-Version" value="${version}" />
+            </manifest>
+        </jar>
+    </target>
+
+    <!-- Очистка -->
+    <target name="clean">
+        <delete dir="${build.dir}" />
+    </target>
+
+
+    <target name="compile-tests" depends="compile">
+        <mkdir dir="${build.test.classes.dir}"/>
+        <javac srcdir="${src.test.dir}" destdir="${build.test.classes.dir}" includeantruntime="false" encoding="UTF-8">
+            <classpath refid="test.classpath"/>
+        </javac>
+    </target>
+
+    <!-- <target name="test" depends="build">
+        <mkdir dir="${build.classes.dir}"/>
+        <javac srcdir="${src.test.dir}" destdir="${build.classes.dir}" includeantruntime="false" encoding="UTF-8">
+            <classpath refid="test.classpath"/>
+        </javac>
+        
+        <java classname="org.junit.runner.JUnitCore" fork="true" failonerror="true">
+            <classpath>
+                <pathelement location="${build.classes.dir}"/>
+                <fileset dir="${lib.dir}" includes="**/*.jar"/>
+            </classpath>
+            <arg value="com.andrew.db.PointServiceTest"/>
+        </java>
+    </target> -->
+
+
+    <target name="test" depends="compile">
+        <mkdir dir="${build.classes.dir}"/>
+        <javac srcdir="${src.test.dir}" destdir="${build.classes.dir}" includeantruntime="false" encoding="UTF-8">
+            <classpath refid="test.classpath"/>
+        </javac>
+
+        <!-- <mkdir dir="${build.report.dir}"/> -->
+
+        <junit printsummary="yes" haltonfailure="no">
+
+            <classpath refid="test.classpath" />
+            <classpath location="${src.test.dir}" />
+                
+            <test name="com.andrew.db.PointServiceTest" 
+                haltonfailure="no">
+                <!-- <formatter type="plain" /> -->
+                <!-- <formatter type="xml" /> -->
+            </test>
+                
+        </junit>
+    </target>
+
+
+    <!-- Генерация Javadoc и добавление MD5/SHA-1 в манифест -->
+    <target name="doc" depends="build">
+        <!-- Создание папки для документации -->
+        <mkdir dir="${doc.dir}" />
+
+        <!-- Генерация Javadoc -->
+        <javadoc sourcepath="${src.dir}" destdir="${doc.dir}" classpathref="project.classpath" use="true" author="true" version="true" encoding="UTF-8">
+            <doctitle>JSF Project Documentation</doctitle>
+        </javadoc>
+
+        <!-- Копируем Javadoc в JAR -->
+        <zip destfile="${dist.dir}/webapp-${version}-with-docs.jar">
+            <zipfileset src="${dist.dir}/webapp-${version}.jar"/>
+            <zipfileset dir="${doc.dir}" prefix="javadoc"/>
+        </zip>
+
+
+        <!-- Вычисляем MD5 и SHA-1 -->
+        <checksum file="${dist.dir}/webapp-${version}.jar" algorithm="MD5" property="jar.md5" />
+        <checksum file="${dist.dir}/webapp-${version}.jar" algorithm="SHA-1" property="jar.sha1" />
+
+        <!-- Создаём манифест с хешами -->
+        <echo file="${manifest.file}" append="true">
+    MD5-Digest: ${jar.md5}
+    SHA1-Digest: ${jar.sha1}
+        </echo>
+
+    </target>
+
+    <target name="scp" depends="build">
+        <scp 
+            file="${dist.dir}/webapp-${version}.jar"
+            todir="${scp.user}@${scp.host}:${scp.remote.dir}"
+            port="${scp.port}"
+            keyfile="${scp.identity.file}"
+            trust="true"
+            verbose="true"
+        />
+    </target>
+
+    <target name="music" depends="build">
+        <exec executable="bash">
+            <arg value="-c"/>
+            <arg value="if [ $(( RANDOM % 2 )) -eq 0 ]; then mpg123 ${basedir}/src/main/resources/music1.mp3; else mpg123 ${basedir}/src/main/resources/music2.mp3; fi"/>
+        </exec>
+    </target>
+
+    <target name="xml">
+        <xmlvalidate lenient="yes" failonerror="true">
+            <fileset dir="${basedir}">
+                <include name="**/*.xml"/>
+            </fileset>
+        </xmlvalidate>
+    </target>
+
+    <target name="native2ascii">
+        <mkdir dir="build/converted" />
+
+        <native2ascii encoding="UTF-8" src="src/main/resources" dest="build/converted">
+            <include name="**/*.properties" />
+        </native2ascii>
+    </target>
+
+    <target name="report" depends="test">
+        <mkdir dir="${build.report.dir}"/>
+
+        <junit printsummary="yes" haltonfailure="no">
+
+            <classpath refid="test.classpath" />
+            <classpath location="${src.test.dir}" />
+                
+            <test name="com.andrew.db.PointServiceTest" 
+                haltonfailure="no" todir="${build.report.dir}">
+                <formatter type="plain" />
+                <formatter type="xml" />
+            </test>
+                
+        </junit>
+    </target>
+
+
+
+
+
+
+</project>

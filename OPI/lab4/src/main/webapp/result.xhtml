@@ -1,0 +1,36 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:p="http://primefaces.org/ui"
+    xmlns:f="http://java.sun.com/jsf/core">
+    <h:head>
+        <meta charset="UTF-8"/>
+    </h:head>
+    <h:body>
+        <div style="text-align: center">
+            <h:commandButton value="Очистить историю" styleClass="button">
+                <f:ajax render=":content" listener="#{formBean.clearPoints()}"/>
+            </h:commandButton>
+        </div>
+
+        <p:dataTable value="#{tableBean.points}" var="point" rendered="#{not empty tableBean.points}" styleClass="records-table" id="records">
+            <p:column headerText="X" styleClass="table-header">
+                <h:outputText value="#{point.x}"/>
+            </p:column>
+            <p:column headerText="Y" styleClass="table-header">
+                <h:outputText value="#{point.y}"/>
+            </p:column>
+            <p:column headerText="Текущее время" styleClass="table-header">
+                <h:outputText value="#{point.curTime}"/>
+            </p:column>
+            <p:column headerText="R" styleClass="table-header">
+                <h:outputText value="#{point.r}"/>
+            </p:column>
+            <p:column headerText="Время исполнения" styleClass="table-header">
+                <h:outputText value="#{point.execTime} мкс"/>
+            </p:column>
+            <p:column headerText="Результат попадания" styleClass="table-header">
+                <h:outputText value="#{point.hit ? 'Hit' : 'Miss'}" style="#{point.hit ? 'color: green' : 'color: red'}"/>
+            </p:column>
+        </p:dataTable>
+    </h:body>
+</html>

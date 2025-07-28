@@ -1,0 +1,176 @@
+<html xmlns="http://www.w3.org/1999/xhtml"
+    xmlns:h="http://java.sun.com/jsf/html"
+    xmlns:ui="http://java.sun.com/jsf/facelets"
+    xmlns:f="http://java.sun.com/jsf/core"
+    xmlns:p="http://primefaces.org/ui">
+    <h:head>
+        <title>#{bundle['app.title']}</title>
+        <meta charset="UTF-8"/>
+        <h:outputScript library="js" name="script.js"/>
+    </h:head>
+    <h:body>
+        <ui:include src="header.xhtml"/>
+
+        <div style="text-align: center;">
+            <h:button styleClass="button-big" value="#{bundle['label.on_start']}" outcome="index.xhtml"/>
+        </div>
+
+        <h:panelGroup id="content">
+            <table id="content-table" class="content-table">
+                <tr class="content-cell">
+                    <td scope="col">
+                        <div id="svg-container" class="svg-container">
+                            <svg id="svg" width="600" height="600" viewBox="-7 -7 14 14">
+                                <polygon fill="#F2476A" points="#{figureBean.fig1}" id="fig1"/>
+                                <polygon fill="#F2476A" points="#{figureBean.fig2}" id="fig2"/>
+                                <path fill="#F2476A" d="#{figureBean.fig3}" id="fig3"/>
+
+                                <line stroke="black" stroke-width="0.05" x1="-7" y1="0" x2="7" y2="0"/>
+                                <line stroke="black" stroke-width="0.05" x1="0" y1="-7" x2="0" y2="7"/>
+                                
+                                <line stroke="black" stroke-width="0.05" x1="-6" y1="-0.2" x2="-6" y2="0.2"/>
+                                <line stroke="black" stroke-width="0.05" x1="-5" y1="-0.2" x2="-5" y2="0.2"/>
+                                <line stroke="black" stroke-width="0.05" x1="-4" y1="-0.2" x2="-4" y2="0.2"/>
+                                <line stroke="black" stroke-width="0.05" x1="-3" y1="-0.2" x2="-3" y2="0.2"/>
+                                <line stroke="black" stroke-width="0.05" x1="-2" y1="-0.2" x2="-2" y2="0.2"/>
+                                <line stroke="black" stroke-width="0.05" x1="-1" y1="-0.2" x2="-1" y2="0.2"/>
+                                <line stroke="black" stroke-width="0.05" x1="1" y1="-0.2" x2="1" y2="0.2"/>
+                                <line stroke="black" stroke-width="0.05" x1="2" y1="-0.2" x2="2" y2="0.2"/>
+                                <line stroke="black" stroke-width="0.05" x1="3" y1="-0.2" x2="3" y2="0.2"/>
+                                <line stroke="black" stroke-width="0.05" x1="4" y1="-0.2" x2="4" y2="0.2"/>
+                                <line stroke="black" stroke-width="0.05" x1="5" y1="-0.2" x2="5" y2="0.2"/>
+                                <line stroke="black" stroke-width="0.05" x1="6" y1="-0.2" x2="6" y2="0.2"/>
+
+                                <line stroke="black" stroke-width="0.05" x1="-0.2" y1="-6" x2="0.2" y2="-6"/>
+                                <line stroke="black" stroke-width="0.05" x1="-0.2" y1="-5" x2="0.2" y2="-5"/>
+                                <line stroke="black" stroke-width="0.05" x1="-0.2" y1="-4" x2="0.2" y2="-4"/>
+                                <line stroke="black" stroke-width="0.05" x1="-0.2" y1="-3" x2="0.2" y2="-3"/>
+                                <line stroke="black" stroke-width="0.05" x1="-0.2" y1="-2" x2="0.2" y2="-2"/>
+                                <line stroke="black" stroke-width="0.05" x1="-0.2" y1="-1" x2="0.2" y2="-1"/>
+                                <line stroke="black" stroke-width="0.05" x1="-0.2" y1="1" x2="0.2" y2="1"/>
+                                <line stroke="black" stroke-width="0.05" x1="-0.2" y1="2" x2="0.2" y2="2"/>
+                                <line stroke="black" stroke-width="0.05" x1="-0.2" y1="3" x2="0.2" y2="3"/>
+                                <line stroke="black" stroke-width="0.05" x1="-0.2" y1="4" x2="0.2" y2="4"/>
+                                <line stroke="black" stroke-width="0.05" x1="-0.2" y1="5" x2="0.2" y2="5"/>
+                                <line stroke="black" stroke-width="0.05" x1="-0.2" y1="6" x2="0.2" y2="6"/>
+
+                                <text fill="black" x="-6.25" y="0.625" style="font-size: 0.5px;">-6</text>
+                                <text fill="black" x="-5.25" y="0.625" style="font-size: 0.5px;">-5</text>
+                                <text fill="black" x="-4.25" y="0.625" style="font-size: 0.5px;">-4</text>
+                                <text fill="black" x="-3.25" y="0.625" style="font-size: 0.5px;">-3</text>
+                                <text fill="black" x="-2.25" y="0.625" style="font-size: 0.5px;">-2</text>
+                                <text fill="black" x="-1.25" y="0.625" style="font-size: 0.5px;">-1</text>
+                                <text fill="black" x="0.85" y="0.675" style="font-size: 0.5px;">1</text>
+                                <text fill="black" x="1.85" y="0.675" style="font-size: 0.5px;">2</text>
+                                <text fill="black" x="2.85" y="0.675" style="font-size: 0.5px;">3</text>
+                                <text fill="black" x="3.85" y="0.675" style="font-size: 0.5px;">4</text>
+                                <text fill="black" x="4.85" y="0.675" style="font-size: 0.5px;">5</text>
+                                <text fill="black" x="5.85" y="0.675" style="font-size: 0.5px;">6</text>
+
+                                <text fill="black" x="0.3" y="6.125" style="font-size: 0.5px;">-6</text>
+                                <text fill="black" x="0.3" y="5.125" style="font-size: 0.5px;">-5</text>
+                                <text fill="black" x="0.3" y="4.125" style="font-size: 0.5px;">-4</text>
+                                <text fill="black" x="0.3" y="3.125" style="font-size: 0.5px;">-3</text>
+                                <text fill="black" x="0.3" y="2.125" style="font-size: 0.5px;">-2</text>
+                                <text fill="black" x="0.3" y="1.125" style="font-size: 0.5px;">-1</text>
+                                <text fill="black" x="0.3" y="-0.875" style="font-size: 0.5px;">1</text>
+                                <text fill="black" x="0.3" y="-1.875" style="font-size: 0.5px;">2</text>
+                                <text fill="black" x="0.3" y="-2.875" style="font-size: 0.5px;">3</text>
+                                <text fill="black" x="0.3" y="-3.875" style="font-size: 0.5px;">4</text>
+                                <text fill="black" x="0.3" y="-4.875" style="font-size: 0.5px;">5</text>
+                                <text fill="black" x="0.3" y="-5.875" style="font-size: 0.5px;">6</text>
+
+                                <circle fill="yellow" cx="#{figureBean.pointX}" cy="#{figureBean.pointY}" r="0.1" opacity="#{figureBean.pointOpacity}"/>
+
+                                <ui:repeat value="#{tableBean.points}" var="point">
+                                    <circle cx="#{point.x}" cy="#{-point.y}" r="0.1" fill="#{point.hit ? 'green' : 'red'}"/>
+                                </ui:repeat>
+                            </svg>
+                        </div>
+                    </td>
+                    <td scope="col">
+                        <h:form onsubmit="return validateForm()" id="form">
+                            <div class="x-button">
+                                X:
+                                <br/>
+                                <label>
+                                    -3
+                                    <h:selectBooleanCheckbox value="#{selectXBean.selectedM3}" id="x_-3">
+                                        <f:ajax listener="#{selectXBean.checkboxValueChanged(-3)}" render=":content"/>
+                                    </h:selectBooleanCheckbox>
+                                </label>
+                                <label>
+                                    -2
+                                    <h:selectBooleanCheckbox value="#{selectXBean.selectedM2}" id="x_-2">
+                                        <f:ajax listener="#{selectXBean.checkboxValueChanged(-2)}" render=":content"/>
+                                    </h:selectBooleanCheckbox>
+                                </label>
+                                <label>
+                                    -1
+                                    <h:selectBooleanCheckbox value="#{selectXBean.selectedM1}" id="x_-1">
+                                        <f:ajax listener="#{selectXBean.checkboxValueChanged(-1)}" render=":content"/>
+                                    </h:selectBooleanCheckbox>
+                                </label>
+                                <label>
+                                    0
+                                    <h:selectBooleanCheckbox value="#{selectXBean.selected0}" id="x_0">
+                                        <f:ajax listener="#{selectXBean.checkboxValueChanged(0)}" render=":content"/>
+                                    </h:selectBooleanCheckbox>
+                                </label>
+                                <label>
+                                    1
+                                    <h:selectBooleanCheckbox value="#{selectXBean.selected1}" id="x_1">
+                                        <f:ajax listener="#{selectXBean.checkboxValueChanged(1)}" render=":content"/>
+                                    </h:selectBooleanCheckbox>
+                                </label>
+                                <label>
+                                    2
+                                    <h:selectBooleanCheckbox value="#{selectXBean.selected2}" id="x_2">
+                                        <f:ajax listener="#{selectXBean.checkboxValueChanged(2)}" render=":content"/>
+                                    </h:selectBooleanCheckbox>
+                                </label>
+                                <label>
+                                    3
+                                    <h:selectBooleanCheckbox value="#{selectXBean.selected3}" id="x_3">
+                                        <f:ajax listener="#{selectXBean.checkboxValueChanged(3)}" render=":content"/>
+                                    </h:selectBooleanCheckbox>
+                                </label>
+                            </div>
+                            <div class="y-text">
+                                Y: 
+                                <h:inputText value="#{formBean.y}" required="true">
+                                    <f:ajax listener="#{formBean.setY(formBean.y)}" render=":content"/>
+                                </h:inputText>
+                            </div>
+                            <div class="r-radio">
+                                R: 
+                                <h:selectOneRadio value="#{formBean.r}">
+                                    <f:selectItem itemValue="1" itemLabel="1"/>
+                                    <f:selectItem itemValue="2" itemLabel="2"/>
+                                    <f:selectItem itemValue="3" itemLabel="3"/>
+                                    <f:selectItem itemValue="4" itemLabel="4"/>
+                                    <f:selectItem itemValue="5" itemLabel="5"/>
+                                    <f:ajax listener="#{formBean.setR(formBean.r)}" render=":content"/>
+                                </h:selectOneRadio>
+                            </div>
+
+                            <h:inputHidden id="x_hidden" value="#{formBean.x}"/>
+                            <h:inputHidden id="y_hidden" value="#{formBean.y}"/>
+                            <h:inputHidden id="r_hidden" value="#{formBean.r}"/>
+                            <h:commandButton value="#{bundle['label.send']}" onclick="return validateForm();" id="submitButton" styleClass="button">
+                                <f:ajax event="click" render=":content" execute="@form" listener="#{formBean.check}"/>
+                            </h:commandButton>
+
+                            <p:remoteCommand name="updateCoordinates" style="display: none;" update=":content" process="form:x_hidden form:y_hidden"/>
+                            <p:remoteCommand name="checkHit" actionListener="#{formBean.check}" style="display: none;" update=":content"/>
+
+                            <!-- <button id="reset_button" type="reset">Очистить</button> -->
+                        </h:form>
+                    </td>
+                </tr>
+            </table>
+
+            <ui:include src="result.xhtml"/>
+        </h:panelGroup>
+    </h:body>
+</html>
