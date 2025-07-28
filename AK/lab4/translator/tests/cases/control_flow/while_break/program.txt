@@ -1,0 +1,10 @@
+int i = 10;
+while (i > 0) {
+    if (i == 4) {
+        break;
+    }
+
+    out(i);
+    out(' ');
+    i = i - 1;
+}

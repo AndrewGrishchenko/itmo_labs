@@ -495,7 +495,6 @@ void CodeGenerator::visit(BreakNode& node) {
 }
 
 void CodeGenerator::visit(BlockNode& node) {
-    std::cout << "visited block node\n";
     for (const auto& child : node.children)
         child->accept(*this);
 }
@@ -720,11 +719,6 @@ std::string CodeGenerator::evalType(ASTNode* node) {
             return "int";
         case ASTNodeType::Identifier: {
             IdentifierNode* identifierNode = static_cast<IdentifierNode*>(node);
-            std::cout << "identifier\n";
-            std::cout << "variables\n";
-            for (auto& v: variables) {
-                std::cout << v.first << " " << v.second << "\n";
-            }
             return variables[getVarLabel(identifierNode->name)];
         }
         case ASTNodeType::BinaryOp: {

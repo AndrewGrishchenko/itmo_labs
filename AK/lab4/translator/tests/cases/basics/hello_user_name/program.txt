@@ -1,0 +1,5 @@
+out("What is your name?\n");
+string name = in();
+out("Hello, ");
+out(name);
+out("!");

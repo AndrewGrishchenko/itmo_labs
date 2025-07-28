@@ -78,8 +78,6 @@ int main(int argc, char* argv[]) {
 
             CodeGenerator codeGenerator;
             code = codeGenerator.generateCode(tree);
-            std::cout << "CODE:\n";
-            std::cout << code << std::endl;
         } else {
             std::ifstream asm_file(args.inputFile);
             std::stringstream buffer;
@@ -92,9 +90,6 @@ int main(int argc, char* argv[]) {
         binarizer.writeToFile(args.outputFile);
 
         std::cout << "Binary program saved to " << args.outputFile << std::endl;
-
-        std::cout << "DUMP:\n";
-        binarizer.dump();
     } catch (const std::exception& ex) {
         std::cerr << ex.what() << std::endl;
     }

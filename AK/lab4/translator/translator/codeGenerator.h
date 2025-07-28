@@ -181,8 +181,8 @@ class CodeGenerator : ASTVisitor {
                            "  input_count: 0\n"
                            "  input_ptr: 0\n\n"
                            "  input_buffer_i: 0\n"
-                           "  input_buffer_size: 10\n"
-                           "  input_buffer: .zero 10\n";
+                           "  input_buffer_size: 20\n"
+                           "  input_buffer: .zero 20\n";
 
         std::string interrupts = "default_interrupt:\n"
                                  "  iret\n"

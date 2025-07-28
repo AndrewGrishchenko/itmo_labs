@@ -1,0 +1,2 @@
+string cat = in();
+out(cat);

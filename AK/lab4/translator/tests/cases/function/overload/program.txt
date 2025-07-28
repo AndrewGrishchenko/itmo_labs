@@ -1,0 +1,16 @@
+void process(int i) {
+    out("Process int: ");
+    out(i);
+    out('\n');
+    return;
+}
+
+void process(string s) {
+    out("Process string: ");
+    out(s);
+    out("\n");
+    return;
+}
+
+process(123);
+process("hello");

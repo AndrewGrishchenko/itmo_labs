@@ -536,7 +536,6 @@ class IOSimulator {
 
         void addInput(IOScheduleEntry entry) {
             inputSchedule.push_back(entry);
-            std::cout << "added input " << entry.token << " at tick " << entry.tick << "\n";
         }
 
         void setMixedOutput(bool mixed) {
@@ -577,7 +576,6 @@ class IOSimulator {
 
             if (memory->read(output_address) != 0x0) {
                 int token = memory->read(output_address);
-                std::cout << "got token " << static_cast<char>(token) << std::endl;
                 outputSchedule.push_back({tick, static_cast<char>(token)});
                 output(static_cast<char>(token));
                 memory->write(output_address, 0);

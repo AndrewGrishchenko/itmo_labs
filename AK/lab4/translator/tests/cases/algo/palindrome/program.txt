@@ -1,0 +1,40 @@
+int max_palindrome = 0;
+int a = 999;
+int b = 0;
+int product = 0;
+
+bool isPalindrome(int number) {
+    int original = number;
+    int reversed = 0;
+    int digit = 0;
+
+    while (number > 0) {
+        digit = number % 10;
+        reversed = reversed * 10 + digit;
+        number = number / 10;
+    }
+
+    return original == reversed;
+}
+
+while (a >= 100) {
+    b = a;
+
+    while (b >= 100) {
+        product = a * b;
+
+        if (product <= max_palindrome) {
+            break;
+        }
+
+        if (isPalindrome(product)) {
+            max_palindrome = product;
+        }
+
+        b = b - 1;
+    }
+
+    a = a - 1;
+}
+
+out(max_palindrome);

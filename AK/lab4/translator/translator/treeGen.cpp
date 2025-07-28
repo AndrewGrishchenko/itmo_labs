@@ -92,12 +92,6 @@ ASTNode* TreeGenerator::makeTree(std::string data) {
 
     std::vector<Token> tokens = tokenize(data);
 
-    std::cout << "TOKENS:\n";
-    for (auto& token : tokens) {
-        std::cout << tokenStr(token);
-    }
-    std::cout << std::endl;
-
     size_t pos = 0;
 
     while (pos < tokens.size() && tokens[pos].type != TokenType::EndOfFile) {
@@ -748,7 +742,6 @@ std::vector<Token> TreeGenerator::tokenize(const std::string& input) {
             pos++;
 
             tokens.push_back({TokenType::Char, std::string(1, char_value)});
-            std::cout << "saved " << std::string(1, char_value) << "\n";
             continue;
         }
 
