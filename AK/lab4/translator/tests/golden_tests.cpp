@@ -30,59 +30,48 @@ void runCommandInDir(const std::string& cmd, const fs::path& dir) {
         throw std::runtime_error("Command failed: " + full);
 }
 
-fs::path makeConfig(const fs::path& caseDir,
-                    const fs::path& inputFile,
-                    const fs::path& outputFile,
-                    const fs::path& binFile) {
-
-    fs::path tempConfig = caseDir / "auto_config.cfg";
-    std::ofstream cfg(tempConfig);
-    if (!cfg) throw std::runtime_error("Failed to write config");
-
-    if (fs::exists(inputFile)) {
-        cfg << "input_file: " << inputFile << "\n";
-        cfg << "input_mode: stream\n";
-        cfg << "schedule_start: 1900\n";
-        cfg << "schedule_offset: 200\n";
-    }
-
-    cfg << "output_file: " << outputFile << "\n";
-
-    return tempConfig;
-}
-
 class GoldenTest : public testing::TestWithParam<std::string> {};
 
 class GoldenTestRunner : public testing::TestWithParam<std::string> {
     protected:
         void RunTest(const std::string& category) {
             std::string caseName = GetParam();
+
             fs::path caseDir = fs::path(TEST_CASES_DIR) / category / caseName;
+            fs::path expectedDir = caseDir / "expected";
 
-            fs::path input = caseDir / "input.txt";
-            fs::path output = caseDir / "output.txt";
-            fs::path program = caseDir / "program.txt";
-            fs::path binary = caseDir / "program.bin";
-            fs::path config = caseDir / "config.cfg";
-            fs::path expected = caseDir / "expected.txt";
+            fs::path configFile = caseDir / "config.cfg";
+            fs::path inputFile = caseDir / "input.txt";
+            fs::path programFile = caseDir / "program.txt";
+            fs::path binaryFile = caseDir / "program.bin";
+            
+            fs::path outputFile = caseDir / "output.txt";
+            fs::path reprFile = caseDir / "repr.txt";
+            fs::path hashFile = caseDir / "hash.txt";
+            
+            fs::path expectedOutputFile = expectedDir / "output.txt";
+            fs::path expectedReprFile = expectedDir / "repr.txt";
+            fs::path expectedHashFile = expectedDir / "hash.txt";
 
-            if (fs::exists(output)) fs::remove(output);
-            if (fs::exists(binary)) fs::remove(binary);
+            runCommand(std::string(TRANSLATOR_PATH) + " " + programFile.string() + " " + binaryFile.string());
+            runCommandInDir(std::string(MACHINE_PATH) + " " + configFile.string() + " " + binaryFile.string(), caseDir);
 
-            runCommand(std::string(TRANSLATOR_PATH) + " " + program.string() + " " + binary.string());
+            std::string actualOutput = readFile(outputFile);
+            std::string expectedOutput = readFile(expectedOutputFile);
+            EXPECT_EQ(actualOutput, expectedOutput);
 
-            fs::path autoConfig = makeConfig(caseDir, input, output, binary);
+            std::string actualRepr = readFile(reprFile);
+            std::string expectedRepr = readFile(expectedReprFile);
+            EXPECT_EQ(actualRepr, expectedRepr);
 
-            runCommandInDir(std::string(MACHINE_PATH) + " auto_config.cfg program.bin", caseDir);
+            std::string actualHash = readFile(hashFile);
+            std::string expectedHash = readFile(expectedHashFile);
+            EXPECT_EQ(actualHash, expectedHash);
 
-            std::string actualOut = readFile(output);
-            std::string expectedOut = readFile(expected);
-
-            EXPECT_EQ(actualOut, expectedOut);
-
-            fs::remove(autoConfig);
-            fs::remove(binary);
-            fs::remove(output);
+            fs::remove(binaryFile);
+            fs::remove(outputFile);
+            fs::remove(reprFile);
+            fs::remove(hashFile);
         }
 };
 
@@ -121,17 +110,11 @@ INSTANTIATE_TEST_SUITE_P(ControlFlow, ControlFlowTests, ::testing::Values(
 ));
 
 INSTANTIATE_TEST_SUITE_P(Function, FunctionTests, ::testing::Values(
-    // "recursion",
+    "recursion",
     "overload"
 ));
 
 INSTANTIATE_TEST_SUITE_P(Algo, AlgoTests, ::testing::Values(
-    "sort"
+    "sort",
+    "palindrome"
 ));
-
-// INSTANTIATE_TEST_SUITE_P(AllCases, GoldenTest, ::testing::Values(
-//     "hello",
-//     "cat",
-//     "hello_user_name",
-//     "sort"
-// ));

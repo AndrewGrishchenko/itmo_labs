@@ -15,8 +15,7 @@
 
 class Binarizer {
     public:
-        Binarizer();
-        ~Binarizer();
+        Binarizer() { }
 
         void parse(const std::string& data);
         void writeToFile(const std::string& filename) const;
@@ -28,36 +27,36 @@ class Binarizer {
         };
 
         const std::unordered_map<std::string, uint8_t> opcodeMap = {
-            {"add",  0b00000},
-            {"sub",  0b00001},
-            {"div",  0b00010},
-            {"mul",  0b00011},
-            {"rem",  0b00100},
-            {"inc",  0b00101},
-            {"dec",  0b00110},
-            {"not",  0b00111},
-            {"cla",  0b01000},
-            {"jmp",  0b01001},
-            {"cmp",  0b01010},
-            {"jz",   0b01011},
-            {"jnz",  0b01100},
-            {"jg",   0b01101},
-            {"jge",  0b01110},
-            {"jl",   0b01111},
-            {"jle",  0b10000},
-            {"push", 0b10001},
-            {"pop",  0b10010},
-            {"ld",   0b10011},
-            {"lda",  0b10100},
-            {"ldi",  0b10101},
-            {"st",   0b10110},
-            {"sta",  0b10111},
-            {"call", 0b11000},
-            {"ret",  0b11001},
-            {"ei",   0b11010},
-            {"di",   0b11011},
-            {"iret", 0b11100},
-            {"halt", 0b11101}
+            {"add",  0b00001},
+            {"sub",  0b00010},
+            {"div",  0b00011},
+            {"mul",  0b00100},
+            {"rem",  0b00101},
+            {"inc",  0b00110},
+            {"dec",  0b00111},
+            {"not",  0b01000},
+            {"cla",  0b01001},
+            {"jmp",  0b01010},
+            {"cmp",  0b01011},
+            {"jz",   0b01100},
+            {"jnz",  0b01101},
+            {"jg",   0b01110},
+            {"jge",  0b01111},
+            {"jl",   0b10000},
+            {"jle",  0b10001},
+            {"push", 0b10010},
+            {"pop",  0b10011},
+            {"ld",   0b10100},
+            {"lda",  0b10101},
+            {"ldi",  0b10110},
+            {"st",   0b10111},
+            {"sta",  0b11000},
+            {"call", 0b11001},
+            {"ret",  0b11010},
+            {"ei",   0b11011},
+            {"di",   0b11100},
+            {"iret", 0b11101},
+            {"halt", 0b11110}
         };
 
         enum class Section {None, Text, Data, InterruptTable};

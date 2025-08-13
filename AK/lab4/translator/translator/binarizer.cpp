@@ -1,8 +1,5 @@
 #include "binarizer.h"
 
-Binarizer::Binarizer() { }
-Binarizer::~Binarizer() { }
-
 void Binarizer::parse(const std::string& inputData) {
     std::istringstream iss(inputData);
     std::string line;

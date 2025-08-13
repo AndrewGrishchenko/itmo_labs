@@ -4,8 +4,7 @@ ProcessorModel::ProcessorModel(MachineConfig cfg)
     : cfg(cfg) {
     parseInput();
     iosim.connectOutput(outputFile);
-    iosim.setMixedOutput(cfg.mixed);
-
+    
     mux1.addInput(zero);
     mux1.addInput(registers.getRef(Registers::ACC));
     mux1.addInput(zero);
@@ -65,7 +64,7 @@ ProcessorModel::ProcessorModel(MachineConfig cfg)
     
     iosim.connect(interruptHandler, memory);
 
-    cu.setLog(logFile);
+    cu.setLog(logChunk);
     cu.connect(interruptHandler, mux1, mux2, alu, latchRouter, latchMEM_IR, latchMEM_DR, latchDR_MEM);
     cu.setFlagsInput(registers.getNRef(),
                      registers.getZRef(),
@@ -73,11 +72,17 @@ ProcessorModel::ProcessorModel(MachineConfig cfg)
                      registers.getCRef());
     cu.setIRInput(registers.getRef(Registers::IR));
 
+    if (!cfg.output_file.empty())
+        outputFile.open(cfg.output_file, std::ios::out);
+
     if (!cfg.log_file.empty())
         logFile.open(cfg.log_file, std::ios::out);
 
-    if (!cfg.output_file.empty())
-        outputFile.open(cfg.output_file, std::ios::out);
+    if (!cfg.binary_repr_file.empty())
+        binaryReprFile.open(cfg.binary_repr_file, std::ios::out);
+
+    if (!cfg.log_hash_file.empty())
+        logHashFile.open(cfg.log_hash_file, std::ios::out);
 }
 
 ProcessorModel::~ProcessorModel() { }
@@ -146,19 +151,7 @@ void ProcessorModel::parseInput() {
         if (cfg.schedule_start == -1) throw std::runtime_error("schedule_start not specified");
         if (cfg.schedule_offset == -1) throw std::runtime_error("schedule_offset not specified");
 
-        // std::string line;
         size_t currentTick = cfg.schedule_start;
-
-        // while (std::getline(inputFile, line)) {
-        //     auto values = parseStreamLine(line);
-        //     for (int val : values) {
-        //         iosim.addInput({currentTick, val});
-        //         currentTick += cfg.schedule_offset;
-        //     }
-            
-        //     iosim.addInput({currentTick, 10});
-        //     currentTick += cfg.schedule_offset;
-        // }
 
         std::stringstream buffer;
         buffer << inputFile.rdbuf();
@@ -199,22 +192,27 @@ void ProcessorModel::process() {
         tickCount++;
     }
 
-    logFile << "Output tokens:" << std::endl;
-    logFile << iosim.getTokenOutput() << std::endl;
-    
-    logFile << "\n" << memDump();
-
     std::cout << "Completed in " << tickCount << " ticks\n";
 
     if (!cfg.output_file.empty()) {
         outputFile.close();
-        std::cout << "Wrote output to " << cfg.output_file << " in "
-                  << (cfg.mixed ? "mixed" : "normal") << " mode " << std::endl;
+        std::cout << "Wrote output to " << cfg.output_file << std::endl;
     }
 
     if (!cfg.log_file.empty()) {
         logFile.close();
         std::cout << "Wrote log to " << cfg.log_file << std::endl;
+    }
+
+    if (!cfg.binary_repr_file.empty()) {
+        binaryReprFile.close();
+        std::cout << "Wrote binary representation to " << cfg.binary_repr_file << std::endl;
+    }
+
+    if (!cfg.log_hash_file.empty()) {
+        logHashFile << std::hex << hasher.final();
+        logHashFile.close();
+        std::cout << "Wrote log hash to " << cfg.log_hash_file << std::endl;
     }
 }
 
@@ -239,6 +237,16 @@ void ProcessorModel::loadBinary(const std::string& filename) {
         if (!in.read(reinterpret_cast<char*>(buf), 3))
             throw std::runtime_error("Unexpected EOF while reading instructions");
         memory[addr] = (buf[0] << 16) | (buf[1] << 8) | buf[2];
+
+        if (memory[addr] == 0) continue;
+
+        uint8_t opcode = (memory[addr] >> 19) & 0x1F;
+
+        binaryReprFile << std::dec << std::setw(4) << std::setfill('0') << addr << " - " 
+                       << std::hex << std::uppercase << std::setw(6) << std::setfill('0') << memory[addr] << " - "
+                       << CU::opcodeStr(opcode)
+                       << (CU::hasOperand(opcode) ? (" " + std::to_string(memory[addr] & 0x7FFFF)) : "")
+                       << ((addr < textSize - 1) ? "\n" : "");
     }
 
     for (size_t addr = textSize; addr < textSize + dataSize; addr++) {
@@ -298,7 +306,7 @@ std::string ProcessorModel::registerDump() {
 }
 
 void ProcessorModel::tick() {
-    logFile << "tick #" << tickCount << "\n";
+    logChunk = "tick #" + std::to_string(tickCount) + "\n";
     
     iosim.check(tickCount);
     cu.decode();
@@ -323,8 +331,9 @@ void ProcessorModel::tick() {
     alu.setWriteFlags(false);
     latchRouter.setLatchStates({0, 0, 0, 0, 0, 0});
 
-    logFile << registerDump() << std::endl;
-    // logData << "\n" << memDump() << std::endl; //remove
+    logChunk += registerDump() + "\n";
+    if (!cfg.log_hash_file.empty()) hasher.update(logChunk.data(), logChunk.size());
+    if (!cfg.log_file.empty()) logFile << logChunk;
 }
 
 void InterruptHandler::step() {

@@ -7,83 +7,83 @@ TreeGenerator::~TreeGenerator() { }
 std::string TreeGenerator::tokenStr(Token token) {
     switch (token.type) {
         case TokenType::KeywordIf:
-            return "KeywordIf\n";
+            return "KeywordIf";
         case TokenType::KeywordElse:
-            return "KeywordElse\n";
+            return "KeywordElse";
         case TokenType::KeywordWhile:
-            return "KeywordWhile\n";
+            return "KeywordWhile";
         case TokenType::Identifier:
-            return "Identifier\n";
+            return "Identifier";
         case TokenType::Equals:
-            return "Equals\n";
+            return "Equals";
         case TokenType::Number:
-            return "Number\n";
+            return "Number";
         case TokenType::String:
-            return "String\n";
+            return "String";
         case TokenType::Boolean:
-            return "Boolean\n";
+            return "Boolean";
         case TokenType::LParen:
-            return "LParen\n";
+            return "LParen";
         case TokenType::RParen:
-            return "RParen\n";
+            return "RParen";
         case TokenType::LBrace:
-            return "LBrace\n";
+            return "LBrace";
         case TokenType::RBrace:
-            return "RBrace\n";
+            return "RBrace";
         case TokenType::LogicAnd:
-            return "LogicAnd\n";
+            return "LogicAnd";
         case TokenType::LogicOr:
-            return "LogicOr\n";
+            return "LogicOr";
         case TokenType::LogicEqual:
-            return "LogicEqual\n";
+            return "LogicEqual";
         case TokenType::LogicGreater:
-            return "LogicGreater\n";
+            return "LogicGreater";
         case TokenType::LogicGreaterEqual:
-            return "LogicGreaterEqual\n";
+            return "LogicGreaterEqual";
         case TokenType::LogicLess:
-            return "LogicLess\n";
+            return "LogicLess";
         case TokenType::LogicLessEqual:
-            return "LogicLessEqual\n";
+            return "LogicLessEqual";
         case TokenType::Semicolon:
-            return "Semicolon\n";
+            return "Semicolon";
         case TokenType::EndOfFile:
-            return "EndOfFile\n";
+            return "EndOfFile";
         case TokenType::Plus:
-            return "Plus\n";
+            return "Plus";
         case TokenType::Minus:
-            return "Minus\n";
+            return "Minus";
         case TokenType::Multiply:
-            return "Multiply\n";
+            return "Multiply";
         case TokenType::Divide:
-            return "Divide\n";
+            return "Divide";
         case TokenType::Rem:
-            return "Rem\n";
+            return "Rem";
         case TokenType::KeywordInt:
-            return "KeywordInt\n";
+            return "KeywordInt";
         case TokenType::KeywordString:
-            return "KeywordString\n";
+            return "KeywordString";
         case TokenType::KeywordBool:
-            return "KeywordBool\n";
+            return "KeywordBool";
         case TokenType::Comma:
-            return "Comma\n";
+            return "Comma";
         case TokenType::KeywordReturn:
-            return "Return\n";
+            return "Return";
         case TokenType::KeywordVoid:
-            return "Void\n";
+            return "Void";
         case TokenType::KeywordIntArr:
-            return "IntArr\n";
+            return "IntArr";
         case TokenType::LBracket:
-            return "LBracket\n";
+            return "LBracket";
         case TokenType::RBracket:
-            return "RBracket\n";
+            return "RBracket";
         case TokenType::Dot:
-            return "Dot\n";
+            return "Dot";
         case TokenType::KeywordChar:
-            return "KeywordChar\n";
+            return "KeywordChar";
         case TokenType::Char:
-            return "Char\n";
+            return "Char";
         default:
-            return "Unknown\n";
+            return "Unknown";
     }
 }
 
@@ -462,10 +462,6 @@ ASTNode* TreeGenerator::parseMethodCall(std::vector<Token> tokens, size_t& pos) 
         throw std::runtime_error("Expected ')'");
     pos++;
 
-    // if (tokens[pos].type != TokenType::Semicolon)
-    //     throw std::runtime_error("Expected ';'");
-    // pos++;
-
     return new MethodCallNode(objectNode, methodName, args);
 }
 
@@ -588,7 +584,6 @@ ASTNode* TreeGenerator::parsePrimary(std::vector<Token> tokens, size_t& pos) {
         } else if (pos + 1 < tokens.size() && tokens[pos + 1].type == TokenType::LBracket) {
             return parseArrayGet(tokens, pos);
         } else if (pos + 1 < tokens.size() && tokens[pos + 1].type == TokenType::Dot) {
-            // return parseArraySize(tokens, pos);
             return parseMethodCall(tokens, pos);
         } else {
             std::string name = tokens[pos].value;

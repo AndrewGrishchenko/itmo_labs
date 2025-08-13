@@ -6,13 +6,6 @@ SemanticAnalyzer::~SemanticAnalyzer() { }
 
 void SemanticAnalyzer::analyze(ASTNode* node) {
     enterScope();
-    // if (!node || node->nodeType == ASTNodeType::Block) {
-    //     auto root = static_cast<BlockNode*>(node);
-    //     for (auto& stmt : root->children)
-    //         analyzeStatement(stmt);
-    // } else {
-    //     throw std::runtime_error("Root node must be block");
-    // }
     node->accept(*this);
     exitScope();
 }
@@ -339,45 +332,4 @@ std::string SemanticAnalyzer::findFunction(const std::string& name, std::vector<
         return search(functions[name]);
     
     return "";
-}
-
-std::string SemanticAnalyzer::nodeStr(ASTNode* node) {
-    switch (node->nodeType) {
-        case ASTNodeType::VarDecl:
-            return "VarDecl";
-        case ASTNodeType::NumberLiteral:
-            return "NumberLiteral";
-        case ASTNodeType::StringLiteral:
-            return "StringLiteral";
-        case ASTNodeType::BooleanLiteral:
-            return "BooelanLiteral";
-        case ASTNodeType::Identifier:
-            return "Indetifier";
-        case ASTNodeType::Assignment:
-            return "Assignment";
-        case ASTNodeType::BinaryOp:
-            return "BinaryOp";
-        case ASTNodeType::UnaryOp:
-            return "UnaryOp";
-        case ASTNodeType::If:
-            return "If";
-        case ASTNodeType::While:
-            return "While";
-        case ASTNodeType::Block:
-            return "Block";
-        case ASTNodeType::Parameter:
-            return "Parameter";
-        case ASTNodeType::Function:
-            return "Function";
-        case ASTNodeType::CallParameter:
-            return "CallParameter";
-        case ASTNodeType::FunctionCall:
-            return "FunctionCall";
-        case ASTNodeType::Expression:
-            return "Expression";
-        case ASTNodeType::Return:
-            return "Return";
-        default:
-            return "Unknown";
-    }
 }

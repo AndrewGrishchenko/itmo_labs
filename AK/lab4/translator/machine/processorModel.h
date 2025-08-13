@@ -165,7 +165,6 @@ class ALU {
                     uint64_t tmp = static_cast<uint64_t>(left) + right;
                     value = tmp & 0xFFFFFFFF;
                     C = tmp > 0xFFFFFFFF;
-                    // V = ((left ^ value) & (right ^ value)) >> 31;
                     V = (((left ^ value) & (right ^ value)) & 0x80000000) != 0;
                     break;
                 }
@@ -173,7 +172,6 @@ class ALU {
                     uint64_t tmp = static_cast<uint64_t>(left) - right;
                     value = tmp & 0xFFFFFFFF;
                     C = left >= right;
-                    // V = ((left ^ right) & (left ^ value)) >> 31;
                     V = (((left ^ right) & (left ^ value)) & 0x80000000) != 0;
                     break;
                 }
@@ -538,16 +536,11 @@ class IOSimulator {
             inputSchedule.push_back(entry);
         }
 
-        void setMixedOutput(bool mixed) {
-            this->mixed = mixed;
-        }
-
         void output(const std::string& data) {
-            std::cout << "outputFile: " << outputFile << std::endl;
             if (outputFile)
                 (*outputFile) << data;
         }
-        // TODO: redo
+        
         void output(char c) {
             if (outputFile)
                 (*outputFile) << c;
@@ -558,19 +551,6 @@ class IOSimulator {
                 if (entry.tick == tick) {
                     interruptHandler->setIRQ(InterruptHandler::IRQType::IO_INPUT);
                     memory->write(input_address, entry.token);
-
-                    if (!mixed) break;
-
-                    if (state != 2) {
-                        if (state == 1)
-                            output("\n");
-                        output("> ");
-                        state = 2;
-                    }
-
-                    output(static_cast<char>(entry.token));
-                    if (entry.token == '\n')
-                        state = 0;
                 }
             }
 
@@ -579,22 +559,6 @@ class IOSimulator {
                 outputSchedule.push_back({tick, static_cast<char>(token)});
                 output(static_cast<char>(token));
                 memory->write(output_address, 0);
-
-                // if (!mixed) {
-                //     *outputData << token;
-                //     return;
-                // }
-
-                // if (state != 1) {
-                //     if (state == 2)
-                //         *outputData << '\n';
-                //     *outputData << "< ";
-                //     state = 1;
-                // }
-
-                // *outputData << token;
-                // if (token == '\n')
-                //     state = 0;
             }
         }
 
@@ -628,8 +592,6 @@ class IOSimulator {
         const size_t output_address = 0x11;
 
         std::ofstream* outputFile = nullptr;
-        bool mixed = false;
-        int state = 0;
 };
 
 class CU {
@@ -650,8 +612,11 @@ class CU {
             this->mux1->replaceInput(2, operand);
         }
 
-        void setLog(std::ofstream& logFile) {
-            this->logFile = &logFile;
+        // void setLog(std::ofstream& logFile) {
+        //     this->logFile = &logFile;
+        // }
+        void setLog(std::string& logChunk) {
+            this->logChunk = &logChunk;
         }
 
         void setIRInput(const uint32_t& IR) {
@@ -670,6 +635,97 @@ class CU {
         }
 
         void decode();
+
+        enum Opcode : uint8_t {
+            OP_ADD  = 0b00001,
+            OP_SUB  = 0b00010,
+            OP_DIV  = 0b00011,
+            OP_MUL  = 0b00100,
+            OP_REM  = 0b00101,
+            OP_INC  = 0b00110,
+            OP_DEC  = 0b00111,
+            OP_NOT  = 0b01000,
+            OP_CLA  = 0b01001,
+            OP_JMP  = 0b01010,
+            OP_CMP  = 0b01011,
+            OP_JZ   = 0b01100,
+            OP_JNZ  = 0b01101,
+            OP_JG   = 0b01110,
+            OP_JGE  = 0b01111,
+            OP_JL   = 0b10000,
+            OP_JLE  = 0b10001,
+            OP_PUSH = 0b10010,
+            OP_POP  = 0b10011,
+            OP_LD   = 0b10100,
+            OP_LDA  = 0b10101,
+            OP_LDI  = 0b10110,
+            OP_ST   = 0b10111,
+            OP_STA  = 0b11000,
+            OP_CALL = 0b11001,
+            OP_RET  = 0b11010,
+            OP_EI   = 0b11011,
+            OP_DI   = 0b11100,
+            OP_IRET = 0b11101,
+            OP_HALT = 0b11110
+        };
+
+        static std::string opcodeStr (uint8_t code) {
+            Opcode op = static_cast<Opcode>(code);
+            switch (op) {
+                case OP_ADD:  return "add";
+                case OP_SUB:  return "sub";
+                case OP_DIV:  return "div";
+                case OP_MUL:  return "mul";
+                case OP_REM:  return "rem";
+                case OP_INC:  return "inc";
+                case OP_DEC:  return "dec";
+                case OP_NOT:  return "not";
+                case OP_CLA:  return "cla";
+                case OP_JMP:  return "jmp";
+                case OP_CMP:  return "cmp";
+                case OP_JZ:   return "jz";
+                case OP_JNZ:  return "jnz";
+                case OP_JG:   return "jg";
+                case OP_JGE:  return "jge";
+                case OP_JL:   return "jl";
+                case OP_JLE:  return "jle";
+                case OP_PUSH: return "push";
+                case OP_POP:  return "pop";
+                case OP_LD:   return "ld";
+                case OP_LDA:  return "lda";
+                case OP_LDI:  return "ldi";
+                case OP_ST:   return "st";
+                case OP_STA:  return "sta";
+                case OP_CALL: return "call";
+                case OP_RET:  return "ret";
+                case OP_EI:   return "ei";
+                case OP_DI:   return "di";
+                case OP_IRET: return "iret";
+                case OP_HALT: return "halt";
+                default:      return "unknown"; 
+            }
+        }
+
+        static bool hasOperand (uint8_t code) {
+            Opcode op = static_cast<Opcode>(code);
+            switch (op) {
+                case OP_INC:
+                case OP_DEC:
+                case OP_NOT:
+                case OP_CLA:
+                case OP_PUSH:
+                case OP_POP:
+                case OP_RET:
+                case OP_EI:
+                case OP_DI:
+                case OP_IRET:
+                case OP_HALT:
+                    return false;
+
+                default:
+                    return true;
+            }
+        }
     
     private:
         InterruptHandler* interruptHandler = nullptr;
@@ -725,44 +781,35 @@ class CU {
 
         bool halted = false;
 
-        enum Opcode : uint8_t {
-            OP_ADD  = 0b00000,
-            OP_SUB  = 0b00001,
-            OP_DIV  = 0b00010,
-            OP_MUL  = 0b00011,
-            OP_REM  = 0b00100,
-            OP_INC  = 0b00101,
-            OP_DEC  = 0b00110,
-            OP_NOT  = 0b00111,
-            OP_CLA  = 0b01000,
-            OP_JMP  = 0b01001,
-            OP_CMP  = 0b01010,
-            OP_JZ   = 0b01011,
-            OP_JNZ  = 0b01100,
-            OP_JG   = 0b01101,
-            OP_JGE  = 0b01110,
-            OP_JL   = 0b01111,
-            OP_JLE  = 0b10000,
-            OP_PUSH = 0b10001,
-            OP_POP  = 0b10010,
-            OP_LD   = 0b10011,
-            OP_LDA  = 0b10100,
-            OP_LDI  = 0b10101,
-            OP_ST   = 0b10110,
-            OP_STA  = 0b10111,
-            OP_CALL = 0b11000,
-            OP_RET  = 0b11001,
-            OP_EI   = 0b11010,
-            OP_DI   = 0b11011,
-            OP_IRET = 0b11100,
-            OP_HALT = 0b11101
-        };
+        // std::ofstream* logFile = nullptr;
 
-        std::ofstream* logFile = nullptr;
-
+        std::string* logChunk = nullptr;
         void log(std::string line) {
-            if (logFile) (*logFile) << line << "\n";
+            if (logChunk) (*logChunk) += line + "\n";
         }
+};
+
+class IncrementalFNV1a {
+    public:
+        IncrementalFNV1a() : hash_(FNV_offset_basis) {}
+
+        void update(const void* data, size_t len) {
+            const uint8_t* bytes = static_cast<const uint8_t*>(data);
+            for (size_t i = 0; i < len; ++i) {
+                hash_ ^= bytes[i];
+                hash_ *= FNV_prime;
+            }
+        }
+
+        uint64_t final() const {
+            return hash_;
+        }
+
+    private:
+        static constexpr uint64_t FNV_offset_basis = 14695981039346656037ULL;
+        static constexpr uint64_t FNV_prime = 1099511628211ULL;
+
+        uint64_t hash_;
 };
 
 class ProcessorModel {
@@ -811,11 +858,14 @@ class ProcessorModel {
         std::vector<int> parseStreamLine(const std::string& line);
         void parseInput();
   
+        std::string logChunk = "";
+
         std::ofstream logFile;
         std::ofstream outputFile;
+        std::ofstream binaryReprFile;
+        std::ofstream logHashFile;
 
-        void writeOutput(std::string& line) { outputFile << line << "\n"; }
-        void writeLog(std::string& line) { logFile << line << "\n"; }
+        IncrementalFNV1a hasher;
 };
 
 #endif

@@ -19,8 +19,9 @@ struct MachineConfig {
     size_t schedule_start = -1;
     size_t schedule_offset = -1;
     std::string output_file;
-    bool mixed = false;
     std::string log_file;
+    std::string binary_repr_file;
+    std::string log_hash_file;
 };
 
 inline std::string trim(const std::string& s) {
@@ -62,12 +63,12 @@ inline MachineConfig parseConfig(std::string fileName) {
             config.schedule_offset = std::stoi(value);
         } else if (key == "output_file") {
             config.output_file = value;
-        } else if (key == "mixed") {
-            if (value == "true") config.mixed = true;
-            else if (value == "false") config.mixed = false;
-            else throw std::runtime_error("Invalid mixed value: " + value);
         } else if (key == "log_file") {
             config.log_file = value;
+        } else if (key == "binary_repr_file") {
+            config.binary_repr_file = value;
+        } else if (key == "log_hash_file") {
+            config.log_hash_file = value;
         } else {
             throw std::runtime_error("Unknown config key: " + key);
         }

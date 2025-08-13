@@ -14,18 +14,6 @@ class SemanticAnalyzer : ASTVisitor {
         SemanticAnalyzer();
         ~SemanticAnalyzer();
 
-        // struct VariableData {
-        //     std::string type;
-        //     size_t size;
-
-        //     VariableData(std::string type, size_t size)
-        //         : type(type), size(size) { }
-        //     VariableData(std::string type)
-        //         : type(type), size(0) { }
-        //     VariableData()
-        //         : type(""), size(0) { }
-        // };
-
         void analyze(ASTNode* node);
 
         void visit(VarDeclNode& node) override;
@@ -104,10 +92,7 @@ class SemanticAnalyzer : ASTVisitor {
         bool hasReturn;
         std::string currentReturnType;
 
-        std::string nodeStr(ASTNode* node);
-
         ExpressionNode* lastVisitedExpression = nullptr;
-        // VariableData lastExpressionResult;
         std::string expectedType;
 };
 
