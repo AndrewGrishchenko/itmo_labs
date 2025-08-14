@@ -25,7 +25,12 @@ void SemanticAnalyzer::visit(VarDeclNode& node) {
 }
 
 void SemanticAnalyzer::visit(NumberLiteralNode& node) {
-    node.resolvedType = "int";
+    // node.resolvedType = "int";
+
+    if (this->expectedType == "uint")
+        node.resolvedType = "uint";
+    else
+        node.resolvedType = "int";
     
     this->lastVisitedExpression = &node;
 }
@@ -116,32 +121,46 @@ void SemanticAnalyzer::visit(MethodCallNode& node) {
 
 void SemanticAnalyzer::visit(IdentifierNode& node) {
     node.resolvedType = lookupVariable(node.name);
-
     this->lastVisitedExpression = &node;
 }
 
 void SemanticAnalyzer::visit(AssignNode& node) {
     node.var1->accept(*this);
     std::string var1Type = this->lastVisitedExpression->resolvedType;
+    
+    this->expectedType = var1Type;
 
     node.var2->accept(*this);
     std::string var2Type = this->lastVisitedExpression->resolvedType;
-    
+
     if (var1Type != var2Type)
-        throw std::runtime_error("Type mismatch in variable assignment");    
+        throw std::runtime_error("Type mismatch in variable assignment");
+
+    this->expectedType = "";
 }
 
 void SemanticAnalyzer::visit(BinaryOpNode& node) {
     node.left->accept(*this);
     std::string leftType = this->lastVisitedExpression->resolvedType;
 
+    this->expectedType = leftType;
+
     node.right->accept(*this);
     std::string rightType = this->lastVisitedExpression->resolvedType;
 
+    this->expectedType = "";
+
     if (node.op == "+" || node.op == "-" || node.op == "*" || node.op == "/" || node.op == "%") {
-        if (leftType != "int" || rightType != "int")
-            throw std::runtime_error("Arithmetic operations require int operands");
-        node.resolvedType = "int";
+        // if (leftType != "int" || rightType != "int")
+        //     throw std::runtime_error("Arithmetic operations require int operands");
+        // node.resolvedType = "int";
+        if ((leftType == "int" || leftType == "uint") && (rightType == "int" || rightType == "uint")) {
+            if (leftType == "uint" || rightType == "uint")
+                node.resolvedType = "uint";
+            else
+                node.resolvedType = "int";
+        } else
+            throw std::runtime_error("Arithmetic operations require int or uint operands");
     } else if (node.op == "==" || node.op == "!=" || node.op == ">" || node.op == ">=" || node.op == "<" || node.op == "<=") {
         if (leftType != rightType)
             throw std::runtime_error("Comparsion between incompatible types");

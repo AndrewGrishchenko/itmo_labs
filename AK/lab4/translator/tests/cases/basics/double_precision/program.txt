@@ -1,0 +1,19 @@
+uint a_hi = 1;
+uint a_lo = 4294967295;
+
+uint b_hi = 2;
+uint b_lo = 4294967295;
+
+uint carry = 0;
+
+uint c_lo = a_lo + b_lo;
+
+if (c_lo < a_lo) {
+    carry = 1;
+}
+
+uint c_hi = a_hi + b_hi + carry;
+
+out(c_hi);
+out(":");
+out(c_lo);

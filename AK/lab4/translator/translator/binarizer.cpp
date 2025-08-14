@@ -281,10 +281,12 @@ void Binarizer::writeToFile(const std::string& filename) const {
     uint32_t codeSize = static_cast<uint32_t>(textStart + instructions.size());
     uint32_t dataSize = static_cast<uint32_t>(dataSection.size());
 
+    out.put((codeSize >> 24) & 0xFF);
     out.put((codeSize >> 16) & 0xFF);
     out.put((codeSize >> 8) & 0xFF);
     out.put(codeSize & 0xFF);
 
+    out.put((dataSize >> 24) & 0xFF);
     out.put((dataSize >> 16) & 0xFF);
     out.put((dataSize >> 8) & 0xFF);
     out.put(dataSize & 0xFF);
@@ -294,21 +296,21 @@ void Binarizer::writeToFile(const std::string& filename) const {
 
     uint32_t startAddr = labelAddress.at("_start");
     uint8_t jmpOpcode = opcodeMap.at("jmp");
-    mem[0] = (jmpOpcode << 19) | (startAddr & 0x7FFFF);
+
+    mem[0] = (static_cast<uint32_t>(jmpOpcode) << 24) | (startAddr & 0xFFFFFF);
 
     for (size_t i = 0; i < instructions.size(); i++) {
-        uint32_t raw = (instructions[i].opcode << 19) | (instructions[i].operand & 0x7FFFF);
+        uint32_t raw = (instructions[i].opcode << 24) | (instructions[i].operand & 0xFFFFFF);
         mem[textStart + i] = raw;
     }
 
     for (size_t i = 0; i < dataSection.size(); i++) {
         uint32_t value = dataSection[i];
-        if (value >= (1 << 24))
-            throw std::runtime_error("Data value too big for 3 bytes");
         mem[dataStart + i] = value;
     }
 
     for (uint32_t val : mem) {
+        out.put((val >> 24) & 0xFF);
         out.put((val >> 16) & 0xFF);
         out.put((val >> 8) & 0xFF);
         out.put(val & 0xFF);
@@ -320,34 +322,34 @@ void Binarizer::dump() {
     if (!in.is_open())
         throw std::runtime_error("Failed to open binary file");
 
-    uint8_t buf[3];
+    uint8_t buf[4];
 
-    if (!in.read(reinterpret_cast<char*>(buf), 3))
+    if (!in.read(reinterpret_cast<char*>(buf), 4))
         throw std::runtime_error("Failed to read codeSize from header");
 
-    uint32_t codeSize = (uint32_t(buf[0]) << 16) | (uint32_t(buf[1]) << 8) | uint32_t(buf[2]);
+    uint32_t codeSize = (uint32_t(buf[0]) << 24) | (uint32_t(buf[1]) << 16) | (uint32_t(buf[2]) << 8) | uint32_t(buf[3]);
     std::cout << "HEADER: codeSize = 0x" << std::hex << codeSize << std::dec << "\n";
 
-    if (!in.read(reinterpret_cast<char*>(buf), 3))
+    if (!in.read(reinterpret_cast<char*>(buf), 4))
         throw std::runtime_error("Failed to read dataSize from header");
 
-    uint32_t dataSize = (uint32_t(buf[0]) << 16) | (uint32_t(buf[1]) << 8) | uint32_t(buf[2]);
+    uint32_t dataSize = (uint32_t(buf[0]) << 24) | (uint32_t(buf[1]) << 16) | (uint32_t(buf[2]) << 8) | uint32_t(buf[3]);
     std::cout << "HEADER: dataSize = 0x" << std::hex << dataSize << std::dec << "\n";
 
     int addr = 0;
     while (true) {
-        if (!in.read(reinterpret_cast<char*>(buf), 3)) {
+        if (!in.read(reinterpret_cast<char*>(buf), 4)) {
             if (in.eof()) break;
             throw std::runtime_error("Failed to read 3 bytes from file");
         }
 
-        uint32_t raw = (uint32_t(buf[0]) << 16) | (uint32_t(buf[1]) << 8) | uint32_t(buf[2]);
+        uint32_t raw = (uint32_t(buf[0]) << 24) | (uint32_t(buf[1]) << 16) | (uint32_t(buf[2]) << 8) | uint32_t(buf[3]);
 
-        std::cout << std::setw(4) << std::setfill('0') << std::hex << addr << ": ";
+        std::cout << std::setw(5) << std::setfill('0') << std::hex << addr << ": ";
 
         if (addr < static_cast<int>(codeSize)) {
-            uint8_t opcode = raw >> 19;
-            uint32_t operand = raw & 0x7FFFF;
+            uint8_t opcode = raw >> 24;
+            uint32_t operand = raw & 0xFFFFFF;
             std::cout << "raw=0x" << std::setw(6) << std::setfill('0') << raw
                       << " opcode=0x" << std::hex << int(opcode)
                       << " operand=0x" << operand << std::dec << "\n";

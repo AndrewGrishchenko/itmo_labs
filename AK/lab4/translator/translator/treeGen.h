@@ -20,6 +20,7 @@ enum class TokenType {
 
     // Data types
     KeywordInt,
+    KeywordUint,
     KeywordChar,
     KeywordString,
     KeywordBool,

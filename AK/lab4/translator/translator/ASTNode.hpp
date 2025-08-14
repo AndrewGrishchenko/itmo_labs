@@ -69,9 +69,9 @@ struct VarDeclNode : ASTNode {
 };
 
 struct NumberLiteralNode : ExpressionNode {
-    int number;
+    long number;
     
-    NumberLiteralNode(int number)
+    NumberLiteralNode(long number)
         : ExpressionNode(ASTNodeType::NumberLiteral), number(number) { }
 
     void accept(ASTVisitor& visitor) override {

@@ -101,7 +101,8 @@ INSTANTIATE_TEST_SUITE_P(Basics, BasicTests, ::testing::Values(
     "hello_user_name",
     "cat",
     "array",
-    "arithmetic"
+    "arithmetic",
+    "double_precision"
 ));
 
 INSTANTIATE_TEST_SUITE_P(ControlFlow, ControlFlowTests, ::testing::Values(

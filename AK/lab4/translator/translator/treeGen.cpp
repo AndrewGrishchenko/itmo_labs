@@ -60,6 +60,8 @@ std::string TreeGenerator::tokenStr(Token token) {
             return "Rem";
         case TokenType::KeywordInt:
             return "KeywordInt";
+        case TokenType::KeywordUint:
+            return "KeywordUint";
         case TokenType::KeywordString:
             return "KeywordString";
         case TokenType::KeywordBool:
@@ -139,6 +141,8 @@ ASTNode* TreeGenerator::parseVarStatement(std::vector<Token> tokens, size_t& pos
     std::string type;
     if (tokens[pos].type == TokenType::KeywordInt)
         type = "int";
+    else if (tokens[pos].type == TokenType::KeywordUint)
+        type = "uint";
     else if (tokens[pos].type == TokenType::KeywordChar)
         type = "char";
     else if (tokens[pos].type == TokenType::KeywordString)
@@ -194,6 +198,7 @@ ASTNode* TreeGenerator::parseStatement(std::vector<Token> tokens, size_t& pos) {
     ASTNode* node;
     
     if (tokens[pos].type == TokenType::KeywordInt ||
+        tokens[pos].type == TokenType::KeywordUint ||
         tokens[pos].type == TokenType::KeywordChar ||
         tokens[pos].type == TokenType::KeywordString ||
         tokens[pos].type == TokenType::KeywordBool || 
@@ -563,7 +568,7 @@ ASTNode* TreeGenerator::parseUnary(std::vector<Token> tokens, size_t& pos) {
 
 ASTNode* TreeGenerator::parsePrimary(std::vector<Token> tokens, size_t& pos) {
     if (tokens[pos].type == TokenType::Number) {
-        int value = std::stoi(tokens[pos].value);
+        long value = std::stol(tokens[pos].value);
         pos++;
         return new NumberLiteralNode(value);
     } else if (tokens[pos].type == TokenType::Char) {
@@ -656,6 +661,8 @@ std::vector<Token> TreeGenerator::tokenize(const std::string& input) {
 
                 tokens.push_back({TokenType::KeywordInt, word});
                 continue;
+            } else if (word == "uint") {
+                tokens.push_back({TokenType::KeywordUint, word});
             } else if (word == "char") {
                 tokens.push_back({TokenType::KeywordChar, word});
             } else if (word == "string") {

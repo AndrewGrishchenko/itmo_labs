@@ -41,7 +41,13 @@ void CodeGenerator::visit(VarDeclNode& node) {
 }
 
 void CodeGenerator::visit(NumberLiteralNode& node) {
-    emitCode("ldi " + std::to_string(node.number));
+    if (node.number > 0xFFFFFF) {
+        std::string constLabel = "const_" + std::to_string(node.number);
+        emitData(constLabel + ": " + std::to_string(node.number));
+        emitCode("ld " + constLabel);
+    } else {
+        emitCode("ldi " + std::to_string(node.number));
+    }
 }
 
 void CodeGenerator::visit(CharLiteralNode& node) {
@@ -145,6 +151,9 @@ void CodeGenerator::visit(BinaryOpNode& node) {
     const std::string& op = node.op;
     bool isLogicalOp = (op == ">" || op == "<" || op == ">=" || op == "<=" || op == "==" || op == "!=" || op == "&&" || op == "||");
 
+    std::string leftType = static_cast<ExpressionNode*>(node.left)->resolvedType;
+    std::string rightType = static_cast<ExpressionNode*>(node.right)->resolvedType;
+
     if (isLogicalOp && !currentTrueLabel.empty() && !currentFalseLabel.empty()) {
         if (op == "&&") {
             std::string rightSideLabel = getNewLabel();
@@ -223,23 +232,29 @@ void CodeGenerator::visit(BinaryOpNode& node) {
             emitCodeLabel(endLabel);
         }
         else if (op == ">" || op == "<" || op == ">=" || op == "<=" || op == "==" || op == "!=") {
-            emitCode("sub temp_right");
+            // emitCode("sub temp_right");
+            emitCode("cmp temp_right");
+
+            bool isUnsignedCmp = (leftType == "uint" || rightType == "uint");
 
             std::string trueLabel = getNewLabel();
             std::string endLabel = getNewLabel();
 
-            if (op == "==")
-                emitCode("jz " + trueLabel);
-            else if (op == "!=")
-                emitCode("jnz " + trueLabel);
-            else if (op == ">")
-                emitCode("jg " + trueLabel);
-            else if (op == ">=")
-                emitCode("jge " + trueLabel);
-            else if (op == "<")
-                emitCode("jl " + trueLabel);
-            else if (op == "<=")
-                emitCode("jle " + trueLabel);
+            if (isUnsignedCmp) {
+                if (op == "==") emitCode("jz " + trueLabel);
+                else if (op == "!=") emitCode("jnz " + trueLabel);
+                else if (op == ">") emitCode("ja " + trueLabel);
+                else if (op == ">=") emitCode("jae " + trueLabel);
+                else if (op == "<") emitCode("jb " + trueLabel);
+                else if (op == "<=") emitCode("jbe " + trueLabel);
+            } else {
+                if (op == "==") emitCode("jz " + trueLabel);
+                else if (op == "!=") emitCode("jnz " + trueLabel);
+                else if (op == ">") emitCode("jg " + trueLabel);
+                else if (op == ">=") emitCode("jge " + trueLabel);
+                else if (op == "<") emitCode("jl " + trueLabel);
+                else if (op == "<=") emitCode("jle " + trueLabel);
+            }
 
             emitCode("ldi 0");
             emitCode("jmp " + endLabel);
@@ -263,9 +278,11 @@ void CodeGenerator::visit(UnaryOpNode& node) {
     node.operand->accept(*this);
 
     if (op == "-") {
-        emitCode("st temp_right");
-        emitCode("ldi 0");
-        emitCode("sub temp_right");
+        emitCode("not");
+        emitCode("inc");
+        // emitCode("st temp_right");
+        // emitCode("ldi 0");
+        // emitCode("sub temp_right");
     } else if (op == "!") {
         std::string trueLabel = getNewLabel();
         std::string endLabel = getNewLabel();
@@ -447,7 +464,7 @@ void CodeGenerator::processReservedFunctionCall(FunctionCallNode& node) {
 
         const std::string returnType = node.resolvedType;
 
-        if (returnType == "int") {
+        if (returnType == "int" || returnType == "uint") {
             emitCode("call read_int");
         } else if (returnType == "char") {
             emitCode("call read_char");
@@ -464,6 +481,8 @@ void CodeGenerator::processReservedFunctionCall(FunctionCallNode& node) {
 
         if (typeToPrint == "int") {
             emitCode("call write_int");
+        } else if (typeToPrint == "uint") {
+            emitCode("call write_uint");
         } else if (typeToPrint == "char") {
             emitCode("call write_char");
         } else if (typeToPrint == "string") {
@@ -726,6 +745,7 @@ std::string CodeGenerator::assembleCode() {
     result << read_arr;
     result << write_char;
     result << write_int;
+    result << write_uint;
     result << write_string;
     result << write_arr;
     result << arr_size;

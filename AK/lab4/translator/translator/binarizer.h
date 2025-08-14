@@ -27,36 +27,40 @@ class Binarizer {
         };
 
         const std::unordered_map<std::string, uint8_t> opcodeMap = {
-            {"add",  0b00001},
-            {"sub",  0b00010},
-            {"div",  0b00011},
-            {"mul",  0b00100},
-            {"rem",  0b00101},
-            {"inc",  0b00110},
-            {"dec",  0b00111},
-            {"not",  0b01000},
-            {"cla",  0b01001},
-            {"jmp",  0b01010},
-            {"cmp",  0b01011},
-            {"jz",   0b01100},
-            {"jnz",  0b01101},
-            {"jg",   0b01110},
-            {"jge",  0b01111},
-            {"jl",   0b10000},
-            {"jle",  0b10001},
-            {"push", 0b10010},
-            {"pop",  0b10011},
-            {"ld",   0b10100},
-            {"lda",  0b10101},
-            {"ldi",  0b10110},
-            {"st",   0b10111},
-            {"sta",  0b11000},
-            {"call", 0b11001},
-            {"ret",  0b11010},
-            {"ei",   0b11011},
-            {"di",   0b11100},
-            {"iret", 0b11101},
-            {"halt", 0b11110}
+            {"add",  0b000001},
+            {"sub",  0b000010},
+            {"div",  0b000011},
+            {"mul",  0b000100},
+            {"rem",  0b000101},
+            {"inc",  0b000110},
+            {"dec",  0b000111},
+            {"not",  0b001000},
+            {"cla",  0b001001},
+            {"jmp",  0b001010},
+            {"cmp",  0b001011},
+            {"jz",   0b001100},
+            {"jnz",  0b001101},
+            {"jg",   0b001110},
+            {"jge",  0b001111},
+            {"jl",   0b010000},
+            {"jle",  0b010001},
+            {"ja",   0b010010},
+            {"jae",  0b010011},
+            {"jb",   0b010100},
+            {"jbe",  0b010101},
+            {"push", 0b010110},
+            {"pop",  0b010111},
+            {"ld",   0b011000},
+            {"lda",  0b011001},
+            {"ldi",  0b011010},
+            {"st",   0b011011},
+            {"sta",  0b011100},
+            {"call", 0b011101},
+            {"ret",  0b011110},
+            {"ei",   0b011111},
+            {"di",   0b100000},
+            {"iret", 0b100001},
+            {"halt", 0b100010}
         };
 
         enum class Section {None, Text, Data, InterruptTable};
@@ -99,13 +103,13 @@ class Binarizer {
             return std::all_of(s.begin() + start, s.end(), ::isdigit);
         }
 
-        static int parseNumber(const std::string& s) {
+        static long parseNumber(const std::string& s) {
             if (s.size() > 2 && s.substr(0, 2) == "0x") {
-                return std::stoi(s, nullptr, 16);
+                return std::stol(s, nullptr, 16);
             } else if (s.size() > 2 && s.substr(0, 2) == "0b") {
-                return std::stoi(s.substr(2), nullptr, 2);
+                return std::stol(s.substr(2), nullptr, 2);
             } else {
-                return std::stoi(s);
+                return std::stol(s);
             }
         }
 };

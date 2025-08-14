@@ -637,36 +637,40 @@ class CU {
         void decode();
 
         enum Opcode : uint8_t {
-            OP_ADD  = 0b00001,
-            OP_SUB  = 0b00010,
-            OP_DIV  = 0b00011,
-            OP_MUL  = 0b00100,
-            OP_REM  = 0b00101,
-            OP_INC  = 0b00110,
-            OP_DEC  = 0b00111,
-            OP_NOT  = 0b01000,
-            OP_CLA  = 0b01001,
-            OP_JMP  = 0b01010,
-            OP_CMP  = 0b01011,
-            OP_JZ   = 0b01100,
-            OP_JNZ  = 0b01101,
-            OP_JG   = 0b01110,
-            OP_JGE  = 0b01111,
-            OP_JL   = 0b10000,
-            OP_JLE  = 0b10001,
-            OP_PUSH = 0b10010,
-            OP_POP  = 0b10011,
-            OP_LD   = 0b10100,
-            OP_LDA  = 0b10101,
-            OP_LDI  = 0b10110,
-            OP_ST   = 0b10111,
-            OP_STA  = 0b11000,
-            OP_CALL = 0b11001,
-            OP_RET  = 0b11010,
-            OP_EI   = 0b11011,
-            OP_DI   = 0b11100,
-            OP_IRET = 0b11101,
-            OP_HALT = 0b11110
+            OP_ADD  = 0b000001,
+            OP_SUB  = 0b000010,
+            OP_DIV  = 0b000011,
+            OP_MUL  = 0b000100,
+            OP_REM  = 0b000101,
+            OP_INC  = 0b000110,
+            OP_DEC  = 0b000111,
+            OP_NOT  = 0b001000,
+            OP_CLA  = 0b001001,
+            OP_JMP  = 0b001010,
+            OP_CMP  = 0b001011,
+            OP_JZ   = 0b001100,
+            OP_JNZ  = 0b001101,
+            OP_JG   = 0b001110,
+            OP_JGE  = 0b001111,
+            OP_JL   = 0b010000,
+            OP_JLE  = 0b010001,
+            OP_JA   = 0b010010,
+            OP_JAE  = 0b010011,
+            OP_JB   = 0b010100,
+            OP_JBE  = 0b010101,
+            OP_PUSH = 0b010110,
+            OP_POP  = 0b010111,
+            OP_LD   = 0b011000,
+            OP_LDA  = 0b011001,
+            OP_LDI  = 0b011010,
+            OP_ST   = 0b011011,
+            OP_STA  = 0b011100,
+            OP_CALL = 0b011101,
+            OP_RET  = 0b011110,
+            OP_EI   = 0b011111,
+            OP_DI   = 0b100000,
+            OP_IRET = 0b100001,
+            OP_HALT = 0b100010
         };
 
         static std::string opcodeStr (uint8_t code) {
@@ -689,6 +693,10 @@ class CU {
                 case OP_JGE:  return "jge";
                 case OP_JL:   return "jl";
                 case OP_JLE:  return "jle";
+                case OP_JA:   return "ja";
+                case OP_JAE:  return "jae";
+                case OP_JB:   return "jb";
+                case OP_JBE:  return "jbe";
                 case OP_PUSH: return "push";
                 case OP_POP:  return "pop";
                 case OP_LD:   return "ld";

@@ -200,6 +200,7 @@ void ProcessorModel::process() {
     }
 
     if (!cfg.log_file.empty()) {
+        logFile << memDump();
         logFile.close();
         std::cout << "Wrote log to " << cfg.log_file << std::endl;
     }
@@ -220,39 +221,40 @@ void ProcessorModel::loadBinary(const std::string& filename) {
     std::ifstream in(filename, std::ios::binary);
     if (!in) throw std::runtime_error("Can't open binary file: " + filename);
 
-    uint8_t buf[3];
+    uint8_t buf[4];
 
-    if (!in.read(reinterpret_cast<char*>(buf), 3))
+    if (!in.read(reinterpret_cast<char*>(buf), 4))
         throw std::runtime_error("Failed to read textSize from header");
-    size_t textSize = (buf[0] << 16) | (buf[1] << 8) | buf[2];
+    size_t textSize = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
 
-    if (!in.read(reinterpret_cast<char*>(buf), 3))
+    if (!in.read(reinterpret_cast<char*>(buf), 4))
         throw std::runtime_error("Failed to read dataSize from header");
-    size_t dataSize = (buf[0] << 16) | (buf[1] << 8) | buf[2];
+    size_t dataSize = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
 
     if (textSize + dataSize > MEM_SIZE)
         throw std::runtime_error("Binary too large for memory");
 
     for (size_t addr = 0; addr < textSize; addr++) {
-        if (!in.read(reinterpret_cast<char*>(buf), 3))
+        if (!in.read(reinterpret_cast<char*>(buf), 4))
             throw std::runtime_error("Unexpected EOF while reading instructions");
-        memory[addr] = (buf[0] << 16) | (buf[1] << 8) | buf[2];
+        memory[addr] = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
 
         if (memory[addr] == 0) continue;
 
-        uint8_t opcode = (memory[addr] >> 19) & 0x1F;
+        uint8_t opcode = (memory[addr] >> 24) & 0xFF;
+        uint32_t operand = memory[addr] & 0xFFFFFF;
 
         binaryReprFile << std::dec << std::setw(4) << std::setfill('0') << addr << " - " 
-                       << std::hex << std::uppercase << std::setw(6) << std::setfill('0') << memory[addr] << " - "
+                       << std::hex << std::uppercase << std::setw(8) << std::setfill('0') << memory[addr] << " - "
                        << CU::opcodeStr(opcode)
-                       << (CU::hasOperand(opcode) ? (" " + std::to_string(memory[addr] & 0x7FFFF)) : "")
+                       << (CU::hasOperand(opcode) ? (" " + std::to_string(operand)) : "")
                        << ((addr < textSize - 1) ? "\n" : "");
     }
 
     for (size_t addr = textSize; addr < textSize + dataSize; addr++) {
-        if (!in.read(reinterpret_cast<char*>(buf), 3))
+        if (!in.read(reinterpret_cast<char*>(buf), 4))
             throw std::runtime_error("Unexpected EOF while reading data");
-        memory[addr] = (buf[0] << 16) | (buf[1] << 8) | buf[2];
+        memory[addr] = (buf[0] << 24) | (buf[1] << 16) | (buf[2] << 8) | buf[3];
     }
 
     this->textSize = textSize;
@@ -391,8 +393,8 @@ void CU::decode() {
             break;
         }
         case CPUState::Decode: {
-            opcode = ((*IR) >> 19) & 0x1F;
-            operand = (*IR) & 0x7FFFF;
+            opcode = ((*IR) >> 24) & 0xFF;
+            operand = (*IR) & 0xFFFFFF;
 
             instructionTick();
             if (instructionDone) {
@@ -619,6 +621,66 @@ void CU::instructionTick() {
             mux2->select(0);
 
             if (*Z || *N != *V) {
+                latchRouter->setLatchState(3, 1);
+                alu->setOperation(ALU::Operation::DEC);
+            } else {
+                latchRouter->setLatchStates({0, 0, 0, 0, 0, 0});
+                alu->setOperation(ALU::Operation::NOP);
+            }
+
+            instructionDone = true;
+            break;
+
+        case OP_JA:
+            mux1->select(2);
+            mux2->select(0);
+
+            if (!*C && !*Z) {
+                latchRouter->setLatchState(3, 1);
+                alu->setOperation(ALU::Operation::DEC);
+            } else {
+                latchRouter->setLatchStates({0, 0, 0, 0, 0, 0});
+                alu->setOperation(ALU::Operation::NOP);
+            }
+
+            instructionDone = true;
+            break;
+
+        case OP_JAE:
+            mux1->select(2);
+            mux2->select(0);
+
+            if (!*C) {
+                latchRouter->setLatchState(3, 1);
+                alu->setOperation(ALU::Operation::DEC);
+            } else {
+                latchRouter->setLatchStates({0, 0, 0, 0, 0, 0});
+                alu->setOperation(ALU::Operation::NOP);
+            }
+
+            instructionDone = true;
+            break;
+
+        case OP_JB:
+            mux1->select(2);
+            mux2->select(0);
+
+            if (*C) {
+                latchRouter->setLatchState(3, 1);
+                alu->setOperation(ALU::Operation::DEC);
+            } else {
+                latchRouter->setLatchStates({0, 0, 0, 0, 0, 0});
+                alu->setOperation(ALU::Operation::NOP);
+            }
+
+            instructionDone = true;
+            break;
+
+        case OP_JBE:
+            mux1->select(2);
+            mux2->select(0);
+
+            if (*C || *Z) {
                 latchRouter->setLatchState(3, 1);
                 alu->setOperation(ALU::Operation::DEC);
             } else {

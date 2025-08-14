@@ -29,7 +29,7 @@ class CodeGenerator : ASTVisitor {
         void visit(IdentifierNode& node) override;
         void visit(AssignNode& node) override;
         void visit(BinaryOpNode& node) override;
-        void visit(UnaryOpNode& node) override;
+        void visit(UnaryOpNode &node) override;
         void visit(IfNode& node) override;
         void visit(WhileNode& node) override;
         void visit(BreakNode& node) override;
@@ -84,6 +84,8 @@ class CodeGenerator : ASTVisitor {
             {"in", {
                 {"int", {"int"}},
                 {"int", {}},
+                {"uint", {"int"}},
+                {"uint", {}},
                 {"char", {}},
                 {"string", {"int"}},
                 {"string", {}},
@@ -92,6 +94,7 @@ class CodeGenerator : ASTVisitor {
             }},
             {"out", {
                 {"void", {"int"}},
+                {"void", {"uint"}},
                 {"void", {"char"}},
                 {"void", {"int[]"}},
                 {"void", {"string"}}
@@ -137,11 +140,14 @@ class CodeGenerator : ASTVisitor {
                                  "  input_addr: 0x10\n"
                                  "  output_addr: 0x11\n\n"
                                  "  const_eot: 4\n"
-                                 "  const_space: 32\n\n"
+                                 "  const_space: 32\n"
+                                 "  const_minus: 45\n\n"
+                                 "  const_0: 0\n"
                                  "  const_10: 10\n"
                                  "  const_48: 48\n\n"
                                  "  token: 0\n\n"
                                  "  read_int_val: 0\n"
+                                 "  read_int_neg: 0\n"
                                  "  read_delim: 10\n"
                                  "  read_arr_stop: 0\n\n"
                                  "  write_int_count: 0\n"
@@ -166,20 +172,63 @@ class CodeGenerator : ASTVisitor {
                                       "  di\n"
                                       "  ret\n\n";
 
+        // const std::string read_int = "read_int:\n"
+        //                              "  ldi 0\n"
+        //                              "  st read_int_val\n"
+        //                              "read_int_do:\n"
+        //                              "  call read_char\n \n"
+        //                              "  ld token\n"
+        //                              "  cmp const_eot\n"
+        //                              "  jz read_int_stop\n\n"
+        //                              "  cmp read_delim\n"
+        //                              "  jz read_int_stop\n\n"
+        //                              "  cmp const_space\n"
+        //                              "  jz read_int_ret\n\n"
+        //                              "  cmp const_10\n"
+        //                              "  jz read_int_ret\n\n"
+        //                              "  ld read_int_val\n"
+        //                              "  mul const_10\n"
+        //                              "  st read_int_val\n\n"
+        //                              "  ld token\n"
+        //                              "  sub const_48\n"
+        //                              "  add read_int_val\n"
+        //                              "  st read_int_val\n\n"
+        //                              "  ldi 0\n"
+        //                              "  st token\n\n"
+        //                              "  jmp read_int_do\n"
+        //                              "read_int_stop:\n"
+        //                              "  ldi 1\n"
+        //                              "  st read_arr_stop\n"
+        //                              "read_int_ret:\n"
+        //                              "  ldi 0\n"
+        //                              "  st token\n\n"
+        //                              "  ld read_int_val\n"
+        //                              "  ret\n\n";
+
         const std::string read_int = "read_int:\n"
                                      "  ldi 0\n"
                                      "  st read_int_val\n"
-                                     "read_int_do:\n"
-                                     "  call read_char\n \n"
+                                     "  st read_int_neg\n"
+                                     "  call read_char\n"
                                      "  ld token\n"
+                                     "  cmp const_minus\n"
+                                     "  jnz read_int_build\n"
+                                     "  ldi 0\n"
+                                     "  st token\n"
+                                     "  inc\n"
+                                     "  st read_int_neg\n"
+                                     "read_int_do:\n"
+                                     "  call read_char\n"
+                                     "  ld token\n"
+                                     "read_int_build:\n"
                                      "  cmp const_eot\n"
                                      "  jz read_int_stop\n\n"
                                      "  cmp read_delim\n"
                                      "  jz read_int_stop\n\n"
                                      "  cmp const_space\n"
-                                     "  jz read_int_ret\n\n"
+                                     "  jz read_int_apply_sign\n\n"
                                      "  cmp const_10\n"
-                                     "  jz read_int_ret\n\n"
+                                     "  jz read_int_apply_sign\n\n"
                                      "  ld read_int_val\n"
                                      "  mul const_10\n"
                                      "  st read_int_val\n\n"
@@ -193,9 +242,16 @@ class CodeGenerator : ASTVisitor {
                                      "read_int_stop:\n"
                                      "  ldi 1\n"
                                      "  st read_arr_stop\n"
+                                     "read_int_apply_sign:\n"
+                                     "  ld read_int_neg\n"
+                                     "  jz read_int_ret\n"
+                                     "  ld read_int_val\n"
+                                     "  not\n"
+                                     "  inc\n"
+                                     "  st read_int_val\n"
                                      "read_int_ret:\n"
                                      "  ldi 0\n"
-                                     "  st token\n\n"
+                                     "  st token\n"
                                      "  ld read_int_val\n"
                                      "  ret\n\n";
 
@@ -278,10 +334,22 @@ class CodeGenerator : ASTVisitor {
                                        "  ret\n\n";
 
         const std::string write_int = "write_int:\n"
+                                      "  st read_int_val\n"
+                                      "  cmp const_0\n"
                                       "  jz write_int_zero\n"
+                                      "  jl write_int_negative\n"
+                                      "write_int_positive:\n"
                                       "  st read_int_val\n"
                                       "  ldi 0\n"
                                       "  st write_int_count\n"
+                                      "  jmp write_int_div\n"
+                                      "write_int_negative:\n"
+                                      "  ld const_minus\n"
+                                      "  sta output_addr\n"
+                                      "  ld read_int_val\n"
+                                      "  not\n"
+                                      "  inc\n"
+                                      "  st read_int_val\n"
                                       "write_int_div:\n"
                                       "  ld read_int_val\n"
                                       "  jz write_int_write\n"
@@ -304,10 +372,43 @@ class CodeGenerator : ASTVisitor {
                                       "  sta output_addr\n\n"
                                       "  jmp write_int_write\n"
                                       "write_int_zero:\n"
-                                      "  add const_48\n"
+                                      "  ld const_48\n"
                                       "  sta output_addr\n"
                                       "write_int_ret:\n"
                                       "  ret\n\n";
+
+        const std::string write_uint = "write_uint:\n"
+                                       "  st read_int_val\n"
+                                       "  cmp const_0\n"
+                                       "  jz write_uint_zero\n"
+                                       "  ldi 0\n"
+                                       "  st write_int_count\n"
+                                       "write_uint_div:\n"
+                                       "  ld read_int_val\n"
+                                       "  jz write_uint_write\n"
+                                       "  rem const_10\n"
+                                       "  push\n\n"
+                                       "  ld read_int_val\n"
+                                       "  div const_10\n"
+                                       "  st read_int_val\n\n"
+                                       "  ld write_int_count\n"
+                                       "  inc\n"
+                                       "  st write_int_count\n\n"
+                                       "  jmp write_uint_div\n"
+                                       "write_uint_write:\n"
+                                       "  ld write_int_count\n"
+                                       "  jz write_uint_ret\n"
+                                       "  dec\n"
+                                       "  st write_int_count\n\n"
+                                       "  pop\n"
+                                       "  add const_48\n"
+                                       "  sta output_addr\n\n"
+                                       "  jmp write_uint_write\n"
+                                       "write_uint_zero:\n"
+                                       "  ld const_48\n"
+                                       "  sta output_addr\n"
+                                       "write_uint_ret:\n"
+                                       "  ret\n\n";
 
         const std::string write_string = "write_string:\n"
                                          "  st input_ptr\n"

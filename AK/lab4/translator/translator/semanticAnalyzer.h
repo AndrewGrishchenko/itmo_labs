@@ -55,6 +55,8 @@ class SemanticAnalyzer : ASTVisitor {
             {"in", {
                 {"int", {"int"}},
                 {"int", {}},
+                {"uint", {"int"}},
+                {"uint", {}},
                 {"char", {}},
                 {"string", {"int"}},
                 {"string", {}},
@@ -63,6 +65,7 @@ class SemanticAnalyzer : ASTVisitor {
             }},
             {"out", {
                 {"void", {"int"}},
+                {"void", {"uint"}},
                 {"void", {"char"}},
                 {"void", {"int[]"}},
                 {"void", {"string"}}
