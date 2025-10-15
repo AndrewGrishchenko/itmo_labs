@@ -5,6 +5,7 @@ import com.andrew.model.Role;
 import com.andrew.model.User;
 
 import jakarta.enterprise.context.RequestScoped;
+import jakarta.ws.rs.ForbiddenException;
 
 @RequestScoped
 public class CurrentUser {
@@ -15,7 +16,7 @@ public class CurrentUser {
     }
 
     public User getUser() {
-        if (user == null) throw new IllegalStateException("No logged-in user");
+        if (user == null) throw new ForbiddenException("No logged-in user");
         return user;
     }
 

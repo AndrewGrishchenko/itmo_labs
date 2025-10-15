@@ -12,6 +12,7 @@ import jakarta.ws.rs.Priorities;
 import jakarta.ws.rs.container.ContainerRequestContext;
 import jakarta.ws.rs.container.ContainerRequestFilter;
 import jakarta.ws.rs.core.HttpHeaders;
+import jakarta.ws.rs.core.MultivaluedMap;
 import jakarta.ws.rs.core.Response;
 import jakarta.ws.rs.ext.Provider;
 
@@ -28,7 +29,11 @@ public class JwtAuthFilter implements ContainerRequestFilter {
     @Override
     public void filter(ContainerRequestContext requestContext) {
         String path = requestContext.getUriInfo().getPath();
-        if (path.equals("/auth/login") || path.equals("/auth/register")) {
+        MultivaluedMap<String, String> queryParams = requestContext.getUriInfo().getQueryParameters();
+        System.err.println("PATH BLYAT: " + path);
+        if (path.equals("/auth/login") || 
+            path.equals("/auth/register") || 
+            (path.equals("/auth/user") && !queryParams.containsKey("mine"))) {
             return;
         }
         

@@ -1,8 +1,8 @@
 package com.andrew.service;
 
-import java.util.List;
-
 import com.andrew.dao.PersonDao;
+import com.andrew.dto.PageResponse;
+import com.andrew.dto.person.PersonFilter;
 import com.andrew.dto.person.PersonRequest;
 import com.andrew.exceptions.NotFoundException;
 import com.andrew.model.Person;
@@ -40,8 +40,10 @@ public class PersonService {
                         .orElseThrow(() -> new NotFoundException("Person with id " + id + " not found"));
     }
 
-    public List<Person> getAllPersons(boolean mine) {
-        return mine ? personDao.getAllUser(currentUser.getUser()) : personDao.getAll();
+    public PageResponse<Person> getAllPersons(boolean mine, int page, int size, String sort, String order, PersonFilter filter) {
+        return mine ?
+            personDao.findAllByUserPaginatedAndSorted(currentUser.getUser(), page, size, sort, order, filter) :
+            personDao.findAllPaginatedAndSorted(page, size, sort, order, filter);
     }
 
     public Person updatePerson(int id, PersonRequest dto) {
@@ -50,7 +52,6 @@ public class PersonService {
 
         if (!currentUser.isAdmin() && !existing.getOwner().getId().equals(currentUser.getUser().getId()))
             throw new ForbiddenException("No permission to update");
-        
         
         existing.setName(dto.name());
         existing.setEyeColor(dto.eyeColor());
@@ -65,7 +66,6 @@ public class PersonService {
     public void deletePerson(int id) {
         Person person = personDao.findById(id)
                                  .orElseThrow(() -> new NotFoundException("Person with id " + id + " not found"));
-        
         
         if (!currentUser.isAdmin() && !person.getOwner().getId().equals(currentUser.getUser().getId()))
             throw new ForbiddenException("No permission to delete");

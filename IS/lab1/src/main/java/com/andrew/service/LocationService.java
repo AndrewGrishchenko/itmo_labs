@@ -1,8 +1,8 @@
 package com.andrew.service;
 
-import java.util.List;
-
 import com.andrew.dao.LocationDao;
+import com.andrew.dto.PageResponse;
+import com.andrew.dto.location.LocationFilter;
 import com.andrew.dto.location.LocationRequest;
 import com.andrew.exceptions.NotFoundException;
 import com.andrew.model.Location;
@@ -33,8 +33,10 @@ public class LocationService {
                           .orElseThrow(() -> new NotFoundException("Location with id " + id + " not found"));
     }
 
-    public List<Location> getAllLocations(boolean mine) {
-        return mine ? locationDao.getAllUser(currentUser.getUser()) : locationDao.getAll();
+    public PageResponse<Location> getAllLocations(boolean mine, int page, int size, String sort, String order, LocationFilter filter) {
+        return mine ?
+            locationDao.findAllByUserPaginatedAndSorted(currentUser.getUser(), page, size, sort, order, filter) :
+            locationDao.findAllPaginatedAndSorted(page, size, sort, order, filter);
     }
 
     public Location updateLocation(int id, LocationRequest dto) {

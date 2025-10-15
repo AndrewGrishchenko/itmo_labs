@@ -1,8 +1,8 @@
 package com.andrew.service;
 
-import java.util.List;
-
 import com.andrew.dao.MovieDao;
+import com.andrew.dto.PageResponse;
+import com.andrew.dto.movie.MovieFilter;
 import com.andrew.dto.movie.MovieRequest;
 import com.andrew.exceptions.NotFoundException;
 import com.andrew.model.Movie;
@@ -46,8 +46,10 @@ public class MovieService {
                        .orElseThrow(() -> new NotFoundException("Movie with id " + id + " not found"));
     }
 
-    public List<Movie> getAllMovies(boolean mine) {
-        return mine ? movieDao.getAllUser(currentUser.getUser()) : movieDao.getAll();
+    public PageResponse<Movie> getAllMovies(boolean mine, int page, int size, String sort, String order, MovieFilter filter) {
+        return mine ?
+            movieDao.findAllByUserPaginatedAndSorted(currentUser.getUser(), page, size, sort, order, filter) :
+            movieDao.findAllPaginatedAndSorted(page, size, sort, order, filter);
     }
 
     public Movie updateMovie(int id, MovieRequest dto) {

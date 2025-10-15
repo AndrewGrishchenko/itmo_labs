@@ -2,13 +2,18 @@ package com.andrew.rest;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.andrew.dto.OwnerResponse;
+import com.andrew.dto.PageResponse;
 import com.andrew.dto.coordinates.CoordinatesResponse;
+import com.andrew.dto.coordinates.CoordinatesFilter;
 import com.andrew.dto.coordinates.CoordinatesRequest;
 import com.andrew.model.Coordinates;
 import com.andrew.service.CoordinatesService;
+import com.andrew.util.ResponseMapper;
+import com.andrew.websocket.CoordinatesSocketServer;
+import com.andrew.websocket.WebSocketMessage;
 
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -36,22 +41,38 @@ public class CoordinatesResource {
 
     @GET
     public Response getAll(
-        @QueryParam("mine") @DefaultValue("false") boolean mine
+        @QueryParam("mine") @DefaultValue("false") boolean mine,
+        
+        @QueryParam("page") @DefaultValue("0") int page,
+        @QueryParam("size") @DefaultValue("10") int size,
+        @QueryParam("sort") @DefaultValue("id") String sort,
+        @QueryParam("order") @DefaultValue("asc") String order,
+
+        @QueryParam("owner.id") Long ownerId,
+        @QueryParam("x") Long x,
+        @QueryParam("y") Double y
     ) {
-        List<Coordinates> list = coordinatesService.getAllCoordinates(mine);
-        
-        List<CoordinatesResponse> responseList = list.stream()
-            .map(this::toResponse)
+        CoordinatesFilter filter = new CoordinatesFilter(ownerId, x, y);
+
+        PageResponse<Coordinates> pagedResult = coordinatesService.getAllCoordinates(mine, page, size, sort, order, filter);
+
+        List<CoordinatesResponse> responseList = pagedResult.content().stream()
+            .map(ResponseMapper::toResponse)
             .collect(Collectors.toList());
-        
-        return Response.ok(responseList).build();
+
+        PageResponse<CoordinatesResponse> response = new PageResponse<>(
+            responseList,
+            pagedResult.totalElements()
+        );
+
+        return Response.ok(response).build();
     }
 
     @GET
     @Path("{id}")
     public Response getById(@PathParam("id") int id) {
         Coordinates coordinates = coordinatesService.getCoordinatesById(id);
-        return Response.ok(toResponse(coordinates)).build();
+        return Response.ok(ResponseMapper.toResponse(coordinates)).build();
     }
 
     @POST
@@ -62,8 +83,12 @@ public class CoordinatesResource {
                               .path(String.valueOf(created.getId()))
                               .build();
 
+        CoordinatesResponse response = ResponseMapper.toResponse(created);
+
+        CoordinatesSocketServer.broadcast(new WebSocketMessage<>("create", response));
+
         return Response.created(location)
-                       .entity(toResponse(created))
+                       .entity(response)
                        .build();
     }
 
@@ -71,27 +96,16 @@ public class CoordinatesResource {
     @Path("{id}")
     public Response update(@PathParam("id") int id, @Valid CoordinatesRequest dto) {
         Coordinates updated = coordinatesService.updateCoordinates(id, dto);
-        return Response.ok(toResponse(updated)).build();
+        CoordinatesResponse response = ResponseMapper.toResponse(updated);
+        CoordinatesSocketServer.broadcast(new WebSocketMessage<>("update", response));
+        return Response.ok(response).build();
     }
 
     @DELETE
     @Path("{id}")
     public Response delete(@PathParam("id") int id) {
         coordinatesService.deleteCoordinates(id);
+        CoordinatesSocketServer.broadcast(new WebSocketMessage<>("delete", Map.of("id", id)));
         return Response.noContent().build();
-    }
-
-    private CoordinatesResponse toResponse(Coordinates entity) {
-        OwnerResponse owner = new OwnerResponse(
-            entity.getOwner().getId(),
-            entity.getOwner().getUsername()
-        );
-
-        return new CoordinatesResponse(
-            entity.getId(),
-            owner,
-            entity.getX(),
-            entity.getY()
-        );
     }
 }

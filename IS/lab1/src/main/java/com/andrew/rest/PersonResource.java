@@ -2,13 +2,20 @@ package com.andrew.rest;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.andrew.dto.OwnerResponse;
+import com.andrew.dto.PageResponse;
+import com.andrew.dto.person.PersonFilter;
 import com.andrew.dto.person.PersonRequest;
 import com.andrew.dto.person.PersonResponse;
+import com.andrew.model.Color;
+import com.andrew.model.Country;
 import com.andrew.model.Person;
 import com.andrew.service.PersonService;
+import com.andrew.util.ResponseMapper;
+import com.andrew.websocket.PersonSocketServer;
+import com.andrew.websocket.WebSocketMessage;
 
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -36,22 +43,61 @@ public class PersonResource {
 
     @GET
     public Response getAll(
-        @QueryParam("mine") @DefaultValue("false") boolean mine
-    ) {
-        List<Person> list = personService.getAllPersons(mine);
+        @QueryParam("mine") @DefaultValue("false") boolean mine,
+        @QueryParam("page") @DefaultValue("0") int page,
+        @QueryParam("size") @DefaultValue("10") int size,
+        @QueryParam("sort") @DefaultValue("id") String sort,
+        @QueryParam("order") @DefaultValue("asc") String order,
 
-        List<PersonResponse> responseList = list.stream()
-            .map(this::toResponse)
+        @QueryParam("owner.id") Long ownerId,
+        @QueryParam("name") String name,
+        @QueryParam("eyeColor") Color eyeColor,
+        @QueryParam("hairColor") Color hairColor,
+        @QueryParam("location") Long locationId,
+        @QueryParam("weight") Float weight,
+        @QueryParam("nationality") Country nationality
+    ) {
+        // System.err.println("location id is blyat " + locationId);
+
+        // PersonFilter filter = new PersonFilter(
+        //     ownerId,
+        //     name,
+        //     eyeColor != null ? Color.valueOf(eyeColor) : null,
+        //     hairColor != null ? Color.valueOf(hairColor) : null,
+        //     locationId,
+        //     weight,
+        //     nationality != null ? Country.valueOf(nationality) : null
+        // );
+
+        PersonFilter filter = new PersonFilter(
+            ownerId,
+            name,
+            eyeColor,
+            hairColor,
+            locationId,
+            weight,
+            nationality
+        );
+
+        PageResponse<Person> pagedResult = personService.getAllPersons(mine, page, size, sort, order, filter);
+
+        List<PersonResponse> responseList = pagedResult.content().stream()
+            .map(ResponseMapper::toResponse)
             .collect(Collectors.toList());
 
-        return Response.ok(responseList).build();
+        PageResponse<PersonResponse> response = new PageResponse<>(
+            responseList,
+            pagedResult.totalElements()
+        );
+
+        return Response.ok(response).build();
     }
 
     @GET
     @Path("{id}")
     public Response getById(@PathParam("id") int id) {
         Person person = personService.getPersonById(id);
-        return Response.ok(toResponse(person)).build();
+        return Response.ok(ResponseMapper.toResponse(person)).build();
     }
 
     @POST
@@ -62,8 +108,12 @@ public class PersonResource {
                               .path(String.valueOf(created.getId()))
                               .build();
 
+        PersonResponse response = ResponseMapper.toResponse(created);
+
+        PersonSocketServer.broadcast(new WebSocketMessage<>("create", response));
+
         return Response.created(location)
-                       .entity(toResponse(created))
+                       .entity(response)
                        .build();
     }
 
@@ -71,31 +121,16 @@ public class PersonResource {
     @Path("{id}")
     public Response update(@PathParam("id") int id, @Valid PersonRequest request) {
         Person updated = personService.updatePerson(id, request);
-        return Response.ok(toResponse(updated)).build();
+        PersonResponse response = ResponseMapper.toResponse(updated);
+        PersonSocketServer.broadcast(new WebSocketMessage<>("update", response));
+        return Response.ok(response).build();
     }
 
     @DELETE
     @Path("id")
     public Response delete(@PathParam("id") int id) {
         personService.deletePerson(id);
+        PersonSocketServer.broadcast(new WebSocketMessage<>("delete", Map.of("id", id)));
         return Response.noContent().build();
-    }
- 
-    private PersonResponse toResponse(Person entity) {
-        OwnerResponse owner = new OwnerResponse(
-            entity.getOwner().getId(),
-            entity.getOwner().getUsername()
-        );
-
-        return new PersonResponse(
-            entity.getId(),
-            owner,
-            entity.getName(),
-            entity.getEyeColor(),
-            entity.getHairColor(),
-            entity.getLocation(),
-            entity.getWeight(),
-            entity.getNationality()
-        );
     }
 }

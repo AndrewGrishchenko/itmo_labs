@@ -2,13 +2,18 @@ package com.andrew.rest;
 
 import java.net.URI;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
-import com.andrew.dto.OwnerResponse;
+import com.andrew.dto.PageResponse;
+import com.andrew.dto.location.LocationFilter;
 import com.andrew.dto.location.LocationRequest;
 import com.andrew.dto.location.LocationResponse;
 import com.andrew.model.Location;
 import com.andrew.service.LocationService;
+import com.andrew.util.ResponseMapper;
+import com.andrew.websocket.LocationSocketServer;
+import com.andrew.websocket.WebSocketMessage;
 
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -36,22 +41,39 @@ public class LocationResource {
 
     @GET
     public Response getAll(
-        @QueryParam("mine") @DefaultValue("false") boolean mine
-    ) {
-        List<Location> list = locationService.getAllLocations(mine);
+        @QueryParam("mine") @DefaultValue("false") boolean mine,
+        
+        @QueryParam("page") @DefaultValue("0") int page,
+        @QueryParam("size") @DefaultValue("10") int size,
+        @QueryParam("sort") @DefaultValue("id") String sort,
+        @QueryParam("order") @DefaultValue("asc") String order,
 
-        List<LocationResponse> responseList = list.stream()
-            .map(this::toResponse)
+        @QueryParam("owner.id") Long ownerId,
+        @QueryParam("name") String name,
+        @QueryParam("x") Double x,
+        @QueryParam("y") Double y
+    ) {
+        LocationFilter filter = new LocationFilter(ownerId, name, x, y);
+
+        PageResponse<Location> pagedResult = locationService.getAllLocations(mine, page, size, sort, order, filter);
+
+        List<LocationResponse> responseList = pagedResult.content().stream()
+            .map(ResponseMapper::toResponse)
             .collect(Collectors.toList());
 
-        return Response.ok(responseList).build();
+        PageResponse<LocationResponse> response = new PageResponse<>(
+            responseList,
+            pagedResult.totalElements()
+        );
+
+        return Response.ok(response).build();
     }
 
     @GET
     @Path("{id}")
     public Response getById(@PathParam("id") int id) {
         Location location = locationService.getLocationById(id);
-        return Response.ok(toResponse(location)).build();
+        return Response.ok(ResponseMapper.toResponse(location)).build();
     }
 
     @POST
@@ -62,8 +84,12 @@ public class LocationResource {
                               .path(String.valueOf(created.getId()))
                               .build();
         
+        LocationResponse response = ResponseMapper.toResponse(created);
+
+        LocationSocketServer.broadcast(new WebSocketMessage<>("create", response));
+
         return Response.created(location)
-                       .entity(toResponse(created))
+                       .entity(response)
                        .build();
     }
 
@@ -71,28 +97,16 @@ public class LocationResource {
     @Path("{id}")
     public Response update(@PathParam("id") int id, @Valid LocationRequest request) {
         Location updated = locationService.updateLocation(id, request);
-        return Response.ok(toResponse(updated)).build();
+        LocationResponse response = ResponseMapper.toResponse(updated);
+        LocationSocketServer.broadcast(new WebSocketMessage<>("update", response));
+        return Response.ok(response).build();
     }
 
     @DELETE
     @Path("{id}")
     public Response delete(@PathParam("id") int id) {
         locationService.deleteLocation(id);
+        LocationSocketServer.broadcast(new WebSocketMessage<>("delete", Map.of("id", id)));
         return Response.noContent().build();
-    }
-
-    private LocationResponse toResponse(Location entity) {
-        OwnerResponse owner = new OwnerResponse(
-            entity.getOwner().getId(),
-            entity.getOwner().getUsername()
-        );
-
-        return new LocationResponse(
-            entity.getId(),
-            owner,
-            entity.getX(),
-            entity.getY(),
-            entity.getName()
-        );
     }
 }

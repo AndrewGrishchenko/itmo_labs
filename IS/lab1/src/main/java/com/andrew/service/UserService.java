@@ -1,11 +1,14 @@
 package com.andrew.service;
 
+import java.util.List;
 import java.util.Optional;
 
 import com.andrew.dao.UserDao;
+import com.andrew.dto.PageResponse;
 import com.andrew.exceptions.ValidationException;
 import com.andrew.model.Role;
 import com.andrew.model.User;
+import com.andrew.security.CurrentUser;
 import com.andrew.util.JwtUtil;
 import com.andrew.util.PasswordUtil;
 
@@ -14,9 +17,11 @@ import jakarta.inject.Inject;
 
 @ApplicationScoped
 public class UserService {
-
     @Inject
     UserDao userDao;
+
+    @Inject
+    CurrentUser currentUser;
 
     public User register(String username, String password, Role role) {
         if (userDao.findByUsername(username).isPresent())
@@ -35,6 +40,12 @@ public class UserService {
 
         User user = userOpt.get();
         return JwtUtil.generateToken(user.getUsername(), user.getId(), user.getRole().toString());
+    }
+
+    public PageResponse<User> getAllUsers(boolean mine, int page, int size, String sort, String order) {
+        return mine ?
+            new PageResponse<>(List.of(currentUser.getUser()), 1) :
+            userDao.findAllPaginatedAndSorted(page, size, sort, order);
     }
 
     public Optional<User> findById(Long id) {

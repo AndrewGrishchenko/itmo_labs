@@ -1,8 +1,8 @@
 package com.andrew.service;
 
-import java.util.List;
-
 import com.andrew.dao.CoordinatesDao;
+import com.andrew.dto.PageResponse;
+import com.andrew.dto.coordinates.CoordinatesFilter;
 import com.andrew.dto.coordinates.CoordinatesRequest;
 import com.andrew.exceptions.NotFoundException;
 import com.andrew.model.Coordinates;
@@ -33,8 +33,10 @@ public class CoordinatesService {
                              .orElseThrow(() -> new NotFoundException("Coordinates with id " + id + " not found"));
     }
 
-    public List<Coordinates> getAllCoordinates(boolean mine) {
-        return mine ? coordinatesDao.getAllUser(currentUser.getUser()) : coordinatesDao.getAll();
+    public PageResponse<Coordinates> getAllCoordinates(boolean mine, int page, int size, String sort, String order, CoordinatesFilter filter) {
+        return mine ?
+            coordinatesDao.findAllByUserPaginatedAndSorted(currentUser.getUser(), page, size, sort, order, filter) :
+            coordinatesDao.findAllPaginatedAndSorted(page, size, sort, order, filter);
     }
 
     public Coordinates updateCoordinates(int id, CoordinatesRequest dto) {
