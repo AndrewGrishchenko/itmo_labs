@@ -57,18 +57,6 @@ public class PersonResource {
         @QueryParam("weight") Float weight,
         @QueryParam("nationality") Country nationality
     ) {
-        // System.err.println("location id is blyat " + locationId);
-
-        // PersonFilter filter = new PersonFilter(
-        //     ownerId,
-        //     name,
-        //     eyeColor != null ? Color.valueOf(eyeColor) : null,
-        //     hairColor != null ? Color.valueOf(hairColor) : null,
-        //     locationId,
-        //     weight,
-        //     nationality != null ? Country.valueOf(nationality) : null
-        // );
-
         PersonFilter filter = new PersonFilter(
             ownerId,
             name,
@@ -127,7 +115,7 @@ public class PersonResource {
     }
 
     @DELETE
-    @Path("id")
+    @Path("{id}")
     public Response delete(@PathParam("id") int id) {
         personService.deletePerson(id);
         PersonSocketServer.broadcast(new WebSocketMessage<>("delete", Map.of("id", id)));

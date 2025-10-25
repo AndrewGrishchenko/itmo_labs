@@ -1,11 +1,17 @@
 package com.andrew.service;
 
+import java.util.List;
+import java.util.Map;
+
 import com.andrew.dao.CoordinatesDao;
+import com.andrew.dao.MovieDao;
 import com.andrew.dto.PageResponse;
 import com.andrew.dto.coordinates.CoordinatesFilter;
 import com.andrew.dto.coordinates.CoordinatesRequest;
+import com.andrew.exceptions.ConflictException;
 import com.andrew.exceptions.NotFoundException;
 import com.andrew.model.Coordinates;
+import com.andrew.model.Movie;
 import com.andrew.security.CurrentUser;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -16,6 +22,9 @@ import jakarta.ws.rs.ForbiddenException;
 public class CoordinatesService {
     @Inject
     CoordinatesDao coordinatesDao;
+
+    @Inject
+    MovieDao movieDao;
 
     @Inject
     CurrentUser currentUser;
@@ -58,6 +67,14 @@ public class CoordinatesService {
         
         if (!currentUser.isAdmin() && !coordinates.getOwner().getId().equals(currentUser.getUser().getId()))
             throw new ForbiddenException("No permission to delete");
+
+        if (movieDao.existsByCoordinateAndNotOwner(coordinates, currentUser.getUser()))
+            throw new ConflictException("FOREIGN_DEPENDENCY_CONFLICT");
+        
+        List<Movie> dependencies = movieDao.findByCoordinate(coordinates);
+
+        if (!dependencies.isEmpty())
+            throw new ConflictException("DEPENDENCY_CONFLICT", Map.of("Movie", dependencies.size()));
         
         coordinatesDao.delete(coordinates);
     }

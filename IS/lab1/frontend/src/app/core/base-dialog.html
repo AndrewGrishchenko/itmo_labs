@@ -1,0 +1,40 @@
+<div style="background-color: white; color: black; border-radius: 8px; display: flex; flex-direction: column; height: 100%;">
+
+  <mat-progress-bar mode="indeterminate" *ngIf="isSaving"></mat-progress-bar>
+
+  <h1 mat-dialog-title style="padding: 24px 24px 20px 24px; margin: 0; flex-shrink: 0;">
+    {{ isEditMode ? (isOwner ? 'Изменить' : 'Просмотреть') : 'Создать' }} {{ entityDisplayName }}
+  </h1>
+
+  <div style="padding: 0 24px; overflow-y: auto; flex-grow: 1;">
+    <p *ngIf="isEditMode && !isOwner" 
+       style="background-color: #f5f5f5; border-radius: 4px; padding: 8px 12px; margin-bottom: 16px; text-align: center;">
+      Вы не являетесь владельцем этого объекта, доступен только просмотр.
+    </p>
+    
+    <form [formGroup]="form" style="display: flex; flex-direction: column;">
+      <app-form-field 
+        *ngFor="let field of formFields" 
+        [form]="form" 
+        [config]="field"
+        style="display: block; margin-bottom: 15px;">
+      </app-form-field>     
+    </form>
+  </div>
+
+  <div mat-dialog-actions align="end" style="padding: 16px 24px; flex-shrink: 0;">
+    <button mat-button (click)="onCancel()" [disabled]="isSaving">
+      {{ isOwner ? 'Отмена' : 'Закрыть' }}
+    </button>
+    
+    <ng-container *ngIf="isOwner">
+      <button mat-stroked-button color="warn" (click)="onDelete()" *ngIf="isEditMode" [disabled]="isSaving">
+        Удалить
+      </button>
+      <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!form.valid || isSaving">
+        {{ isEditMode ? 'Изменить' : 'Создать' }}
+      </button>
+    </ng-container>
+  </div>
+
+</div>

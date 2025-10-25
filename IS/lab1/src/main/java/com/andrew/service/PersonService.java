@@ -1,10 +1,16 @@
 package com.andrew.service;
 
+import java.util.List;
+import java.util.Map;
+
+import com.andrew.dao.MovieDao;
 import com.andrew.dao.PersonDao;
 import com.andrew.dto.PageResponse;
 import com.andrew.dto.person.PersonFilter;
 import com.andrew.dto.person.PersonRequest;
+import com.andrew.exceptions.ConflictException;
 import com.andrew.exceptions.NotFoundException;
+import com.andrew.model.Movie;
 import com.andrew.model.Person;
 import com.andrew.security.CurrentUser;
 
@@ -16,6 +22,9 @@ import jakarta.ws.rs.ForbiddenException;
 public class PersonService {
     @Inject
     PersonDao personDao;
+
+    @Inject
+    MovieDao movieDao;
 
     @Inject
     CurrentUser currentUser;
@@ -69,6 +78,14 @@ public class PersonService {
         
         if (!currentUser.isAdmin() && !person.getOwner().getId().equals(currentUser.getUser().getId()))
             throw new ForbiddenException("No permission to delete");
+
+        if (movieDao.existsByPersonAndNotOwner(person, currentUser.getUser()))
+            throw new ConflictException("FOREIGN_DEPENDENCY_CONFLICT");
+
+        List<Movie> dependencies = movieDao.findByPerson(person);
+        
+        if (!dependencies.isEmpty())
+            throw new ConflictException("DEPENDENCY_CONFLICT", Map.of("Movie", dependencies.size()));
         
         personDao.delete(person);
     }

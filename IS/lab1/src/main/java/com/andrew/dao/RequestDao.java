@@ -18,7 +18,6 @@ public class RequestDao {
         if (movieId == null)
             return null;
 
-        //Movie movie = session.createQuery("")
         return null;
     }
 }

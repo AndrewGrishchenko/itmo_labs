@@ -1,0 +1,202 @@
+<div class="page-container">
+  <h1>Специальные операции</h1>
+
+  <mat-card class="operation-card">
+    <mat-card-header>
+      <mat-card-title>Фильм с минимальным жанром</mat-card-title>
+      <mat-card-subtitle>
+        Возвращает один (любой) фильм, значение поля genre которого является минимальным (в алфавитном порядке).
+      </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-actions>
+      <button mat-raised-button color="primary" (click)="onFindMovieWithMinGenre()" [disabled]="isLoadingMinGenre">
+        Выполнить
+      </button>
+    </mat-card-actions>
+
+    <mat-card-content class="result-container">
+        <mat-spinner *ngIf="isLoadingMinGenre" diameter="40"></mat-spinner>
+
+        <div *ngIf="minGenreMovieResult" class="result-box entity-result">
+            <div class="entity-info">
+            <span class="entity-type">Фильм</span>
+            <span class="entity-name">{{ minGenreMovieResult.name }}</span>
+            </div>
+            <div class="entity-actions">
+            <button mat-icon-button (click)="openMovieDialog(minGenreMovieResult)" title="Просмотреть детали">
+                <mat-icon>visibility</mat-icon>
+            </button>
+            </div>
+        </div>
+
+        <div *ngIf="minGenreError" class="error-box">
+            <p>{{ minGenreError }}</p>
+        </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="operation-card">
+    <mat-card-header>
+        <mat-card-title>Количество по "Золотым пальмовым ветвям"</mat-card-title>
+        <mat-card-subtitle>
+        Возвращает количество фильмов, значение поля goldenPalmCount которых равно заданному.
+        </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content [formGroup]="goldenPalmForm">
+        <mat-form-field appearance="outline">
+        <mat-label>Количество "Золотых пальм"</mat-label>
+        <input matInput type="number" formControlName="count" min="1">
+        </mat-form-field>
+    </mat-card-content>
+
+    <mat-card-actions>
+        <button mat-raised-button color="primary" (click)="onCountByGoldenPalm()" [disabled]="isLoadingGoldenPalm || goldenPalmForm.invalid">
+        Выполнить
+        </button>
+    </mat-card-actions>
+
+    <mat-card-content class="result-container">
+        <mat-spinner *ngIf="isLoadingGoldenPalm" diameter="40"></mat-spinner>
+
+        <div *ngIf="goldenPalmResult !== null" class="result-box">
+        <h3>Результат:</h3>
+        <p>Найдено фильмов: <strong>{{ goldenPalmResult }}</strong></p>
+        </div>
+
+        <div *ngIf="goldenPalmError" class="error-box">
+        <p>{{ goldenPalmError }}</p>
+        </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="operation-card">
+    <mat-card-header>
+        <mat-card-title>Количество по жанру (меньше заданного)</mat-card-title>
+        <mat-card-subtitle>
+        Возвращает количество фильмов, значение поля genre которых меньше (в алфавитном порядке) заданного.
+        </mat-card-subtitle>
+    </mat-card-header>
+    
+    <mat-card-content [formGroup]="genreLessThanForm">
+        <mat-form-field appearance="outline">
+        <mat-label>Жанр для сравнения</mat-label>
+        <mat-select formControlName="genre">
+            <mat-option *ngFor="let genre of movieGenres" [value]="genre">
+            {{ genre }}
+            </mat-option>
+        </mat-select>
+        </mat-form-field>
+    </mat-card-content>
+    
+    <mat-card-actions>
+        <button mat-raised-button color="primary" (click)="onCountGenreLessThan()" [disabled]="isLoadingGenreLessThan || genreLessThanForm.invalid">
+        Выполнить
+        </button>
+    </mat-card-actions>
+    
+    <mat-card-content class="result-container">
+        <mat-spinner *ngIf="isLoadingGenreLessThan" diameter="40"></mat-spinner>
+    
+        <div *ngIf="genreLessThanResult !== null" class="result-box">
+        <h3>Результат:</h3>
+        <p>Найдено фильмов: <strong>{{ genreLessThanResult }}</strong></p>
+        </div>
+    
+        <div *ngIf="genreLessThanError" class="error-box">
+        <p>{{ genreLessThanError }}</p>
+        </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="operation-card">
+    <mat-card-header>
+        <mat-card-title>Сценаристы без "Оскаров"</mat-card-title>
+        <mat-card-subtitle>
+        Получить список сценаристов, ни один фильм которых не получил ни одного "Оскара".
+        </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-actions>
+        <button mat-raised-button color="primary" (click)="onFindScreenwritersWithNoOscars()" [disabled]="isLoadingScreenwriters">
+        Выполнить
+        </button>
+    </mat-card-actions>
+
+    <mat-card-content class="result-container">
+        <mat-spinner *ngIf="isLoadingScreenwriters" diameter="40"></mat-spinner>
+
+        <div *ngIf="screenwritersResult" class="result-box">
+        <div *ngIf="screenwritersResult.length > 0; else noScreenwritersFound">
+            <h3>Результат ({{ screenwritersResult.length }}):</h3>
+            
+            <div class="entity-list-container">
+            <div *ngFor="let person of screenwritersResult" class="entity-result">
+                <div class="entity-info">
+                <span class="entity-type">Сценарист</span>
+                <span class="entity-name">{{ person.name }}</span>
+                </div>
+                <div class="entity-actions">
+                <button mat-icon-button (click)="openPersonDialog(person)" title="Просмотреть детали">
+                    <mat-icon>visibility</mat-icon>
+                </button>
+                </div>
+            </div>
+            </div>
+            
+        </div>
+        <ng-template #noScreenwritersFound>
+            <p>Сценаристы, подходящие под условие, не найдены.</p>
+        </ng-template>
+        </div>
+
+        <div *ngIf="screenwritersError" class="error-box">
+        <p>{{ screenwritersError }}</p>
+        </div>
+    </mat-card-content>
+  </mat-card>
+
+  <mat-card class="operation-card">
+    <mat-card-header>
+        <mat-card-title>Перераспределение "Оскаров"</mat-card-title>
+        <mat-card-subtitle>
+        Равномерно перераспределить все "Оскары" из одного жанра между фильмами другого. Дробные части отбрасываются.
+        </mat-card-subtitle>
+    </mat-card-header>
+
+    <mat-card-content [formGroup]="redistributeForm">
+        <div class="form-row">
+        <mat-form-field appearance="outline">
+            <mat-label>Из жанра</mat-label>
+            <mat-select formControlName="sourceGenre">
+            <mat-option *ngFor="let genre of movieGenres" [value]="genre">{{ genre }}</mat-option>
+            </mat-select>
+        </mat-form-field>
+
+        <mat-form-field appearance="outline">
+            <mat-label>В жанр</mat-label>
+            <mat-select formControlName="destGenre">
+            <mat-option *ngFor="let genre of movieGenres" [value]="genre">{{ genre }}</mat-option>
+            </mat-select>
+        </mat-form-field>
+        </div>
+        <mat-error *ngIf="redistributeForm.hasError('genresAreSame')">
+        Исходный и конечный жанры не должны совпадать.
+        </mat-error>
+    </mat-card-content>
+
+    <mat-card-actions>
+        <button mat-raised-button color="primary" (click)="onRedistributeOscars()" [disabled]="isLoadingRedistribute || redistributeForm.invalid">
+        Выполнить
+        </button>
+    </mat-card-actions>
+
+    <mat-card-content class="result-container">
+        <mat-spinner *ngIf="isLoadingRedistribute" diameter="40"></mat-spinner>
+        <div *ngIf="redistributeError" class="error-box">
+        <p>{{ redistributeError }}</p>
+        </div>
+    </mat-card-content>
+  </mat-card>
+</div>

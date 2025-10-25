@@ -61,29 +61,6 @@ public class CoordinatesDao {
 
         List<Coordinates> content = query.list();
         return new PageResponse<>(content, totalElements);
-        
-        // String countHql = "select count(c.id) from Coordinates c";
-        // Query<Long> countQuery = session.createQuery(countHql, Long.class);
-        // long totalElements = countQuery.getSingleResult();
-
-        // if (totalElements == 0)
-        //     return new PageResponse<>(List.of(), 0);
-
-        // String sanitizedSortField = sanitizeSortField(sortField);
-        // String sanitizedSortOrder = "desc".equalsIgnoreCase(sortOrder) ? "desc" : "asc";
-
-        // StringBuilder hql = new StringBuilder("from Coordinates c order by c.");
-        // hql.append(sanitizedSortField);
-        // hql.append(" ");
-        // hql.append(sanitizedSortOrder);
-
-        // Query<Coordinates> query = session.createQuery(hql.toString(), Coordinates.class);
-        // query.setFirstResult(page * size);
-        // query.setMaxResults(size);
-
-        // List<Coordinates> content = query.list();
-
-        // return new PageResponse<>(content, totalElements);
     }
 
     public PageResponse<Coordinates> findAllByUserPaginatedAndSorted(User user, int page, int size, String sortField, String sortOrder, CoordinatesFilter filter) {
@@ -109,31 +86,6 @@ public class CoordinatesDao {
 
         List<Coordinates> content = query.list();
         return new PageResponse<>(content, totalElements);
-        
-        // String countHql = "select count(c.id) from Coordinates c where c.owner = :user";
-        // Query<Long> countQuery = session.createQuery(countHql, Long.class);
-        // countQuery.setParameter("user", user);
-        // long totalElements = countQuery.getSingleResult();
-
-        // if (totalElements == 0)
-        //     return new PageResponse<>(List.of(), 0);
-
-        // String sanitizedSortField = sanitizeSortField(sortField);
-        // String sanitizedSortOrder = "desc".equalsIgnoreCase(sortOrder) ? "desc" : "asc";
-
-        // StringBuilder hql = new StringBuilder("from Coordinates c where c.owner = :user order by c.");
-        // hql.append(sanitizedSortField);
-        // hql.append(" ");
-        // hql.append(sanitizedSortOrder);
-
-        // Query<Coordinates> query = session.createQuery(hql.toString(), Coordinates.class);
-        // query.setParameter("user", user);
-        // query.setFirstResult(page * size);
-        // query.setMaxResults(size);
-
-        // List<Coordinates> content = query.list();
-
-        // return new PageResponse<>(content, totalElements);
     }
 
     public Optional<Coordinates> findById(int id) {

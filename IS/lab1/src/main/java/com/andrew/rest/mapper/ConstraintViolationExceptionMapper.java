@@ -1,4 +1,4 @@
-package com.andrew.rest;
+package com.andrew.rest.mapper;
 
 import java.util.HashMap;
 import java.util.Map;

@@ -1,11 +1,17 @@
 package com.andrew.service;
 
+import java.util.List;
+import java.util.Map;
+
 import com.andrew.dao.LocationDao;
+import com.andrew.dao.PersonDao;
 import com.andrew.dto.PageResponse;
 import com.andrew.dto.location.LocationFilter;
 import com.andrew.dto.location.LocationRequest;
+import com.andrew.exceptions.ConflictException;
 import com.andrew.exceptions.NotFoundException;
 import com.andrew.model.Location;
+import com.andrew.model.Person;
 import com.andrew.security.CurrentUser;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -16,6 +22,9 @@ import jakarta.ws.rs.ForbiddenException;
 public class LocationService {
     @Inject
     LocationDao locationDao;
+
+    @Inject
+    PersonDao personDao;
 
     @Inject
     CurrentUser currentUser;
@@ -60,6 +69,14 @@ public class LocationService {
         if (!currentUser.isAdmin() && !location.getOwner().getId().equals(currentUser.getUser().getId()))
             throw new ForbiddenException("No permission to delete");
         
-        locationDao.delete(location);
+        if (personDao.existsByLocationAndNotOwner(location, currentUser.getUser()))
+            throw new ConflictException("FOREIGN_DEPENDENCY_CONFLICT");
+
+        List<Person> dependencies = personDao.getAllWithLocation(location);
+        
+        if (!dependencies.isEmpty())
+            throw new ConflictException("DEPENDENCY_CONFLICT", Map.of("Person", dependencies.size()));
+
+        locationDao.delete(location);            
     }
 }

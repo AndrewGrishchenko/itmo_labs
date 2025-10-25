@@ -1,0 +1,57 @@
+<div class="header-controls">
+  <button mat-raised-button color="primary" (click)="openDialog()">Создать</button>
+  <mat-checkbox [(ngModel)]="showOnlyMine" (change)="onFilterChange()">Показать только мои</mat-checkbox>
+</div>
+<div class="table-wrapper">
+  <div *ngIf="isLoading" class="spinner-overlay"><mat-spinner></mat-spinner></div>
+  <div class="table-container mat-elevation-z8">
+    <div [formGroup]="filterForm">
+      <table mat-table [dataSource]="dataSource" matSort>
+        <ng-container matColumnDef="x">
+          <th mat-header-cell *matHeaderCellDef>
+            <div mat-sort-header="x">X</div>
+            <mat-form-field class="filter-field">
+              <input matInput formControlName="x" (click)="$event.stopPropagation()">
+            </mat-form-field>
+          </th>
+          <td mat-cell *matCellDef="let row"> {{row.x}} </td>
+        </ng-container>
+        
+        <ng-container matColumnDef="y">
+          <th mat-header-cell *matHeaderCellDef>
+            <div mat-sort-header="y">Y</div>
+            <mat-form-field class="filter-field">
+              <input matInput formControlName="y" (click)="$event.stopPropagation()">
+            </mat-form-field>
+          </th>
+          <td mat-cell *matCellDef="let row"> {{row.y}} </td>
+        </ng-container>
+        
+        <ng-container matColumnDef="owner">
+          <th mat-header-cell *matHeaderCellDef>
+            <div mat-sort-header="owner.username">Владелец</div>
+            
+            <div class="picker-filter-container">
+              <button mat-stroked-button class="picker-button" (click)="openOwnerFilterSelector()">
+                {{ filterForm.get('owner')?.value?.username || 'Выбрать...' }}
+              </button>
+              <button *ngIf="filterForm.get('owner')?.value"
+                      mat-icon-button class="clear-button" (click)="clearOwnerFilter($event)">
+                <mat-icon>close</mat-icon>
+              </button>
+            </div>
+          </th>
+          <td mat-cell *matCellDef="let row"> {{row.owner.username}} </td>
+        </ng-container>
+
+        <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
+        
+        <tr mat-row *matRowDef="let row; columns: displayedColumns;" (click)="openDialog(row)" class="clickable-row" [ngClass]="{'not-my-row': row.owner?.id !== currentUserId}"></tr>
+        
+        <tr class="mat-row" *matNoDataRow><td class="mat-cell" [attr.colspan]="displayedColumns.length">Нет данных.</td></tr>
+      </table>
+    </div>
+    
+    <mat-paginator [length]="resultsLength" [pageSize]="10" [pageSizeOptions]="[5, 10, 25, 100]"></mat-paginator>
+  </div>
+</div>

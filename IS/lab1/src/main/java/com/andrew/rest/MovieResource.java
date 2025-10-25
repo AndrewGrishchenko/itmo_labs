@@ -50,6 +50,8 @@ public class MovieResource {
         @QueryParam("sort") @DefaultValue("id") String sort,
         @QueryParam("order") @DefaultValue("asc") String order,
 
+        @QueryParam("filterLogic") @DefaultValue("AND") String filterLogic,
+        
         @QueryParam("owner.id") Long ownerId,
         @QueryParam("name") String name,
         @QueryParam("coordinates") Long coordinatesId,
@@ -82,7 +84,7 @@ public class MovieResource {
             genre
         );
 
-        PageResponse<Movie> pagedResult = movieService.getAllMovies(mine, page, size, sort, order, filter);
+        PageResponse<Movie> pagedResult = movieService.getAllMovies(mine, page, size, sort, order, filterLogic, filter);
 
         List<MovieResponse> responseList = pagedResult.content().stream()
             .map(ResponseMapper::toResponse)

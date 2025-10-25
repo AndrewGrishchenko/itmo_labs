@@ -13,7 +13,9 @@ import org.hibernate.query.Query;
 
 import com.andrew.dto.PageResponse;
 import com.andrew.dto.movie.MovieFilter;
+import com.andrew.model.Coordinates;
 import com.andrew.model.Movie;
+import com.andrew.model.Person;
 import com.andrew.model.User;
 
 import jakarta.enterprise.context.ApplicationScoped;
@@ -40,9 +42,10 @@ public class MovieDao {
                       .list();
     }
 
-    public PageResponse<Movie> findAllPaginatedAndSorted(int page, int size, String sortField, String sortOrder, MovieFilter filter) {
+    public PageResponse<Movie> findAllPaginatedAndSorted(int page, int size, String sortField, String sortOrder, String filterLogic, MovieFilter filter) {
         Map<String, Object> parameters = new HashMap<>();
-        String whereClause = buildWhereClause(filter, parameters, null);
+        String sanitizedFilterLogic = "and".equalsIgnoreCase(filterLogic) ? "and" : "or";
+        String whereClause = buildWhereClause(filter, parameters, null, sanitizedFilterLogic);
 
         String countHql = "select count(m.id) from Movie m" + whereClause;
         Query<Long> countQuery = session.createQuery(countHql, Long.class);
@@ -65,9 +68,10 @@ public class MovieDao {
         return new PageResponse<>(content, totalElements);
     }
 
-    public PageResponse<Movie> findAllByUserPaginatedAndSorted(User user, int page, int size, String sortField, String sortOrder, MovieFilter filter) {
+    public PageResponse<Movie> findAllByUserPaginatedAndSorted(User user, int page, int size, String sortField, String sortOrder, String filterLogic, MovieFilter filter) {
         Map<String, Object> parameters = new HashMap<>();
-        String whereClause = buildWhereClause(filter, parameters, user);
+        String sanitizedFilterLogic = "and".equalsIgnoreCase(filterLogic) ? "and" : "or";
+        String whereClause = buildWhereClause(filter, parameters, user, sanitizedFilterLogic);
 
         String countHql = "select count(m.id) from Movie m" + whereClause;
         Query<Long> countQuery = session.createQuery(countHql, Long.class);
@@ -96,6 +100,41 @@ public class MovieDao {
                       .uniqueResultOptional();
     }
 
+    public boolean existsByPersonAndNotOwner(Person person, User owner) {
+        return session.createQuery("select count(m.id) from Movie m where " +
+                                   "m.owner != :owner and (" +
+                                   "m.director = :person or " +
+                                   "m.screenwriter = :person or " +
+                                   "m.operator = :person)", Long.class)
+                      .setParameter("owner", owner)
+                      .setParameter("person", person)
+                      .getSingleResult() > 0;
+    }
+
+    public List<Movie> findByPerson(Person person) {
+        return session.createQuery("from Movie m where " +
+                                   "m.director = :person or " +
+                                   "m.screenwriter = :person or " +
+                                   "m.operator = :person", Movie.class)
+                      .setParameter("person", person)
+                      .list();
+    }
+
+    public boolean existsByCoordinateAndNotOwner(Coordinates coordinates, User owner) {
+        return session.createQuery("select count(m.id) from Movie m where " +
+                                   "m.owner != :owner and " +
+                                   "m.coordinates = :coordinates", Long.class)
+                      .setParameter("owner", owner)
+                      .setParameter("coordinates", coordinates)
+                      .getSingleResult() > 0;
+    }
+
+    public List<Movie> findByCoordinate(Coordinates coordinates) {
+        return session.createQuery("from Movie m where m.coordinates = :coordinates", Movie.class)
+                      .setParameter("coordinates", coordinates)
+                      .list();
+    }
+
     public Movie update(Movie movie) {
         session.beginTransaction();
         Movie updated = session.merge(movie);
@@ -118,82 +157,82 @@ public class MovieDao {
         return "id";
     }
 
-    private String buildWhereClause (MovieFilter filter, Map<String, Object> parameters, User user) {
+    private String buildWhereClause (MovieFilter filter, Map<String, Object> parameters, User user, String filterLogic) {
         StringBuilder whereClause = new StringBuilder();
 
         if (user != null) {
-            appendWhere(whereClause, " m.owner = :user ");
+            appendWhere(whereClause, " m.owner = :user ", filterLogic);
             parameters.put("user", user);
         }
 
         if (filter != null) {
             if (filter.ownerId() != null) {
-                appendWhere(whereClause, " m.owner.id = :ownerId ");
+                appendWhere(whereClause, " m.owner.id = :ownerId ", filterLogic);
                 parameters.put("ownerId", filter.ownerId());
             }
 
             if (filter.name() != null && !filter.name().isEmpty()) {
-                appendWhere(whereClause, " m.name = :name ");
+                appendWhere(whereClause, " m.name = :name ", filterLogic);
                 parameters.put("name", filter.name());
             }
 
             if (filter.coordinatesId() != null) {
-                appendWhere(whereClause, " m.coordinates.id = :coordinatesId ");
+                appendWhere(whereClause, " m.coordinates.id = :coordinatesId ", filterLogic);
                 parameters.put("coordinatesId", filter.coordinatesId());
             }
 
             if (filter.creationDate() != null && !filter.creationDate().isEmpty()) {
-                appendWhere(whereClause, " m.creationDate = :creationDate ");
+                appendWhere(whereClause, " m.creationDate = :creationDate ", filterLogic);
                 parameters.put("creationDate", LocalDateTime.parse(filter.creationDate(), DateTimeFormatter.ofPattern("dd-MM-yyyy HH:mm:ss")));
             }
 
             if (filter.oscarsCount() != null) {
-                appendWhere(whereClause, " m.oscarsCount = :oscarsCount ");
+                appendWhere(whereClause, " m.oscarsCount = :oscarsCount ", filterLogic);
                 parameters.put("oscarsCount", filter.oscarsCount());
             }
 
             if (filter.budget() != null) {
-                appendWhere(whereClause, " m.budget = :budget ");
+                appendWhere(whereClause, " m.budget = :budget ", filterLogic);
                 parameters.put("budget", filter.budget());
             }
 
             if (filter.totalBoxOffice() != null) {
-                appendWhere(whereClause, " m.totalBoxOffice = :totalBoxOffice ");
+                appendWhere(whereClause, " m.totalBoxOffice = :totalBoxOffice ", filterLogic);
                 parameters.put("totalBoxOffice", filter.totalBoxOffice());
             }
 
             if (filter.mpaaRating() != null) {
-                appendWhere(whereClause, " m.mpaaRating = :mpaaRating ");
+                appendWhere(whereClause, " m.mpaaRating = :mpaaRating ", filterLogic);
                 parameters.put("mpaaRating", filter.mpaaRating());
             }
 
             if (filter.directorId() != null) {
-                appendWhere(whereClause, " m.director.id = :directorId ");
+                appendWhere(whereClause, " m.director.id = :directorId ", filterLogic);
                 parameters.put("directorId", filter.directorId());
             }
 
             if (filter.screenwriterId() != null) {
-                appendWhere(whereClause, " m.screenwriter.id = :screenwriterId ");
+                appendWhere(whereClause, " m.screenwriter.id = :screenwriterId ", filterLogic);
                 parameters.put("screenwriterId", filter.screenwriterId());
             }
 
             if (filter.operatorId() != null) {
-                appendWhere(whereClause, " m.operator.id = :operatorId ");
+                appendWhere(whereClause, " m.operator.id = :operatorId ", filterLogic);
                 parameters.put("operatorId", filter.operatorId());
             }
 
             if (filter.length() != null) {
-                appendWhere(whereClause, " m.length = :length ");
+                appendWhere(whereClause, " m.length = :length ", filterLogic);
                 parameters.put("length", filter.length());
             }
 
             if (filter.goldenPalmCount() != null) {
-                appendWhere(whereClause, " m.goldenPalmCount = :goldenPalmCount ");
+                appendWhere(whereClause, " m.goldenPalmCount = :goldenPalmCount ", filterLogic);
                 parameters.put("goldenPalmCount", filter.goldenPalmCount());
             }
 
             if (filter.genre() != null) {
-                appendWhere(whereClause, " m.genre = :genre ");
+                appendWhere(whereClause, " m.genre = :genre ", filterLogic);
                 parameters.put("genre", filter.genre());
             }
         }
@@ -207,11 +246,11 @@ public class MovieDao {
         }
     }
 
-    private void appendWhere(StringBuilder sb, String condition) {
+    private void appendWhere(StringBuilder sb, String condition, String filterLogic) {
         if (sb.length() == 0)
             sb.append(" where ");
         else
-            sb.append(" and ");
+            sb.append(" " + filterLogic + " ");
         sb.append(condition);
     }
 }

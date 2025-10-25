@@ -46,10 +46,10 @@ public class MovieService {
                        .orElseThrow(() -> new NotFoundException("Movie with id " + id + " not found"));
     }
 
-    public PageResponse<Movie> getAllMovies(boolean mine, int page, int size, String sort, String order, MovieFilter filter) {
+    public PageResponse<Movie> getAllMovies(boolean mine, int page, int size, String sort, String order, String filterLogic, MovieFilter filter) {
         return mine ?
-            movieDao.findAllByUserPaginatedAndSorted(currentUser.getUser(), page, size, sort, order, filter) :
-            movieDao.findAllPaginatedAndSorted(page, size, sort, order, filter);
+            movieDao.findAllByUserPaginatedAndSorted(currentUser.getUser(), page, size, sort, order, filterLogic, filter) :
+            movieDao.findAllPaginatedAndSorted(page, size, sort, order, filterLogic, filter);
     }
 
     public Movie updateMovie(int id, MovieRequest dto) {

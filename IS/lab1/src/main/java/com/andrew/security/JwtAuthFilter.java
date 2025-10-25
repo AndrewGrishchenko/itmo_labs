@@ -30,7 +30,7 @@ public class JwtAuthFilter implements ContainerRequestFilter {
     public void filter(ContainerRequestContext requestContext) {
         String path = requestContext.getUriInfo().getPath();
         MultivaluedMap<String, String> queryParams = requestContext.getUriInfo().getQueryParameters();
-        System.err.println("PATH BLYAT: " + path);
+        
         if (path.equals("/auth/login") || 
             path.equals("/auth/register") || 
             (path.equals("/auth/user") && !queryParams.containsKey("mine"))) {

@@ -11,6 +11,7 @@ import org.hibernate.query.Query;
 
 import com.andrew.dto.PageResponse;
 import com.andrew.dto.person.PersonFilter;
+import com.andrew.model.Location;
 import com.andrew.model.Person;
 import com.andrew.model.User;
 
@@ -92,6 +93,21 @@ public class PersonDao {
         return session.createQuery("from Person p where p.id = :id", Person.class)
                       .setParameter("id", id)
                       .uniqueResultOptional();
+    }
+
+    public List<Person> getAllWithLocation(Location location) {
+        return session.createQuery("from Person p where p.location = :location", Person.class)
+                      .setParameter("location", location)
+                      .list();
+    }
+
+    public boolean existsByLocationAndNotOwner(Location location, User owner) {
+        return session.createQuery("select count(p.id) from Person p where " +
+                                   "p.location = :location and " +
+                                   "p.owner != :owner", Long.class)
+                      .setParameter("location", location)
+                      .setParameter("owner", owner)
+                      .getSingleResult() > 0;
     }
 
     public Person update(Person person) {
