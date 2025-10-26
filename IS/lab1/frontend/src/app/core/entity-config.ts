@@ -37,7 +37,7 @@ export const ENTITY_CONFIGS: Record<EntityName, EntityConfig> = {
     httpEndpoint: '/api/coordinates',
     wsEndpoint: '/websocket/coordinates',
     dialogComponent: CoordinateDialogComponent,
-    tableColumns: ['x', 'y', 'owner'],
+    tableColumns: ['id', 'x', 'y', 'owner'],
     selectorColumns: [
       { def: 'id', header: 'ID', cell: (e: Coordinate) => e.id.toString() },
       { def: 'x', header: 'X', cell: (e: Coordinate) => e.x.toString() },
@@ -50,8 +50,9 @@ export const ENTITY_CONFIGS: Record<EntityName, EntityConfig> = {
     httpEndpoint: '/api/location',
     wsEndpoint: '/websocket/location',
     dialogComponent: LocationDialogComponent,
-    tableColumns: ['name', 'x', 'y', 'owner'],
+    tableColumns: ['id', 'name', 'x', 'y', 'owner'],
     selectorColumns: [
+      { def: 'id', header: 'ID', cell: (e: Location) => e.id.toString() },
       { def: 'name', header: 'Название', cell: (e: Location) => e.name },
       { def: 'x', header: 'X', cell: (e: Location) => e.x.toString() },
       { def: 'y', header: 'Y', cell: (e: Location) => e.y.toString() },
@@ -63,8 +64,9 @@ export const ENTITY_CONFIGS: Record<EntityName, EntityConfig> = {
     httpEndpoint: '/api/person',
     wsEndpoint: '/websocket/person',
     dialogComponent: PersonDialogComponent,
-    tableColumns: ['name', 'eyeColor', 'hairColor', 'location', 'weight', 'nationality', 'owner'],
+    tableColumns: ['id', 'name', 'eyeColor', 'hairColor', 'location', 'weight', 'nationality', 'owner'],
     selectorColumns: [
+      { def: 'id', header: 'ID', cell: (e: Person) => e.id.toString() },
       { def: 'name', header: 'Имя', cell: (e: Person) => e.name },
       { def: 'eyeColor', header: 'Цвет глаз', cell: (e: Person) => e.eyeColor || '-' },
       { def: 'hairColor', header: 'Цвет волос', cell: (e: Person) => e.hairColor || '-' },
@@ -79,8 +81,9 @@ export const ENTITY_CONFIGS: Record<EntityName, EntityConfig> = {
     httpEndpoint: '/api/movie',
     wsEndpoint: '/websocket/movie',
     dialogComponent: MovieDialogComponent,
-    tableColumns: ['name', 'coordinates', 'creationDate', 'oscarsCount', 'budget', 'totalBoxOffice', 'mpaaRating', 'director', 'screenwriter', 'operator', 'length', 'goldenPalmCount', 'genre', 'owner'],
+    tableColumns: ['id', 'name', 'coordinates', 'creationDate', 'oscarsCount', 'budget', 'totalBoxOffice', 'mpaaRating', 'director', 'screenwriter', 'operator', 'length', 'goldenPalmCount', 'genre', 'owner'],
     selectorColumns: [
+      { def: 'id', header: 'ID', cell: (e: Movie) => e.id.toString() },
       { def: 'name', header: 'Название', cell: (e: Movie) => e.name },
       { def: 'coordinates', header: 'Координаты id', cell: (e: Movie) => e.coordinates.id.toString() },
       { def: 'creationDate', header: 'creationDate', cell: (e: Movie) => e.creationDate },

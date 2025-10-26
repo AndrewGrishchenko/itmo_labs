@@ -20,13 +20,11 @@ public class CoordinatesSocketServer {
 
     @OnOpen
     public void onOpen(Session session) {
-        System.out.println("WebSocket onOpen: " + session.getId());
         sessions.add(session);
     }
 
     @OnClose
     public void onClose(Session session) {
-        System.out.println("WebSocket onClose: " + session.getId());
         sessions.remove(session);
     }
 

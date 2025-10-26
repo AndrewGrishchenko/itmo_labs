@@ -49,11 +49,12 @@ public class LocationResource {
         @QueryParam("order") @DefaultValue("asc") String order,
 
         @QueryParam("owner.id") Long ownerId,
+        @QueryParam("id") Long id,
         @QueryParam("name") String name,
         @QueryParam("x") Double x,
         @QueryParam("y") Double y
     ) {
-        LocationFilter filter = new LocationFilter(ownerId, name, x, y);
+        LocationFilter filter = new LocationFilter(ownerId, id, name, x, y);
 
         PageResponse<Location> pagedResult = locationService.getAllLocations(mine, page, size, sort, order, filter);
 

@@ -43,6 +43,7 @@ export class PersonDialogComponent extends BaseDialogComponent<Person> {
     this.matDialog = this.injector.get(MatDialog);
 
     this.formFields = [
+      { name: 'id', label: 'ID', fieldType: 'text', validators: []},
       { name: 'name', label: 'Имя', fieldType: 'input', type: 'text', validators: [Validators.required] },
       { name: 'eyeColor', label: 'Цвет глаз', fieldType: 'select', options: enumService.getColors(), validators: [] },
       { name: 'hairColor', label: 'Цвет волос', fieldType: 'select', options: enumService.getColors(), validators: [] },

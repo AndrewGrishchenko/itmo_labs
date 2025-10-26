@@ -34,6 +34,7 @@ import { AppValidators } from '../../../core/validation.utils';
 })
 export class LocationDialogComponent extends BaseDialogComponent<Location> {
   override formFields: FormFieldConfig[] = [
+    { name: 'id', label: 'ID', fieldType: 'text', validators: []},
     { name: 'name', label: 'Название', fieldType: 'input', type: 'text', validators: [Validators.required] },
     { name: 'x', label: 'x', fieldType: 'input', type: 'float', validators: [Validators.required, AppValidators.float] },
     { name: 'y', label: 'y', fieldType: 'input', type: 'float', validators: [Validators.required, AppValidators.float] }

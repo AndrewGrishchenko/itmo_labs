@@ -29,6 +29,7 @@ import { AppValidators } from '../../../core/validation.utils';
 })
 export class CoordinateDialogComponent extends BaseDialogComponent<Coordinate> {
   override formFields: FormFieldConfig[] = [
+    { name: 'id', label: 'ID', fieldType: 'text', validators: []},
     { name: 'x', label: 'X', fieldType: 'input', type: 'integer', validators: [Validators.required, AppValidators.integer] },
     { name: 'y', label: 'Y', fieldType: 'input', type: 'float', validators: [Validators.required, AppValidators.float, Validators.max(450)] }
   ]

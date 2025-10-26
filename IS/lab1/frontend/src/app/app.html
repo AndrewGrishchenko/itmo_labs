@@ -7,11 +7,11 @@
     <mat-sidenav mode="side" opened class="sidenav">
       <h2 class="sidenav-title">Навигация</h2>
       <mat-nav-list>
-        <a mat-list-item routerLink="/coordinates" routerLinkActive="active-link">Координаты</a>
-        <a mat-list-item routerLink="/person" routerLinkActive="active-link">Персона</a>
-        <a mat-list-item routerLink="/location" routerLinkActive="active-link">Локация</a>
-        <a mat-list-item routerLink="/movie" routerLinkActive="active-link">Фильм</a>
-        <a mat-list-item routerLink="/operation" routerLinkActive="active-link">Операции</a>
+        <a mat-list-item routerLink="/coordinates" routerLinkActive="active-link" [activated]="router.url.startsWith('/coordinates')">Координаты</a>
+        <a mat-list-item routerLink="/person" routerLinkActive="active-link" [activated]="router.url.startsWith('/person')">Персона</a>
+        <a mat-list-item routerLink="/location" routerLinkActive="active-link" [activated]="router.url.startsWith('/location')">Локация</a>
+        <a mat-list-item routerLink="/movie" routerLinkActive="active-link" [activated]="router.url.startsWith('/movie')">Фильм</a>
+        <a mat-list-item routerLink="/operation" routerLinkActive="active-link" [activated]="router.url.startsWith('/operation')">Операции</a>
       </mat-nav-list>
     </mat-sidenav>
     

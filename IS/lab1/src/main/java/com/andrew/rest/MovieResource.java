@@ -53,6 +53,7 @@ public class MovieResource {
         @QueryParam("filterLogic") @DefaultValue("AND") String filterLogic,
         
         @QueryParam("owner.id") Long ownerId,
+        @QueryParam("id") Long id,
         @QueryParam("name") String name,
         @QueryParam("coordinates") Long coordinatesId,
         @QueryParam("creationDate") String creationDate,
@@ -69,6 +70,7 @@ public class MovieResource {
     ) {
         MovieFilter filter = new MovieFilter(
             ownerId,
+            id,
             name,
             coordinatesId,
             creationDate,

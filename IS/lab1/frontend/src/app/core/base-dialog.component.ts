@@ -75,7 +75,7 @@ export abstract class BaseDialogComponent<T extends BaseEntity> implements OnIni
         formControls[field.name] = [null, field.validators];
     });
     this.form = this.fb.group(formControls);
-
+    
     this.isEditMode = !!this.data.entity;
     if (this.isEditMode && this.data.entity) {
       this.form.patchValue(this.data.entity);
@@ -89,6 +89,11 @@ export abstract class BaseDialogComponent<T extends BaseEntity> implements OnIni
       this.form.disable();
     } else {
       this.form.enable();
+    }
+
+    const idControl = this.form.get('id');
+    if (idControl) {
+      idControl.disable();
     }
 
     this.dialogRef.backdropClick()

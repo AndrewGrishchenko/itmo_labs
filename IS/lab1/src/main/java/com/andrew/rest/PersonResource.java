@@ -50,6 +50,7 @@ public class PersonResource {
         @QueryParam("order") @DefaultValue("asc") String order,
 
         @QueryParam("owner.id") Long ownerId,
+        @QueryParam("id") Long id,
         @QueryParam("name") String name,
         @QueryParam("eyeColor") Color eyeColor,
         @QueryParam("hairColor") Color hairColor,
@@ -59,6 +60,7 @@ public class PersonResource {
     ) {
         PersonFilter filter = new PersonFilter(
             ownerId,
+            id,
             name,
             eyeColor,
             hairColor,

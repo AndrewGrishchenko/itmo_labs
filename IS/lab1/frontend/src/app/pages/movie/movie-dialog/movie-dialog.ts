@@ -47,6 +47,7 @@ export class MovieDialogComponent extends BaseDialogComponent<Location> {
     this.matDialog = this.injector.get(MatDialog);
 
     this.formFields = [
+      { name: 'id', label: 'ID', fieldType: 'text', validators: []},
       { name: 'name', label: 'Название', fieldType: 'input', type: 'text', validators: [Validators.required] },
       {
         name: 'coordinates',

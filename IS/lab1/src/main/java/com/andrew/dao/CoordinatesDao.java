@@ -130,6 +130,11 @@ public class CoordinatesDao {
                 parameters.put("ownerId", filter.ownerId());
             }
 
+            if (filter.id() != null) {
+                appendWhere(whereClause, " c.id = :id ");
+                parameters.put("id", filter.id());
+            }
+
             if (filter.x() != null) {
                 appendWhere(whereClause, " c.x = :x ");
                 parameters.put("x", filter.x());

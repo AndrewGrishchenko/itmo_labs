@@ -5,6 +5,7 @@ import com.andrew.model.MpaaRating;
 
 public record MovieFilter(
     Long ownerId,
+    Long id,
     String name,
     Long coordinatesId,
     String creationDate,

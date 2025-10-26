@@ -130,6 +130,11 @@ public class LocationDao {
                 parameters.put("ownerId", filter.ownerId());
             }
 
+            if (filter.id() != null) {
+                appendWhere(whereClause, " l.id = :id ");
+                parameters.put("id", filter.id());
+            }
+
             if (filter.name() != null && !filter.name().isEmpty()) {
                 appendWhere(whereClause, " l.name = :name ");
                 parameters.put("name", filter.name());

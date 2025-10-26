@@ -23,7 +23,6 @@ import { MatButtonModule } from '@angular/material/button';
   ],
   template: `
     <div [formGroup]="form" [ngSwitch]="config.fieldType" class="form-field-wrapper">
-      
       <mat-form-field *ngSwitchCase="'input'" appearance="fill">
         <mat-label>{{ config.label }}</mat-label>
         <input matInput
@@ -40,17 +39,29 @@ import { MatButtonModule } from '@angular/material/button';
         </mat-select>
       </mat-form-field>
 
-      <mat-form-field *ngSwitchCase="'picker'" appearance="fill" (click)="onFieldClick()" class="picker-field">
+      <mat-form-field *ngSwitchCase="'picker'"
+                      appearance="fill"
+                      (click)="form.get(config.name)?.enabled && onFieldClick()"
+                      class="picker-field"
+                      [class.mat-form-field-disabled]="form.get(config.name)?.disabled">
         <mat-label>{{ config.label }}</mat-label>
         <input matInput readonly 
              [value]="config.pickerDisplayValue ? 
                       config.pickerDisplayValue(form.get(config.name)?.value) : 
                       form.get(config.name)?.value?.name || ''"
-             placeholder="Нажмите для выбора">
-        <button *ngIf="form.get(config.name)?.value" 
+             placeholder="Нажмите для выбора"
+             [disabled]="form.get(config.name)?.disabled">
+        <button *ngIf="form.get(config.name)?.value && form.get(config.name)?.enabled" 
              mat-icon-button matSuffix (click)="onClearClick($event)">
           <mat-icon>close</mat-icon>
         </button>
+      </mat-form-field>
+
+      <mat-form-field *ngSwitchCase="'text'">
+        <mat-label>{{ config.label }}</mat-label>
+        <input matInput
+          [formControlName]="config.name"
+          [type]="'text'">
       </mat-form-field>
 
     </div>
@@ -58,6 +69,14 @@ import { MatButtonModule } from '@angular/material/button';
   styles: [`
     .form-field-wrapper, mat-form-field { width: 100%; }
     .picker-field { cursor: pointer; }
+    .readonly-field {
+      // background-color: #f5f5f5;
+      color: #757575;
+      cursor: not-allowed;
+  
+      &:focus {
+        outline: none;
+      }}
   `]
 })
 export class FormFieldComponent {
@@ -79,7 +98,7 @@ export class FormFieldComponent {
 export interface FormFieldConfig {
   name: string;
   label: string;
-  fieldType: 'input' | 'select' | 'picker';
+  fieldType: 'input' | 'select' | 'picker' | 'text';
   type?: 'text' | 'integer' | 'float';
   options?: any[];
   onPickerClick?: () => void;

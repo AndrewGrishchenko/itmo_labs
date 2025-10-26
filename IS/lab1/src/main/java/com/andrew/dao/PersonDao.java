@@ -146,6 +146,11 @@ public class PersonDao {
                 parameters.put("ownerId", filter.ownerId());
             }
 
+            if (filter.id() != null) {
+                appendWhere(whereClause, " p.id = :id ");
+                parameters.put("id", filter.id());
+            }
+
             if (filter.name() != null && !filter.name().isEmpty()) {
                 appendWhere(whereClause, " p.name = :name ");
                 parameters.put("name", filter.name());

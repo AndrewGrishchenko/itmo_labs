@@ -5,6 +5,7 @@ import com.andrew.model.Country;
 
 public record PersonFilter (
     Long ownerId,
+    Long id,
     String name,
     Color eyeColor,
     Color hairColor,

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Router, RouterLink, RouterOutlet } from '@angular/router';
 import { MatToolbarModule } from '@angular/material/toolbar';
@@ -22,10 +22,10 @@ import { AuthService, User } from './auth/auth';
 export class AppComponent implements OnInit {
   isAuthenticated$: Observable<boolean>;
   currentUser: User | null = null;
+  router: Router = inject(Router);
 
   constructor(
     public authService: AuthService, 
-    private router: Router
   ) {
     this.isAuthenticated$ = this.authService.isAuthenticated$;
   }

@@ -49,10 +49,11 @@ public class CoordinatesResource {
         @QueryParam("order") @DefaultValue("asc") String order,
 
         @QueryParam("owner.id") Long ownerId,
+        @QueryParam("id") Long id,
         @QueryParam("x") Long x,
         @QueryParam("y") Double y
     ) {
-        CoordinatesFilter filter = new CoordinatesFilter(ownerId, x, y);
+        CoordinatesFilter filter = new CoordinatesFilter(ownerId, id, x, y);
 
         PageResponse<Coordinates> pagedResult = coordinatesService.getAllCoordinates(mine, page, size, sort, order, filter);
 

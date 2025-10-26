@@ -171,6 +171,11 @@ public class MovieDao {
                 parameters.put("ownerId", filter.ownerId());
             }
 
+            if (filter.id() != null) {
+                appendWhere(whereClause, " m.id = :id ", filterLogic);
+                parameters.put("id", filter.id());
+            }
+
             if (filter.name() != null && !filter.name().isEmpty()) {
                 appendWhere(whereClause, " m.name = :name ", filterLogic);
                 parameters.put("name", filter.name());
