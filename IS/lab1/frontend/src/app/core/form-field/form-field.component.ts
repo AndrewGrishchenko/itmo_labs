@@ -29,6 +29,25 @@ import { MatButtonModule } from '@angular/material/button';
           [formControlName]="config.name"
           [type]="config.type === 'text' ? 'text' : 'number'"
           [attr.step]="config.type === 'float' ? 'any' : (config.type === 'integer' ? '1' : null)">
+    
+        <mat-error *ngIf="form.get(config.name)?.hasError('required')">
+          Поле не может быть пустым
+        </mat-error>
+        <mat-error *ngIf="form.get(config.name)?.hasError('max')">
+          Максимальное значение: {{ form.get(config.name)?.errors?.['max'].max }}
+        </mat-error>
+        <mat-error *ngIf="form.get(config.name)?.hasError('min')">
+          Минимальное значение: {{ form.get(config.name)?.errors?.['min'].min }}
+        </mat-error>
+        <mat-error *ngIf="form.get(config.name)?.hasError('isNotInteger')">
+          Значение должно быть целым числом
+        </mat-error>
+        <mat-error *ngIf="form.get(config.name)?.hasError('isNotFloat')">
+          Значение должно быть числом
+        </mat-error>
+        <mat-error *ngIf="form.get(config.name)?.hasError('isNotPositive')">
+          Значение должно быть положительным
+        </mat-error>
       </mat-form-field>
 
       <mat-form-field *ngSwitchCase="'select'" appearance="fill">
@@ -37,6 +56,10 @@ import { MatButtonModule } from '@angular/material/button';
           <mat-option [value]="null">Не выбрано</mat-option>
           <mat-option *ngFor="let option of config.options" [value]="option">{{ option }}</mat-option>
         </mat-select>
+
+        <mat-error *ngIf="form.get(config.name)?.hasError('required')">
+          Поле не может быть пустым
+        </mat-error>
       </mat-form-field>
 
       <mat-form-field *ngSwitchCase="'picker'"
@@ -44,17 +67,36 @@ import { MatButtonModule } from '@angular/material/button';
                       (click)="form.get(config.name)?.enabled && onFieldClick()"
                       class="picker-field"
                       [class.mat-form-field-disabled]="form.get(config.name)?.disabled">
+        
         <mat-label>{{ config.label }}</mat-label>
+        
+        <input matInput 
+         [formControlName]="config.name" 
+         class="hidden-control">
+        
         <input matInput readonly 
+         class="display-input"
+         [value]="config.pickerDisplayValue ? 
+                  config.pickerDisplayValue(form.get(config.name)?.value) : 
+                  form.get(config.name)?.value?.name || ''"
+         placeholder="Нажмите для выбора"
+         [disabled]="form.get(config.name)?.disabled">
+
+        <!-- <input matInput readonly 
              [value]="config.pickerDisplayValue ? 
                       config.pickerDisplayValue(form.get(config.name)?.value) : 
                       form.get(config.name)?.value?.name || ''"
              placeholder="Нажмите для выбора"
-             [disabled]="form.get(config.name)?.disabled">
+             [disabled]="form.get(config.name)?.disabled"> -->
+
         <button *ngIf="form.get(config.name)?.value && form.get(config.name)?.enabled" 
              mat-icon-button matSuffix (click)="onClearClick($event)">
           <mat-icon>close</mat-icon>
         </button>
+
+        <mat-error *ngIf="form.get(config.name)?.hasError('required')">
+          Поле не может быть пустым
+        </mat-error>
       </mat-form-field>
 
       <mat-form-field *ngSwitchCase="'text'">
@@ -70,13 +112,33 @@ import { MatButtonModule } from '@angular/material/button';
     .form-field-wrapper, mat-form-field { width: 100%; }
     .picker-field { cursor: pointer; }
     .readonly-field {
-      // background-color: #f5f5f5;
       color: #757575;
       cursor: not-allowed;
   
       &:focus {
         outline: none;
-      }}
+      }
+    }
+    
+    .picker-field {
+      position: relative;
+      cursor: pointer;
+    }
+
+    .hidden-control {
+      opacity: 0;
+      height: 0;
+      width: 0;
+      padding: 0;
+      border: none;
+      position: absolute;
+    }
+
+    .display-input {
+      position: relative;
+      z-index: 2;
+      background-color: transparent;
+    }
   `]
 })
 export class FormFieldComponent {

@@ -54,7 +54,7 @@ export class PersonDialogComponent extends BaseDialogComponent<Person> {
         validators: [],
         onPickerClick: () => this.openLocationSelector()
       },
-      { name: 'weight', label: 'Вес', fieldType: 'input', type: 'float', validators: [Validators.required, AppValidators.positiveFloat] },
+      { name: 'weight', label: 'Вес', fieldType: 'input', type: 'float', validators: [Validators.required, AppValidators.positive, AppValidators.float] },
       { name: 'nationality', label: 'Национальность', fieldType: 'select', options: enumService.getCountries(), validators: [] }
     ];
   }

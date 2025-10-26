@@ -62,8 +62,8 @@ export class MovieDialogComponent extends BaseDialogComponent<Location> {
         }
       },
       { name: 'oscarsCount', label: 'Количество оскаров', fieldType: 'input', type: 'integer', validators: [Validators.required, Validators.min(0)] },
-      { name: 'budget', label: 'Бюджет', fieldType: 'input', type: 'float', validators: [Validators.required, AppValidators.positiveFloat] },
-      { name: 'totalBoxOffice', label: 'Касса', fieldType: 'input', type: 'float', validators: [Validators.required, AppValidators.positiveFloat] },
+      { name: 'budget', label: 'Бюджет', fieldType: 'input', type: 'float', validators: [Validators.required, AppValidators.positive, AppValidators.float] },
+      { name: 'totalBoxOffice', label: 'Касса', fieldType: 'input', type: 'float', validators: [Validators.required, AppValidators.positive, AppValidators.float] },
       { name: 'mpaaRating', label: 'Рейтинг', fieldType: 'select', options: enumService.getMpaaRatings(), validators: [] },
       { name: 'director', label: 'Директор', fieldType: 'picker', onPickerClick: () => this.openDirectorSelector(), validators: [] },
       { name: 'screenwriter', label: 'Сценарист', fieldType: 'picker', onPickerClick: () => this.openScreenwriterSelector(), validators: [] },
