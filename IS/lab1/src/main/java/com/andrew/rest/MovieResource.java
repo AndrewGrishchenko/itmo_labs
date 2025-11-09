@@ -14,8 +14,9 @@ import com.andrew.model.MovieGenre;
 import com.andrew.model.MpaaRating;
 import com.andrew.service.MovieService;
 import com.andrew.util.ResponseMapper;
-import com.andrew.websocket.MovieSocketServer;
+// import com.andrew.websocket.MovieSocketServer;
 import com.andrew.websocket.WebSocketMessage;
+import com.andrew.websocket.WebSocketNotifier;
 
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -40,6 +41,9 @@ import jakarta.ws.rs.core.UriInfo;
 public class MovieResource {
     @Inject
     MovieService movieService;
+
+    @Inject
+    private WebSocketNotifier notifier;
 
     @GET
     public Response getAll(
@@ -117,7 +121,9 @@ public class MovieResource {
 
         MovieResponse response = ResponseMapper.toResponse(created);
 
-        MovieSocketServer.broadcast(new WebSocketMessage<>("create", response));
+        // MovieSocketServer.broadcast(new WebSocketMessage<>("create", response));
+
+        notifier.broadcast("movie", new WebSocketMessage<>("create", response));
 
         return Response.created(location)
                        .entity(response)
@@ -129,7 +135,8 @@ public class MovieResource {
     public Response update(@PathParam("id") int id, @Valid MovieRequest request) {
         Movie updated = movieService.updateMovie(id, request);
         MovieResponse response = ResponseMapper.toResponse(updated);
-        MovieSocketServer.broadcast(new WebSocketMessage<>("update", response));
+        // MovieSocketServer.broadcast(new WebSocketMessage<>("update", response));
+        notifier.broadcast("movie", new WebSocketMessage<>("update", response));
         return Response.ok(response).build();
     }
 
@@ -137,7 +144,8 @@ public class MovieResource {
     @Path("{id}")
     public Response delete(@PathParam("id") int id) {
         movieService.deleteMovie(id);
-        MovieSocketServer.broadcast(new WebSocketMessage<>("delete", Map.of("id", id)));
+        // MovieSocketServer.broadcast(new WebSocketMessage<>("delete", Map.of("id", id)));
+        notifier.broadcast("movie", new WebSocketMessage<>("delete", Map.of("id", id)));
         return Response.noContent().build();
     }
 }

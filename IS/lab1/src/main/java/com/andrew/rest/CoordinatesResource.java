@@ -12,8 +12,9 @@ import com.andrew.dto.coordinates.CoordinatesRequest;
 import com.andrew.model.Coordinates;
 import com.andrew.service.CoordinatesService;
 import com.andrew.util.ResponseMapper;
-import com.andrew.websocket.CoordinatesSocketServer;
+// import com.andrew.websocket.CoordinatesSocketServer;
 import com.andrew.websocket.WebSocketMessage;
+import com.andrew.websocket.WebSocketNotifier;
 
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -37,7 +38,10 @@ import jakarta.ws.rs.core.UriInfo;
 @Consumes(MediaType.APPLICATION_JSON)
 public class CoordinatesResource {
     @Inject
-    CoordinatesService coordinatesService;
+    private CoordinatesService coordinatesService;
+
+    @Inject
+    private WebSocketNotifier notifier;
 
     @GET
     public Response getAll(
@@ -86,7 +90,9 @@ public class CoordinatesResource {
 
         CoordinatesResponse response = ResponseMapper.toResponse(created);
 
-        CoordinatesSocketServer.broadcast(new WebSocketMessage<>("create", response));
+        // CoordinatesSocketServer.broadcast(new WebSocketMessage<>("create", response));
+
+        notifier.broadcast("coordinates", new WebSocketMessage<>("create", response));
 
         return Response.created(location)
                        .entity(response)
@@ -98,7 +104,8 @@ public class CoordinatesResource {
     public Response update(@PathParam("id") int id, @Valid CoordinatesRequest dto) {
         Coordinates updated = coordinatesService.updateCoordinates(id, dto);
         CoordinatesResponse response = ResponseMapper.toResponse(updated);
-        CoordinatesSocketServer.broadcast(new WebSocketMessage<>("update", response));
+        // CoordinatesSocketServer.broadcast(new WebSocketMessage<>("update", response));
+        notifier.broadcast("coordinates", new WebSocketMessage<>("update", response));
         return Response.ok(response).build();
     }
 
@@ -106,7 +113,8 @@ public class CoordinatesResource {
     @Path("{id}")
     public Response delete(@PathParam("id") int id) {
         coordinatesService.deleteCoordinates(id);
-        CoordinatesSocketServer.broadcast(new WebSocketMessage<>("delete", Map.of("id", id)));
+        // CoordinatesSocketServer.broadcast(new WebSocketMessage<>("delete", Map.of("id", id)));
+        notifier.broadcast("coordinates", new WebSocketMessage<>("delete", Map.of("id", id)));
         return Response.noContent().build();
     }
 }

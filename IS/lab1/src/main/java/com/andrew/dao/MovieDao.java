@@ -43,36 +43,18 @@ public class MovieDao {
     }
 
     public PageResponse<Movie> findAllPaginatedAndSorted(int page, int size, String sortField, String sortOrder, String filterLogic, MovieFilter filter) {
-        Map<String, Object> parameters = new HashMap<>();
-        String sanitizedFilterLogic = "and".equalsIgnoreCase(filterLogic) ? "and" : "or";
-        String whereClause = buildWhereClause(filter, parameters, null, sanitizedFilterLogic);
-
-        String countHql = "select count(m.id) from Movie m" + whereClause;
-        Query<Long> countQuery = session.createQuery(countHql, Long.class);
-        setFilterParameters(countQuery, parameters);
-        long totalElements = countQuery.getSingleResult();
-
-        if (totalElements == 0)
-            return new PageResponse<>(List.of(), 0);
-
-        String sanitizedSortField = sanitizeSortField(sortField);
-        String sanitizedSortOrder = "desc".equalsIgnoreCase(sortOrder) ? "desc" : "asc";
-        String hql = String.format("from Movie m %s order by m.%s %s", whereClause, sanitizedSortField, sanitizedSortOrder);
-        
-        Query<Movie> query = session.createQuery(hql, Movie.class);
-        setFilterParameters(query, parameters);
-        query.setFirstResult(page * size);
-        query.setMaxResults(size);
-
-        List<Movie> content = query.list();
-        return new PageResponse<>(content, totalElements);
+        return findInternal(null, page, size, sortField, sortOrder, filterLogic, filter);
     }
 
     public PageResponse<Movie> findAllByUserPaginatedAndSorted(User user, int page, int size, String sortField, String sortOrder, String filterLogic, MovieFilter filter) {
+        return findInternal(user, page, size, sortField, sortOrder, filterLogic, filter);
+    }
+
+    private PageResponse<Movie> findInternal(User user, int page, int size, String sortField, String sortOrder, String filterLogic, MovieFilter filter) {
         Map<String, Object> parameters = new HashMap<>();
         String sanitizedFilterLogic = "and".equalsIgnoreCase(filterLogic) ? "and" : "or";
         String whereClause = buildWhereClause(filter, parameters, user, sanitizedFilterLogic);
-
+        
         String countHql = "select count(m.id) from Movie m" + whereClause;
         Query<Long> countQuery = session.createQuery(countHql, Long.class);
         setFilterParameters(countQuery, parameters);
@@ -82,9 +64,9 @@ public class MovieDao {
             return new PageResponse<>(List.of(), 0);
 
         String sanitizedSortField = sanitizeSortField(sortField);
-        String sanitizedSortOrder = "desc".equalsIgnoreCase(sortOrder) ? "desc" : "asc";
+        String sanitizedSortOrder = "desc".equalsIgnoreCase(sanitizedSortField) ? "desc" : "asc";
         String hql = String.format("from Movie m %s order by m.%s %s", whereClause, sanitizedSortField, sanitizedSortOrder);
-        
+
         Query<Movie> query = session.createQuery(hql, Movie.class);
         setFilterParameters(query, parameters);
         query.setFirstResult(page * size);
@@ -118,6 +100,12 @@ public class MovieDao {
                                    "m.operator = :person", Movie.class)
                       .setParameter("person", person)
                       .list();
+    }
+
+    public List<Movie> findByGenres(List<String> genres) {
+        return session.createQuery("from Movie m WHERE m.genre IN (:genres)", Movie.class)
+                      .setParameter("genres", genres)
+                      .getResultList();
     }
 
     public boolean existsByCoordinateAndNotOwner(Coordinates coordinates, User owner) {

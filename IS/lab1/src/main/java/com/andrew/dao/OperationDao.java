@@ -50,7 +50,6 @@ public class OperationDao {
     }
 
     public Long redistributeOscars(String sourceGenre, String destGenre) {
-        System.err.println("FROM GENRE " + sourceGenre + " TO GENRE " + destGenre);
         return session.createNativeQuery("SELECT redistribute_oscars_by_genre(:source, :dest)", Long.class)
                       .setParameter("source", sourceGenre)
                       .setParameter("dest", destGenre)

@@ -7,8 +7,11 @@ import java.util.stream.Collectors;
 import com.andrew.dto.RedistributeOscarRequest;
 import com.andrew.dto.person.PersonResponse;
 import com.andrew.model.Movie;
+import com.andrew.service.MovieService;
 import com.andrew.service.OperationService;
 import com.andrew.util.ResponseMapper;
+import com.andrew.websocket.WebSocketMessage;
+import com.andrew.websocket.WebSocketNotifier;
 
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -27,6 +30,12 @@ import jakarta.ws.rs.core.Response;
 public class OperationResource {
     @Inject
     OperationService operationService;
+
+    @Inject
+    MovieService movieService;
+
+    @Inject
+    WebSocketNotifier notifier;
 
     @GET
     @Path("/movie-min-genre")
@@ -67,6 +76,16 @@ public class OperationResource {
     @Path("/redistribute-oscars")
     public Response redistributeOscars(@Valid RedistributeOscarRequest dto) {
         Long movedOscars = operationService.redistributeOscars(dto.sourceGenre(), dto.destGenre());
+    
+        if (movedOscars != null && movedOscars > 0) {
+            List<String> affectedGenres = List.of(dto.sourceGenre(), dto.destGenre());
+            List<Movie> updatedMovies = movieService.getMoviesByGenres(affectedGenres);
+            
+            updatedMovies.forEach(movie -> {
+                notifier.broadcast("movie", new WebSocketMessage<>("update", ResponseMapper.toResponse(movie)));
+            });
+        }
+        
         return Response.ok(Map.of("movedOscars", movedOscars)).build();
     }
 }

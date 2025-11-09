@@ -17,6 +17,9 @@ import { MatDialog } from '@angular/material/dialog';
 import { EntitySelectorComponent, EntitySelectorData } from '../../../core/entity-selector/entity-selector.component';
 import { MovieService } from '../movie.service';
 import { AppValidators } from '../../../core/validation.utils';
+import { CoordinateDialogComponent } from '../../coordinates/coordinate-dialog/coordinate-dialog';
+import { PersonDialogComponent } from '../../person/person-dialog/person-dialog';
+import { EntityName } from '../../../core/entity-config';
 
 @Component({
   selector: 'app-movie-dialog',
@@ -54,6 +57,7 @@ export class MovieDialogComponent extends BaseDialogComponent<Location> {
         label: 'Координаты',
         fieldType: 'picker',
         onPickerClick: () => this.openCoordinatesSelector(),
+        onViewSelectedClick: (coord: Coordinate) => this.openEntityDialog(CoordinateDialogComponent, coord, 'coordinate'),
         validators: [Validators.required],
         pickerDisplayValue: (coord: Coordinate | null) => {
             if (!coord) return '';
@@ -65,13 +69,30 @@ export class MovieDialogComponent extends BaseDialogComponent<Location> {
       { name: 'budget', label: 'Бюджет', fieldType: 'input', type: 'float', validators: [Validators.required, AppValidators.positive, AppValidators.float] },
       { name: 'totalBoxOffice', label: 'Касса', fieldType: 'input', type: 'float', validators: [Validators.required, AppValidators.positive, AppValidators.float] },
       { name: 'mpaaRating', label: 'Рейтинг', fieldType: 'select', options: enumService.getMpaaRatings(), validators: [] },
-      { name: 'director', label: 'Директор', fieldType: 'picker', onPickerClick: () => this.openDirectorSelector(), validators: [] },
-      { name: 'screenwriter', label: 'Сценарист', fieldType: 'picker', onPickerClick: () => this.openScreenwriterSelector(), validators: [] },
-      { name: 'operator', label: 'Оператор', fieldType: 'picker', onPickerClick: () => this.openOperatorSelector(), validators: [Validators.required] },
+      { name: 'director', label: 'Директор', fieldType: 'picker', onPickerClick: () => this.openDirectorSelector(), onViewSelectedClick: (person: Person) => this.openEntityDialog(PersonDialogComponent, person, 'person'), validators: [] },
+      { name: 'screenwriter', label: 'Сценарист', fieldType: 'picker', onPickerClick: () => this.openScreenwriterSelector(), onViewSelectedClick: (person: Person) => this.openEntityDialog(PersonDialogComponent, person, 'person'), validators: [] },
+      { name: 'operator', label: 'Оператор', fieldType: 'picker', onPickerClick: () => this.openOperatorSelector(), onViewSelectedClick: (person: Person) => this.openEntityDialog(PersonDialogComponent, person, 'person'), validators: [Validators.required] },
       { name: 'length', label: 'Длина', fieldType: 'input', type: 'integer', validators: [Validators.required, AppValidators.positive] },
       { name: 'goldenPalmCount', label: 'Количество золотых пальм', fieldType: 'input', type: 'integer', validators: [Validators.required, AppValidators.positive] },
       { name: 'genre', label: 'Жанр', fieldType: 'select', options: enumService.getMovieGenres(), validators: [] }
     ];
+  }
+
+  private openEntityDialog(dialogComponent: any, entity: { id: number }, entityName: EntityName): void {
+    if (!entity || !entity.id) {
+      console.error("unable to open entity dialog");
+      return;
+    }
+
+    this.matDialog.open(dialogComponent, {
+      width: '80vw',
+      maxWidth: '600px',
+      data: {
+        entity: entity,
+        entityName: entityName,
+        currentUserId: this.data.currentUserId
+      }
+    });
   }
 
   openCoordinatesSelector(): void {

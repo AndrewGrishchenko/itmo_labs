@@ -2,9 +2,11 @@ package com.andrew.service;
 
 import java.util.List;
 
+import com.andrew.dao.MovieDao;
 import com.andrew.dao.OperationDao;
 import com.andrew.model.Movie;
 import com.andrew.model.Person;
+import com.andrew.websocket.WebSocketNotifier;
 
 import jakarta.enterprise.context.ApplicationScoped;
 import jakarta.inject.Inject;
@@ -13,6 +15,12 @@ import jakarta.inject.Inject;
 public class OperationService {
     @Inject
     OperationDao operationDao;
+
+    @Inject
+    MovieDao movieDao;
+
+    @Inject
+    WebSocketNotifier notifier;
 
     public Movie findMovieWithMinGenre() {
         return operationDao.findMovieWithMinGenre();

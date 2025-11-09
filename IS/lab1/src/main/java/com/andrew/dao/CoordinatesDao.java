@@ -39,31 +39,14 @@ public class CoordinatesDao {
     }
 
     public PageResponse<Coordinates> findAllPaginatedAndSorted(int page, int size, String sortField, String sortOrder, CoordinatesFilter filter) {
-        Map<String, Object> parameters = new HashMap<>();
-        String whereClause = buildWhereClause(filter, parameters, null);
-
-        String countHql = "select count(c.id) from Coordinates c" + whereClause;
-        Query<Long> countQuery = session.createQuery(countHql, Long.class);
-        setFilterParameters(countQuery, parameters);
-        long totalElements = countQuery.getSingleResult();
-
-        if (totalElements == 0)
-            return new PageResponse<>(List.of(), 0);
-
-        String sanitizedSortField = sanitizeSortField(sortField);
-        String sanitizedSortOrder = "desc".equalsIgnoreCase(sortOrder) ? "desc" : "asc";
-        String hql = String.format("from Coordinates c %s order by c.%s %s", whereClause, sanitizedSortField, sanitizedSortOrder);
-
-        Query<Coordinates> query = session.createQuery(hql, Coordinates.class);
-        setFilterParameters(query, parameters);
-        query.setFirstResult(page * size);
-        query.setMaxResults(size);
-
-        List<Coordinates> content = query.list();
-        return new PageResponse<>(content, totalElements);
+        return findInternal(null, page, size, sortField, sortOrder, filter);
     }
 
     public PageResponse<Coordinates> findAllByUserPaginatedAndSorted(User user, int page, int size, String sortField, String sortOrder, CoordinatesFilter filter) {
+        return findInternal(user, page, size, sortField, sortOrder, filter);
+    }
+
+    private PageResponse<Coordinates> findInternal(User user, int page, int size, String sortField, String sortOrder, CoordinatesFilter filter) {
         Map<String, Object> parameters = new HashMap<>();
         String whereClause = buildWhereClause(filter, parameters, user);
 

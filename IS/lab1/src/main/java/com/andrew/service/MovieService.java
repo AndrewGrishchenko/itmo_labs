@@ -1,5 +1,7 @@
 package com.andrew.service;
 
+import java.util.List;
+
 import com.andrew.dao.MovieDao;
 import com.andrew.dto.PageResponse;
 import com.andrew.dto.movie.MovieFilter;
@@ -50,6 +52,10 @@ public class MovieService {
         return mine ?
             movieDao.findAllByUserPaginatedAndSorted(currentUser.getUser(), page, size, sort, order, filterLogic, filter) :
             movieDao.findAllPaginatedAndSorted(page, size, sort, order, filterLogic, filter);
+    }
+
+    public List<Movie> getMoviesByGenres(List<String> genres) {
+        return movieDao.findByGenres(genres);
     }
 
     public Movie updateMovie(int id, MovieRequest dto) {

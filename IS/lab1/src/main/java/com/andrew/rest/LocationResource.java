@@ -12,8 +12,9 @@ import com.andrew.dto.location.LocationResponse;
 import com.andrew.model.Location;
 import com.andrew.service.LocationService;
 import com.andrew.util.ResponseMapper;
-import com.andrew.websocket.LocationSocketServer;
+// import com.andrew.websocket.LocationSocketServer;
 import com.andrew.websocket.WebSocketMessage;
+import com.andrew.websocket.WebSocketNotifier;
 
 import jakarta.inject.Inject;
 import jakarta.validation.Valid;
@@ -38,6 +39,9 @@ import jakarta.ws.rs.core.UriInfo;
 public class LocationResource {
     @Inject
     LocationService locationService;
+
+    @Inject
+    private WebSocketNotifier notifier;
 
     @GET
     public Response getAll(
@@ -87,7 +91,9 @@ public class LocationResource {
         
         LocationResponse response = ResponseMapper.toResponse(created);
 
-        LocationSocketServer.broadcast(new WebSocketMessage<>("create", response));
+        // LocationSocketServer.broadcast(new WebSocketMessage<>("create", response));
+
+        notifier.broadcast("location", new WebSocketMessage<>("create", response));
 
         return Response.created(location)
                        .entity(response)
@@ -99,7 +105,8 @@ public class LocationResource {
     public Response update(@PathParam("id") int id, @Valid LocationRequest request) {
         Location updated = locationService.updateLocation(id, request);
         LocationResponse response = ResponseMapper.toResponse(updated);
-        LocationSocketServer.broadcast(new WebSocketMessage<>("update", response));
+        // LocationSocketServer.broadcast(new WebSocketMessage<>("update", response));
+        notifier.broadcast("location", new WebSocketMessage<>("update", response));
         return Response.ok(response).build();
     }
 
@@ -107,7 +114,8 @@ public class LocationResource {
     @Path("{id}")
     public Response delete(@PathParam("id") int id) {
         locationService.deleteLocation(id);
-        LocationSocketServer.broadcast(new WebSocketMessage<>("delete", Map.of("id", id)));
+        // LocationSocketServer.broadcast(new WebSocketMessage<>("delete", Map.of("id", id)));
+        notifier.broadcast("location", new WebSocketMessage<>("delete", Map.of("id", id)));
         return Response.noContent().build();
     }
 }

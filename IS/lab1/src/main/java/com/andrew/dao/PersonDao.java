@@ -40,31 +40,14 @@ public class PersonDao {
     }
 
     public PageResponse<Person> findAllPaginatedAndSorted(int page, int size, String sortField, String sortOrder, PersonFilter filter) {
-        Map<String, Object> parameters = new HashMap<>();
-        String whereClause = buildWhereClause(filter, parameters, null);
-
-        String countHql = "select count(p.id) from Person p" + whereClause;
-        Query<Long> countQuery = session.createQuery(countHql, Long.class);
-        setFilterParameters(countQuery, parameters);
-        long totalElements = countQuery.getSingleResult();
-
-        if (totalElements == 0)
-            return new PageResponse<>(List.of(), 0);
-
-        String sanitizedSortField = sanitizeSortField(sortField);
-        String sanitizedSortOrder = "desc".equalsIgnoreCase(sortOrder) ? "desc" : "asc";
-        String hql = String.format("from Person p %s order by p.%s %s", whereClause, sanitizedSortField, sanitizedSortOrder);
-
-        Query<Person> query = session.createQuery(hql, Person.class);
-        setFilterParameters(query, parameters);
-        query.setFirstResult(page * size);
-        query.setMaxResults(size);
-
-        List<Person> content = query.list();
-        return new PageResponse<>(content, totalElements);
+        return findInternal(null, page, size, sortField, sortOrder, filter);
     }
 
     public PageResponse<Person> findAllByUserPaginatedAndSorted(User user, int page, int size, String sortField, String sortOrder, PersonFilter filter) {
+        return findInternal(user, page, size, sortField, sortOrder, filter);
+    }
+
+    private PageResponse<Person> findInternal(User user, int page, int size, String sortField, String sortOrder, PersonFilter filter) {
         Map<String, Object> parameters = new HashMap<>();
         String whereClause = buildWhereClause(filter, parameters, user);
 

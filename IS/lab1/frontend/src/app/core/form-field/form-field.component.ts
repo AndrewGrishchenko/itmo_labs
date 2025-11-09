@@ -82,6 +82,12 @@ import { MatButtonModule } from '@angular/material/button';
          placeholder="Нажмите для выбора"
          [disabled]="form.get(config.name)?.disabled">
 
+        <button *ngIf="form.get(config.name)?.value && config.onViewSelectedClick && form.get(config.name)?.enabled"
+                mat-icon-button matSuffix
+                (click)="onViewClick($event)">
+          <mat-icon>visibility</mat-icon>
+        </button>
+
         <!-- <input matInput readonly 
              [value]="config.pickerDisplayValue ? 
                       config.pickerDisplayValue(form.get(config.name)?.value) : 
@@ -155,6 +161,13 @@ export class FormFieldComponent {
     event.stopPropagation();
     this.form.get(this.config.name)?.setValue(null);
   }
+
+  onViewClick(event: MouseEvent) {
+    event.stopPropagation();
+    if (this.config.onViewSelectedClick) {
+      this.config.onViewSelectedClick(this.form.get(this.config.name)?.value);
+    }
+  }
 }
 
 export interface FormFieldConfig {
@@ -165,5 +178,6 @@ export interface FormFieldConfig {
   options?: any[];
   onPickerClick?: () => void;
   pickerDisplayValue?: (entity: any) => string;
+  onViewSelectedClick?: (entity: any) => void;
   validators: ValidatorFn[];
 }
