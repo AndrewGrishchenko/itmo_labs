@@ -1,0 +1,38 @@
+<mat-progress-bar mode="indeterminate" *ngIf="isSaving"></mat-progress-bar>
+
+<h1 mat-dialog-title>{{ isEditMode ? 'Изменить/Просмотреть координату' : 'Создать новую координату' }}</h1>
+
+<div mat-dialog-content>
+  <p *ngIf="isEditMode && !isOwner" class="owner-notice">
+    Вы не являетесь владельцем этого объекта, просмотр.
+  </p>
+  <form [formGroup]="form" class="dialog-form">
+    <mat-form-field appearance="fill">
+      <mat-label>ID</mat-label>
+      <input matInput formControlName="id" type="number" [readonly]="true">
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>X (long)</mat-label>
+      <input matInput formControlName="x" type="number" [readonly]="!isOwner">
+    </mat-form-field>
+    <mat-form-field appearance="fill">
+      <mat-label>Y (double)</mat-label>
+      <input matInput formControlName="y" type="number" [readonly]="!isOwner">
+    </mat-form-field>
+  </form>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isSaving">
+    {{ isOwner ? 'Отмена' : 'Закрыть' }}
+  </button>
+  
+  <ng-container *ngIf="isOwner">
+    <button mat-stroked-button color="warn" (click)="onDelete()" [disabled]="isSaving" *ngIf="isEditMode">
+      Удалить
+    </button>
+    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!form.valid || isSaving">
+      {{ isEditMode ? 'Изменить' : 'Создать' }}
+    </button>
+  </ng-container>
+</div>

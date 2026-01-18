@@ -1,0 +1,24 @@
+:host {
+  ::ng-deep {
+    .mat-mdc-dialog-content {
+      max-height: none !important;
+      padding: 0 24px 20px 24px !important;
+    }
+  }
+}
+
+.dialog-form {
+  app-form-field {
+    display: block;
+    margin-bottom: 10px;
+  }
+}
+
+.owner-notice {
+  color: #616161;
+  background-color: #f5f5f5;
+  border-radius: 4px;
+  padding: 8px 12px;
+  margin-bottom: 16px;
+  text-align: center;
+}
