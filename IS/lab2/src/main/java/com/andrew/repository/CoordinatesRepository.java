@@ -1,0 +1,142 @@
+package com.andrew.repository;
+
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Optional;
+import java.util.Set;
+
+import org.hibernate.SessionFactory;
+import org.hibernate.query.Query;
+
+import com.andrew.dto.PageResponse;
+import com.andrew.dto.coordinates.CoordinatesFilter;
+import com.andrew.model.Coordinates;
+import com.andrew.model.User;
+
+import jakarta.enterprise.context.ApplicationScoped;
+import jakarta.inject.Inject;
+
+@ApplicationScoped
+public class CoordinatesRepository {
+    @Inject
+    SessionFactory sessionFactory;
+
+    public void save(Coordinates coordinates) {
+        sessionFactory.getCurrentSession().persist(coordinates);
+    }
+
+    public List<Coordinates> getAll() {
+        return sessionFactory.getCurrentSession().createQuery("from Coordinates", Coordinates.class).list();
+    }
+
+    public List<Coordinates> getAllUser(User user) {
+        return sessionFactory.getCurrentSession().createQuery("from Coordinates c where c.owner = :user", Coordinates.class)
+                      .setParameter("user", user)
+                      .list();
+    }
+
+    public PageResponse<Coordinates> findAllPaginatedAndSorted(int page, int size, String sortField, String sortOrder, CoordinatesFilter filter) {
+        return findInternal(null, page, size, sortField, sortOrder, filter);
+    }
+
+    public PageResponse<Coordinates> findAllByUserPaginatedAndSorted(User user, int page, int size, String sortField, String sortOrder, CoordinatesFilter filter) {
+        return findInternal(user, page, size, sortField, sortOrder, filter);
+    }
+
+    private PageResponse<Coordinates> findInternal(User user, int page, int size, String sortField, String sortOrder, CoordinatesFilter filter) {
+        Map<String, Object> parameters = new HashMap<>();
+        String whereClause = buildWhereClause(filter, parameters, user);
+
+        String countHql = "select count(c.id) from Coordinates c" + whereClause;
+        Query<Long> countQuery = sessionFactory.getCurrentSession().createQuery(countHql, Long.class);
+        setFilterParameters(countQuery, parameters);
+        long totalElements = countQuery.getSingleResult();
+
+        if (totalElements == 0)
+            return new PageResponse<>(List.of(), 0);
+
+        String sanitizedSortField = sanitizeSortField(sortField);
+        String sanitizedSortOrder = "desc".equalsIgnoreCase(sortOrder) ? "desc" : "asc";
+        String hql = String.format("from Coordinates c %s order by c.%s %s", whereClause, sanitizedSortField, sanitizedSortOrder);
+
+        Query<Coordinates> query = sessionFactory.getCurrentSession().createQuery(hql, Coordinates.class);
+        setFilterParameters(query, parameters);
+        query.setFirstResult(page * size);
+        query.setMaxResults(size);
+
+        List<Coordinates> content = query.list();
+        return new PageResponse<>(content, totalElements);
+    }
+
+    public Optional<Coordinates> findById(Long id) {
+        return sessionFactory.getCurrentSession().createQuery("from Coordinates c where c.id = :id", Coordinates.class)
+                      .setParameter("id", id)
+                      .uniqueResultOptional();
+    }
+
+    public Coordinates update(Coordinates coordinates) {
+        Coordinates updated = sessionFactory.getCurrentSession().merge(coordinates);
+        return updated;
+    }
+
+    public void delete(Coordinates coordinates) {
+        sessionFactory.getCurrentSession().remove(coordinates);
+    }
+
+    private String sanitizeSortField(String sortField) {
+        Set<String> allowedSortFields = Set.of("id", "x", "y", "owner.username");
+
+        if (sortField != null && allowedSortFields.contains(sortField))
+            return sortField;
+
+        return "id";
+    }
+
+    private String buildWhereClause (CoordinatesFilter filter, Map<String, Object> parameters, User user) {
+        StringBuilder whereClause = new StringBuilder();
+
+        if (user != null) {
+            appendWhere(whereClause, " c.owner = :user ");
+            parameters.put("user", user);
+        }
+
+        if (filter != null) {
+            if (filter.ownerId() != null) {
+                appendWhere(whereClause, " c.owner.id = :ownerId ");
+                parameters.put("ownerId", filter.ownerId());
+            }
+
+            if (filter.id() != null) {
+                appendWhere(whereClause, " c.id = :id ");
+                parameters.put("id", filter.id());
+            }
+
+            if (filter.x() != null) {
+                appendWhere(whereClause, " c.x = :x ");
+                parameters.put("x", filter.x());
+            }
+
+            if (filter.y() != null) {
+                appendWhere(whereClause, " c.y = :y ");
+                parameters.put("y", filter.y());
+            }
+        }
+
+        return whereClause.toString();
+    }
+
+    private void setFilterParameters(Query<?> query, Map<String, Object> parameters) {
+        for (Map.Entry<String, Object> entry : parameters.entrySet()) {
+            query.setParameter(entry.getKey(), entry.getValue());
+        }
+    }
+
+    private void appendWhere(StringBuilder sb, String condition) {
+        if (sb.length() == 0)
+            sb.append(" where ");
+        else
+            sb.append(" and ");
+        sb.append(condition);
+    }
+}
