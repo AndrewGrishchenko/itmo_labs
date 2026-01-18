@@ -1,7 +1,10 @@
 package com.andrew.service;
 
+import java.sql.Connection;
 import java.util.List;
 import java.util.stream.Collectors;
+
+import org.hibernate.SessionFactory;
 
 import com.andrew.dto.PageResponse;
 import com.andrew.dto.movie.MovieFilter;
@@ -32,6 +35,9 @@ public class MovieService {
     @Inject
     EntityResolver resolver;
 
+    @Inject
+    SessionFactory sessionFactory;
+
     @Transactional
     public MovieResponse createMovie(MovieRequest dto) {
         return createMovie(ObjectFactory.createMovie(dto, currentUser.getUser()));
@@ -44,6 +50,10 @@ public class MovieService {
 
     @Transactional
     private MovieResponse createMovie(Movie movie) {
+        sessionFactory.getCurrentSession().doWork(connection -> {
+            connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+        });
+
         movie.setCoordinates(resolver.resolve(movie.getCoordinates()));
         movie.setDirector(resolver.resolve(movie.getDirector()));
         movie.setScreenwriter(resolver.resolve(movie.getScreenwriter()));
