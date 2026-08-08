@@ -1,0 +1,37 @@
+<config
+    xmlns="http://www.ehcache.org/v3"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+
+    <cache alias="default">
+        <key-type>java.lang.Object</key-type>
+        <value-type>java.lang.Object</value-type>
+
+        <resources>
+            <heap unit="entries">1000</heap>
+        </resources>
+
+        <expiry>
+            <ttl unit="minutes">10</ttl>
+        </expiry>
+    </cache>
+
+    <cache alias="default-query-results-region">
+        <key-type>java.lang.Object</key-type>
+        <value-type>java.lang.Object</value-type>
+        <resources>
+            <heap unit="entries">1000</heap>
+        </resources>
+        <expiry>
+            <ttl unit="minutes">10</ttl>
+        </expiry>
+    </cache>
+
+    <cache alias="default-update-timestamps-region">
+        <key-type>java.lang.Object</key-type>
+        <value-type>java.lang.Object</value-type>
+        <resources>
+            <heap unit="entries">1000</heap>
+        </resources>
+    </cache>
+
+</config>

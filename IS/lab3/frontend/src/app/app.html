@@ -1,0 +1,31 @@
+<ng-container *ngIf="!(authService.isAuthenticated$ | async)">
+  <router-outlet></router-outlet>
+</ng-container>
+
+<ng-container *ngIf="authService.isAuthenticated$ | async">
+  <mat-sidenav-container class="sidenav-container">
+    <mat-sidenav mode="side" opened class="sidenav">
+      <h2 class="sidenav-title">Навигация</h2>
+      <mat-nav-list>
+        <a mat-list-item routerLink="/coordinates" routerLinkActive="active-link" [activated]="router.url.startsWith('/coordinates')">Координаты</a>
+        <a mat-list-item routerLink="/person" routerLinkActive="active-link" [activated]="router.url.startsWith('/person')">Персона</a>
+        <a mat-list-item routerLink="/location" routerLinkActive="active-link" [activated]="router.url.startsWith('/location')">Локация</a>
+        <a mat-list-item routerLink="/movie" routerLinkActive="active-link" [activated]="router.url.startsWith('/movie')">Фильм</a>
+        <a mat-list-item routerLink="/operation" routerLinkActive="active-link" [activated]="router.url.startsWith('/operation')">Операции</a>
+        <a mat-list-item routerLink="/history" routerLinkActive="active-link" [activated]="router.url.startsWith('/history')">История</a>
+      </mat-nav-list>
+    </mat-sidenav>
+    
+    <mat-sidenav-content>
+      <mat-toolbar color="primary">
+        <span *ngIf="currentUser">Пользователь: {{ currentUser.username }}</span>
+        <span class="spacer"></span>
+        <button mat-button (click)="logout()">Выйти</button>
+      </mat-toolbar>
+
+      <main class="content">
+        <router-outlet></router-outlet>
+      </main>
+    </mat-sidenav-content>
+  </mat-sidenav-container>
+</ng-container>

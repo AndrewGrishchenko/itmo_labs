@@ -1,0 +1,60 @@
+<mat-progress-bar mode="indeterminate" *ngIf="isSaving"></mat-progress-bar>
+
+<h1 mat-dialog-title>
+  {{ isEditMode ? (isOwner ? 'Изменить' : 'Просмотреть') : 'Создать' }} {{ entityDisplayName }}
+</h1>
+
+<div mat-dialog-content>
+  <p *ngIf="isEditMode && !isOwner" class="owner-notice">
+    Вы не являетесь владельцем этого объекта, доступен только просмотр.
+  </p>
+  
+  <form [formGroup]="form" class="dialog-form">
+    <ng-container *ngFor="let field of formFields">
+      <mat-form-field appearance="fill">
+        <mat-label>{{ field.label }}</mat-label>
+        <input matInput [formControlName]="field.name" [type]="field.type">
+      </mat-form-field>
+    </ng-container>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Рейтинг</mat-label>
+      <mat-select formControlName="mpaaRating">
+        <mat-option [value]="null">Не выбрано</mat-option>
+        <mat-option *ngFor="let rating of ratings" [value]="color">{{ rating }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill">
+      <mat-label>Жанр</mat-label>
+      <mat-select formControlName="genre">
+        <mat-option [value]="null">Не выбрано</mat-option>
+        <mat-option *ngFor="let genre of genres" [value]="color">{{ genre }}</mat-option>
+      </mat-select>
+    </mat-form-field>
+
+    <mat-form-field appearance="fill" (click)="openLocationSelector()" class="location-picker">
+      <mat-label>Локация</mat-label>
+      <input matInput readonly [value]="form.get('location')?.value?.name || ''" placeholder="Нажмите для выбора">
+      <button *ngIf="form.get('location')?.value && isOwner" 
+              mat-icon-button matSuffix (click)="clearLocation(); $event.stopPropagation()">
+        <mat-icon>close</mat-icon>
+      </button>
+    </mat-form-field>
+  </form>
+</div>
+
+<div mat-dialog-actions align="end">
+  <button mat-button (click)="onCancel()" [disabled]="isSaving">
+    {{ isOwner ? 'Отмена' : 'Закрыть' }}
+  </button>
+  
+  <ng-container *ngIf="isOwner">
+    <button mat-stroked-button color="warn" (click)="onDelete()" *ngIf="isEditMode" [disabled]="isSaving">
+      Удалить
+    </button>
+    <button mat-raised-button color="primary" (click)="onSave()" [disabled]="!form.valid || isSaving">
+      {{ isEditMode ? 'Изменить' : 'Создать' }}
+    </button>
+  </ng-container>
+</div>

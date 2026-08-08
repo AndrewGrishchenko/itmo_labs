@@ -1,0 +1,26 @@
+package com.andrew.mapper.exception;
+
+import java.util.HashMap;
+import java.util.Map;
+
+import com.andrew.exceptions.RouteBuildException;
+
+import jakarta.ws.rs.core.MediaType;
+import jakarta.ws.rs.core.Response;
+import jakarta.ws.rs.ext.ExceptionMapper;
+import jakarta.ws.rs.ext.Provider;
+
+@Provider
+public class RouteBuildExceptionMapper implements ExceptionMapper<RouteBuildException> {
+    @Override
+    public Response toResponse(RouteBuildException ex) {
+        Map<String, Object> body = new HashMap<>();
+        body.put("error", "route_build");
+        body.put("message", ex.getMessage());
+
+        return Response.status(Response.Status.BAD_REQUEST)
+            .entity(body)
+            .type(MediaType.APPLICATION_JSON)
+            .build();
+    }
+}

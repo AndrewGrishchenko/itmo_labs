@@ -1,0 +1,86 @@
+@startuml
+autonumber
+skinparam boxPadding 10
+
+actor "Пользователь" as User
+participant "Web/Mobile UI\n(React/App)" as UI
+participant "Backend API\n(Spring Boot)" as Backend
+database "PostgreSQL" as DB
+participant "Payment Gateway\n(ЮKassa)" as Payment
+participant "Notification Service\n(SMTP)" as Email
+
+title Sequence-диаграмма: Оформление подписки (zaycev.net)
+
+== Инициализация покупки ==
+
+User -> UI: Нажатие "Оформить подписку"
+activate UI
+
+UI -> Backend: POST /api/subscription/create (userId, tariffId)
+activate Backend
+
+Backend -> DB: Создание записи заказа (status=PENDING)
+activate DB
+DB --> Backend: Order ID
+deactivate DB
+
+Backend -> Payment: Запрос на создание платежа
+activate Payment
+Payment --> Backend: Ссылка на оплату (paymentUrl)
+deactivate Payment
+
+Backend --> UI: Возврат paymentUrl
+deactivate Backend
+
+== Процесс оплаты ==
+
+UI -> User: Перенаправление на страницу оплаты
+User -> Payment: Ввод реквизитов карты и подтверждение
+activate Payment
+
+alt Оплата прошла успешно
+    Payment --> User: Успешная оплата, возврат в магазин
+    
+    par Обработка на сервере
+        Payment -> Backend: Webhook: Payment Success
+        activate Backend
+        Backend -> DB: Обновление статуса (status=PAID)
+        activate DB
+        DB --> Backend: OK
+        
+        Backend -> DB: Обновление роли пользователя\n(Premium Active)
+        DB --> Backend: OK
+        deactivate DB
+        
+        Backend -> Email: Отправка чека и уведомления
+        activate Email
+        Email --> User: Email с подтверждением
+        deactivate Email
+        
+        deactivate Backend
+    else Ожидание на клиенте
+        UI -> Backend: Проверка статуса оплаты (Polling)
+        activate Backend
+        Backend --> UI: Статус: PAID
+        deactivate Backend
+    end
+    
+    UI --> User: Отображение сообщения "Подписка активирована"
+
+else Оплата отклонена / Ошибка
+    Payment --> User: Ошибка оплаты
+    Payment -> Backend: Webhook: Payment Failed
+    activate Backend
+    Backend -> DB: Обновление статуса (status=FAILED)
+    activate DB
+    DB --> Backend: OK
+    deactivate DB
+    deactivate Backend
+    
+    UI --> User: Сообщение "Оплата не прошла, попробуйте снова"
+end
+
+deactivate Payment
+deactivate UI
+
+@enduml

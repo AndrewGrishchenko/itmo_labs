@@ -1,0 +1,41 @@
+<div class="dialog-container">
+  <h1 mat-dialog-title>Разрешение зависимостей</h1>
+
+  <div mat-dialog-content class="dialog-content">
+    <p>
+      Невозможно удалить <strong>{{ data.entityName }}</strong>, так как на него ссылаются
+      <strong>{{ data.dependencyCount }}</strong> объект(ов) <strong>{{ data.dependencyEntityName }}</strong>.
+    </p>
+    <p>
+      Пожалуйста, измените или удалите зависимые объекты перед повторной попыткой.
+    </p>
+
+    <div [ngSwitch]="data.dependencyEntityName">
+      
+      <app-person *ngSwitchCase="'person'"
+                  [initialFilter]="initialFilter"
+                  [isFilterLocked]="true"
+                  [conflictingEntityId]="data.entityId">
+      </app-person>
+      
+      <app-movie *ngSwitchCase="'movie'"
+                  [initialFilter]="initialFilter"
+                  [isFilterLocked]="true"
+                  [conflictingEntityId]="data.entityId"> 
+      </app-movie>
+
+      <div *ngSwitchDefault>
+        Ошибка: неизвестный тип зависимости '{{ data.dependencyEntityName }}'.
+      </div>
+    </div>
+
+  </div>
+
+  <div mat-dialog-actions align="end">
+    <button mat-button (click)="onCancel()">Закрыть</button>
+  </div>
+
+  <button mat-raised-button color="primary" (click)="onRetryDelete()">
+    Попробовать снова
+  </button>
+</div>

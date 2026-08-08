@@ -173,6 +173,13 @@ export abstract class BaseTableComponent<T extends BaseEntity> implements OnInit
     this.reload$.next();
   }
 
+  // private setupWebSocketListener(): void {
+  //   this.webSocketService.connect(this.webSocketEndpoint);
+  //   this.webSocketService.messages$
+  //     .pipe(takeUntil(this.destroy$))
+  //     .subscribe(() => this.reload$.next());
+  // }
+
   private setupWebSocketListener(): void {
     this.webSocketService.connect(this.webSocketEndpoint);
     this.webSocketService.messages$

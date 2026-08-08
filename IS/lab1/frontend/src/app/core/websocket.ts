@@ -31,7 +31,7 @@ export class WebSocketService {
 
     this.currentEndpoint = endpoint;
     const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
-    const backendHost = 'localhost:8080';
+    const backendHost = 'localhost:3452';
     const url = `${protocol}//${backendHost}${endpoint}`;
     
     this.socket = new WebSocket(url);

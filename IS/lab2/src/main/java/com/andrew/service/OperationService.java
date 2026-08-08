@@ -1,8 +1,11 @@
 package com.andrew.service;
 
 import java.io.InputStream;
+import java.sql.Connection;
 import java.util.List;
 import java.util.Set;
+
+import org.hibernate.SessionFactory;
 
 import com.andrew.dto.coordinates.CoordinatesRequest;
 import com.andrew.dto.coordinates.CoordinatesResponse;
@@ -52,6 +55,9 @@ public class OperationService {
     @Inject
     Validator validator;
 
+    @Inject
+    SessionFactory sessionFactory;
+
     private static Jsonb jsonb = JsonbBuilder.create();
 
     @Transactional
@@ -83,6 +89,10 @@ public class OperationService {
 
     @Transactional(rollbackOn = RuntimeException.class)
     public ImportResult parseObjects(InputStream content) {
+        sessionFactory.getCurrentSession().doWork(connection -> {
+            connection.setTransactionIsolation(Connection.TRANSACTION_SERIALIZABLE);
+        });
+        
         try {
             BulkImportRequest request;
 

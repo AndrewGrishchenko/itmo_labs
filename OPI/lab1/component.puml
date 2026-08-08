@@ -1,0 +1,60 @@
+@startuml
+skinparam componentStyle uml2
+
+package "Client Layer" {
+    [Web Browser\n(React, TypeScript)] as WebApp
+    [Mobile App\n(iOS/Android)] as MobApp
+}
+
+package "Infrastructure / Networking" {
+    [Nginx\n(Load Balancer & Reverse Proxy)] as Nginx
+}
+
+package "Backend System (Docker Container)" {
+    component "API Gateway / Security" as Security {
+        [Spring Security\n(OAuth 2.0 / JWT)]
+    }
+    
+    component "Application Logic (Spring Boot)" as AppLogic {
+        [Music Service]
+        [User Service]
+        [Subscription Service]
+        [Search Engine]
+    }
+    
+    component "Data Access Layer" as DAO {
+        [Spring Data JPA]
+        [Liquibase]
+    }
+}
+
+package "Data Storage Layer" {
+    database "PostgreSQL\n(User Data, Metadata)" as DB
+    database "Redis\n(Caching, Sessions)" as Cache
+}
+
+cloud "External Services" {
+    [AWS S3\n(Audio Files Storage)] as S3
+    [ЮKassa API\n(Payments)] as Kassa
+    [OAuth Providers\n(VK, Google)] as SocialAuth
+    [SMTP Server\n(Email Notifications)] as Mail
+}
+
+' Connections
+WebApp ..> Nginx : HTTPS (JSON)
+MobApp ..> Nginx : HTTPS (JSON)
+
+Nginx ..> Security : Forward Requests
+
+Security --> AppLogic : Authenticated Requests
+Security ..> SocialAuth : Validate Tokens
+
+AppLogic --> DAO : CRUD Operations
+AppLogic ..> S3 : Get Audio Stream URL
+AppLogic ..> Kassa : Process Payments
+AppLogic ..> Mail : Send Emails
+
+DAO ..> DB : SQL Queries
+DAO ..> Cache : Read/Write Cache
+
+@enduml

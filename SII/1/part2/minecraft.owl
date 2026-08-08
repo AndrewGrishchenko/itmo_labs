@@ -1,0 +1,209 @@
+<?xml version="1.0"?>
+<rdf:RDF
+    xmlns="http://example.com/minecraft#"
+    xml:base="http://example.com/minecraft"
+    xmlns:rdf="http://www.w3.org/1999/02/22-rdf-syntax-ns#"
+    xmlns:owl="http://www.w3.org/2002/07/owl#"
+    xmlns:rdfs="http://www.w3.org/2000/01/rdf-schema#"
+    xmlns:xsd="http://www.w3.org/2001/XMLSchema#">
+
+    <owl:Ontology rdf:about="http://example.com/minecraft"/>
+
+    <!-- Classes -->
+    <owl:Class rdf:about="#Mob"/>
+    <owl:Class rdf:about="#HostileMob"><rdfs:subClassOf rdf:resource="#Mob"/></owl:Class>
+    <owl:Class rdf:about="#PassiveMob"><rdfs:subClassOf rdf:resource="#Mob"/></owl:Class>
+    <owl:Class rdf:about="#BossMob"><rdfs:subClassOf rdf:resource="#Mob"/></owl:Class>
+    <owl:Class rdf:about="#UsefulMob">
+        <owl:equivalentClass>
+            <owl:Class>
+                <owl:unionOf rdf:parseType="Collection">
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="#canBeTamedWith"/>
+                        <owl:someValuesFrom rdf:resource="#Item"/>
+                    </owl:Restriction>
+                    <owl:Restriction>
+                        <owl:onProperty rdf:resource="#dropsItem"/>
+                        <owl:someValuesFrom rdf:resource="#Item"/>
+                    </owl:Restriction>
+                </owl:unionOf>
+            </owl:Class>
+        </owl:equivalentClass>
+    </owl:Class>
+
+    <owl:Class rdf:about="#Block"/>
+    <owl:Class rdf:about="#RareResource"><rdfs:subClassOf rdf:resource="#Block"/></owl:Class>
+    <owl:Class rdf:about="#Tool"/>
+    <owl:Class rdf:about="#Item"/>
+    <owl:Class rdf:about="#Biome"/>
+
+    <!-- Classes -->
+    <owl:ObjectProperty rdf:about="#spawnsIn">
+        <rdfs:domain rdf:resource="#Mob"/>
+        <rdfs:range rdf:resource="#Biome"/>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#dropsItem">
+        <rdfs:domain rdf:resource="#Mob"/>
+        <rdfs:range rdf:resource="#Item"/>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#canBeTamedWith">
+        <rdfs:domain rdf:resource="#Mob"/>
+        <rdfs:range rdf:resource="#Item"/>
+    </owl:ObjectProperty>
+
+    <owl:ObjectProperty rdf:about="#requiresTool">
+        <rdfs:domain rdf:resource="#Block"/>
+        <rdfs:range rdf:resource="#Tool"/>
+    </owl:ObjectProperty>
+
+    <!-- Classes -->
+    <owl:NamedIndividual rdf:about="#RottenFlesh"><rdf:type rdf:resource="#Item"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#Bone"><rdf:type rdf:resource="#Item"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#Gunpowder"><rdf:type rdf:resource="#Item"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#Porkchop"><rdf:type rdf:resource="#Item"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#Leather"><rdf:type rdf:resource="#Item"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#DragonEgg"><rdf:type rdf:resource="#Item"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#NetherStar"><rdf:type rdf:resource="#Item"/></owl:NamedIndividual>
+
+    <!-- Items for taming -->
+    <owl:NamedIndividual rdf:about="#Meat"><rdf:type rdf:resource="#Item"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#Fish"><rdf:type rdf:resource="#Item"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#Apple"><rdf:type rdf:resource="#Item"/></owl:NamedIndividual>
+
+    <!-- Tools -->
+    <owl:NamedIndividual rdf:about="#IronPickaxe"><rdf:type rdf:resource="#Tool"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#DiamondPickaxe"><rdf:type rdf:resource="#Tool"/></owl:NamedIndividual>
+
+    <!-- Biomes -->
+    <owl:NamedIndividual rdf:about="#Overworld"><rdf:type rdf:resource="#Biome"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#Nether"><rdf:type rdf:resource="#Biome"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#End"><rdf:type rdf:resource="#Biome"/></owl:NamedIndividual>
+
+    <!-- Mobs -->
+    <owl:NamedIndividual rdf:about="#Zombie">
+        <rdf:type rdf:resource="#Mob"/>
+        <rdf:type rdf:resource="#HostileMob"/>
+        <spawnsIn rdf:resource="#Overworld"/>
+        <dropsItem rdf:resource="#RottenFlesh"/>
+    </owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="#Skeleton">
+        <rdf:type rdf:resource="#Mob"/>
+        <rdf:type rdf:resource="#HostileMob"/>
+        <spawnsIn rdf:resource="#Overworld"/>
+        <dropsItem rdf:resource="#Bone"/>
+    </owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="#Creeper">
+        <rdf:type rdf:resource="#Mob"/>
+        <rdf:type rdf:resource="#HostileMob"/>
+        <spawnsIn rdf:resource="#Overworld"/>
+        <dropsItem rdf:resource="#Gunpowder"/>
+    </owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="#Enderman">
+        <rdf:type rdf:resource="#Mob"/>
+        <rdf:type rdf:resource="#HostileMob"/>
+        <spawnsIn rdf:resource="#End"/>
+    </owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="#Spider"><rdf:type rdf:resource="#Mob"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#Villager">
+        <rdf:type rdf:resource="#Mob"/>
+        <rdf:type rdf:resource="#PassiveMob"/>
+    </owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#IronGolem">
+        <rdf:type rdf:resource="#Mob"/>
+        <rdf:type rdf:resource="#PassiveMob"/>
+    </owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="#Blaze">
+        <rdf:type rdf:resource="#Mob"/>
+        <rdf:type rdf:resource="#HostileMob"/>
+        <spawnsIn rdf:resource="#Nether"/>
+    </owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="#Hoglin">
+        <rdf:type rdf:resource="#Mob"/>
+        <rdf:type rdf:resource="#HostileMob"/>
+        <spawnsIn rdf:resource="#Nether"/>
+    </owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="#WitherSkeleton">
+        <rdf:type rdf:resource="#Mob"/>
+        <rdf:type rdf:resource="#HostileMob"/>
+    </owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="#Pig">
+        <rdf:type rdf:resource="#Mob"/>
+        <rdf:type rdf:resource="#PassiveMob"/>
+        <dropsItem rdf:resource="#Porkchop"/>
+    </owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="#Cow">
+        <rdf:type rdf:resource="#Mob"/>
+        <rdf:type rdf:resource="#PassiveMob"/>
+        <dropsItem rdf:resource="#Leather"/>
+    </owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="#Chicken">
+        <rdf:type rdf:resource="#Mob"/>
+        <rdf:type rdf:resource="#PassiveMob"/>
+    </owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="#EndDragon">
+        <rdf:type rdf:resource="#Mob"/>
+        <rdf:type rdf:resource="#BossMob"/>
+        <spawnsIn rdf:resource="#End"/>
+        <dropsItem rdf:resource="#DragonEgg"/>
+    </owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="#WitherBoss">
+        <rdf:type rdf:resource="#Mob"/>
+        <rdf:type rdf:resource="#BossMob"/>
+        <dropsItem rdf:resource="#NetherStar"/>
+    </owl:NamedIndividual>
+
+    <!-- ========== TAMEABLE MOBS ========== -->
+    <owl:NamedIndividual rdf:about="#Wolf">
+        <rdf:type rdf:resource="#Mob"/>
+        <canBeTamedWith rdf:resource="#Meat"/>
+    </owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="#Cat">
+        <rdf:type rdf:resource="#Mob"/>
+        <canBeTamedWith rdf:resource="#Fish"/>
+    </owl:NamedIndividual>
+
+    <owl:NamedIndividual rdf:about="#Horse">
+        <rdf:type rdf:resource="#Mob"/>
+        <canBeTamedWith rdf:resource="#Apple"/>
+    </owl:NamedIndividual>
+
+    <!-- ========== Blocks ========== -->
+    <owl:NamedIndividual rdf:about="#Dirt"><rdf:type rdf:resource="#Block"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#Stone"><rdf:type rdf:resource="#Block"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#Wood"><rdf:type rdf:resource="#Block"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#DiamondOre">
+        <rdf:type rdf:resource="#Block"/>
+        <rdf:type rdf:resource="#RareResource"/>
+        <requiresTool rdf:resource="#IronPickaxe"/>
+    </owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#IronOre"><rdf:type rdf:resource="#Block"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#GoldOre"><rdf:type rdf:resource="#Block"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#Obsidian">
+        <rdf:type rdf:resource="#Block"/>
+        <rdf:type rdf:resource="#RareResource"/>
+        <requiresTool rdf:resource="#DiamondPickaxe"/>
+    </owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#NetheriteBlock">
+        <rdf:type rdf:resource="#Block"/>
+        <rdf:type rdf:resource="#RareResource"/>
+        <requiresTool rdf:resource="#DiamondPickaxe"/>
+    </owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#Sand"><rdf:type rdf:resource="#Block"/></owl:NamedIndividual>
+    <owl:NamedIndividual rdf:about="#Glowstone"><rdf:type rdf:resource="#Block"/></owl:NamedIndividual>
+
+</rdf:RDF>
