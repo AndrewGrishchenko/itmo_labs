@@ -1,0 +1,38 @@
+@startuml uc
+left to right direction
+
+actor "Пользователь" as User
+
+rectangle "Google Translate" {
+
+  usecase "UC-01\nВвод текста\nдля перевода" as UC01
+
+  usecase "UC-02\nВыбор языка\nисходного текста" as UC02
+
+  usecase "UC-03\nАвтоопределение\nязыка" as UC03
+
+  usecase "UC-04\nВыбор языка\nперевода" as UC04
+
+  usecase "UC-05\nСмена языков\nместами" as UC05
+
+  usecase "UC-06\nКопирование\nперевода" as UC06
+
+  usecase "UC-07\nГолосовой ввод\nтекста" as UC07
+}
+
+User --> UC01
+User --> UC02
+User --> UC03
+User --> UC04
+User --> UC05
+User --> UC06
+User --> UC07
+
+UC03 ..> UC01 : <<extend>>
+
+UC05 ..> UC01 : <<include>>
+UC05 ..> UC04 : <<include>>
+
+UC07 ..> UC01 : <<include>>
+
+@enduml
