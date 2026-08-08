@@ -1,0 +1,46 @@
+services:
+  primary:
+    container_name: primary
+    build: ./primary
+    restart: "on-failure"
+    ports:
+      - "5432:5432"
+    environment:
+      - PGDATA=/var/lib/postgresql/data
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=studs
+    volumes:
+      - ./primary/data:/var/lib/postgresql/data
+    networks:
+      - pg_net
+
+  replica:
+    container_name: replica
+    build: ./replica
+    depends_on:
+      - primary
+    ports:
+      - "5433:5432"
+    environment:
+      - PGDATA=/var/lib/postgresql/data
+      - PGPASSWORD=replpass
+    volumes:
+      - ./replica/data:/var/lib/postgresql/data
+    networks:
+      - pg_net
+
+  pgbouncer:
+    container_name: pgbouncer
+    build: ./pgbouncer
+    depends_on:
+      - primary
+      - replica
+    ports:
+      - "6432:6432"
+    networks:
+      - pg_net
+
+networks:
+  pg_net:
+    driver: bridge
