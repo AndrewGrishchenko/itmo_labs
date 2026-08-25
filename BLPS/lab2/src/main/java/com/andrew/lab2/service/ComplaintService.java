@@ -180,24 +180,20 @@ public class ComplaintService {
 
     @Transactional
     public void acceptViolation(Long complaintId, ModeratorDecisionRequest request) {
-        // transactionRunner.execute(() -> {
-            Complaint complaint = complaintRepository.findById(complaintId)
-                .orElseThrow(() -> new NotFoundException("Complaint", complaintId));
+        Complaint complaint = complaintRepository.findById(complaintId)
+            .orElseThrow(() -> new NotFoundException("Complaint", complaintId));
 
-            Video video = videoRepository.findById(complaint.getVideoId())
-                .orElseThrow(() -> new NotFoundException("Video", complaint.getVideoId()));
+        Video video = videoRepository.findById(complaint.getVideoId())
+            .orElseThrow(() -> new NotFoundException("Video", complaint.getVideoId()));
 
-            complaint.setStatus(ComplaintStatus.ACCEPTED_BY_MODERATOR);
-            complaint.setModeratorComment(request.getModeratorComment());
-            video.setStatus(VideoStatus.BLOCKED_BY_COPYRIGHT);
+        complaint.setStatus(ComplaintStatus.ACCEPTED_BY_MODERATOR);
+        complaint.setModeratorComment(request.getModeratorComment());
+        video.setStatus(VideoStatus.BLOCKED_BY_COPYRIGHT);
 
-            complaintRepository.save(complaint);
-            videoRepository.save(video);
+        complaintRepository.save(complaint);
+        videoRepository.save(video);
 
-            // throw new RuntimeException("test rollback");
-
-            // return null;
-        // });
+        // throw new RuntimeException("test rollback");
     }
 
     @Transactional
@@ -210,11 +206,4 @@ public class ComplaintService {
 
         complaintRepository.save(complaint);
     }
-
-    // @Transactional
-    // private XmlUser getCurrentUser() {
-    //     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    //     return userRepository.findByUsername(auth.getName())
-    //         .orElseThrow(() -> new NotFoundException("User with username " + auth.getName() + " not found"));
-    // }
 }

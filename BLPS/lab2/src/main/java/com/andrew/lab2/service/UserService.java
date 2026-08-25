@@ -102,11 +102,4 @@ public class UserService {
 
         userRepository.delete(existing);
     }
-
-    // @Transactional
-    // private XmlUser getCurrentUser() {
-    //     Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-    //     return userRepository.findByUsername(auth.getName())
-    //         .orElseThrow(() -> new NotFoundException("User with username " + auth.getName() + " not found"));
-    // }
 }

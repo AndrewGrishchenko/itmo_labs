@@ -11,13 +11,7 @@ import jakarta.transaction.TransactionManager;
 import jakarta.transaction.UserTransaction;
 
 @Configuration
-// @EnableTransactionManagement
 public class JtaConfig {
-    // @Bean
-    // public PlatformTransactionManager transactionManager() {
-    //     return new JpaTransactionManager();
-    // }
-
     @Bean
     public JtaTransactionManager transactionManager() throws NamingException {
         JtaTransactionManager tm = new JtaTransactionManager();
