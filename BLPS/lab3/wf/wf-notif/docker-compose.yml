@@ -1,0 +1,8 @@
+services:
+  wildfly-micro:
+    build: .
+    ports:
+      - "8081:8080"
+      - "9991:9990"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"

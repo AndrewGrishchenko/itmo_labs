@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<users>
+    <user>
+        <id>2</id>
+        <username>u1</username>
+        <role>AUTHOR</role>
+        <email>u1@author.com</email>
+        <password>$2a$10$GeRMZRumiNEjylxboczedumdu.JNti3LbqKq5af0tTbaf/OgBIubO</password>        
+    </user>
+    <user>
+        <id>3</id>
+        <username>u2</username>
+        <role>AUTHOR</role>
+        <email>u2@author.com</email>
+        <password>$2a$10$RcO4lEkQbF8gCkIEr/oo7uRXFiuNwqnAmLXbCgPiM/AA4bcF0.dBq</password>
+    </user>
+    <user>
+        <id>4</id>
+        <username>r1</username>
+        <role>RIGHTSHOLDER</role>
+        <email>r1@rightsholder.com</email>
+        <password>$2a$10$SL1Rh.KXPXKZd9qKNULCHOaKdpoEoujuDffUbLUB.nnBF4A0pGZv2</password>
+    </user>
+    <user>
+        <id>5</id>
+        <username>r2</username>
+        <role>RIGHTSHOLDER</role>
+        <email>r2@rightsholder.com</email>
+        <password>$2a$10$ISIfQxWfTzUEAXrqXSmpReL8gwF6IvAZjA7CEvwrlZzZ3zXlIa5yy</password>
+    </user>
+    <user>
+        <id>6</id>
+        <username>m1</username>
+        <role>MODERATOR</role>
+        <email>m1@moderator.com</email>
+        <password>$2a$10$dyag4I2d.NxiBvxC6idRh.1umeuE7Ke4wsDG0TbJpiCpH9CTQjqW2</password>
+    </user>
+</users>
