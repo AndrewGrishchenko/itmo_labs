@@ -1,0 +1,52 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<connector
+        xmlns="https://jakarta.ee/xml/ns/jakartaee"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="
+          https://jakarta.ee/xml/ns/jakartaee
+          https://jakarta.ee/xml/ns/jakartaee/jakartaee-connectors_2_1.xsd"
+        version="2.1">
+
+    <display-name>Email JCA Resource Adapter</display-name>
+    <vendor-name>andrew</vendor-name>
+    <eis-type>SMTP Email System</eis-type>
+    <resourceadapter-version>1.0</resourceadapter-version>
+
+    <resourceadapter>
+        <resourceadapter-class>
+            com.andrew.email.EmailResourceAdapter
+        </resourceadapter-class>
+
+        <outbound-resourceadapter>
+            <connection-definition>
+                <managedconnectionfactory-class>
+                    com.andrew.email.EmailManagedConnectionFactory
+                </managedconnectionfactory-class>
+
+                <connectionfactory-interface>
+                    com.andrew.email.EmailConnectionFactory
+                </connectionfactory-interface>
+
+                <connectionfactory-impl-class>
+                    com.andrew.email.EmailConnectionFactoryImpl
+                </connectionfactory-impl-class>
+
+                <connection-interface>
+                    com.andrew.email.EmailConnection
+                </connection-interface>
+
+                <connection-impl-class>
+                    com.andrew.email.EmailConnectionImpl
+                </connection-impl-class>
+            </connection-definition>
+
+            <transaction-support>
+                NoTransaction
+            </transaction-support>
+
+            <reauthentication-support>
+                false
+            </reauthentication-support>
+        </outbound-resourceadapter>
+    </resourceadapter>
+</connector>
