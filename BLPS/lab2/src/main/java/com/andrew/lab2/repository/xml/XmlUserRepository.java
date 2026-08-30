@@ -35,8 +35,7 @@ public class XmlUserRepository {
             JAXBContext context = JAXBContext.newInstance(XmlUsers.class);
             Unmarshaller unmarshaller = context.createUnmarshaller();
 
-            xmlFile = new File("/home/andrew/users.xml");
-            // xmlFile = new File("/home/studs/s408498/users.xml");
+            xmlFile = new File("/opt/app/config/users.xml");
 
             XmlUsers xmlUsers = (XmlUsers) unmarshaller.unmarshal(xmlFile);
 
