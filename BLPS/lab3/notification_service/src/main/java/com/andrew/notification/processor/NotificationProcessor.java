@@ -57,6 +57,9 @@ public class NotificationProcessor {
 
             case COMPLAINT_REJECTED ->
                 "Complaint rejected";
+
+            case COMPLAINT_EXPIRED ->
+                "Complaint expired";
         };
     }
 
@@ -98,6 +101,14 @@ public class NotificationProcessor {
                     event.payload().complaintInfo().id(),
                     event.payload().complaintInfo().claimDetails(),
                     event.payload().complaintInfo().moderatorComment()
+                );
+
+            case COMPLAINT_EXPIRED ->
+                """
+                Complaint #%d with reported \"%s\" was expired    
+                """.formatted(
+                    event.payload().complaintInfo().id(),
+                    event.payload().complaintInfo().claimDetails()
                 );
         };
     }

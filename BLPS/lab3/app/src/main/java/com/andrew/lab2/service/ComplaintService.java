@@ -41,6 +41,7 @@ public class ComplaintService {
     private final MusicRepository musicRepository;
     private final XmlUserRepository xmlUserRepository;
     private final NotificationProducer notificationProducer;
+    private final ComplaintScheduler complaintScheduler;
 
     @Transactional
     public ComplaintResponse createComplaint(ComplaintCreateRequest request) {
@@ -177,6 +178,8 @@ public class ComplaintService {
                 rightsHolder.getEmail(),
                 NotificationPayload.forComplaint(complaint)
             );
+
+            complaintScheduler.scheduleExpiration(complaint.getId());
         }
 
         return ResponseMapper.toResponse(complaintRepository.save(complaint));
@@ -217,6 +220,9 @@ public class ComplaintService {
     public void acceptViolation(Long complaintId, ModeratorDecisionRequest request) {
         Complaint complaint = complaintRepository.findById(complaintId)
             .orElseThrow(() -> new NotFoundException("Complaint", complaintId));
+
+        if (complaint.getStatus() != ComplaintStatus.PENDING_MODERATOR)
+            throw new ValidationException("Complaint is not pending moderator");
 
         Video video = videoRepository.findById(complaint.getVideoId())
             .orElseThrow(() -> new NotFoundException("Video", complaint.getVideoId()));
@@ -264,6 +270,27 @@ public class ComplaintService {
             .orElseThrow(() -> new NotFoundException("User", complaint.getRightsholderId()));
         notificationProducer.sendNotification(
             NotificationEventType.COMPLAINT_REJECTED,
+            rightsholder.getId(),
+            rightsholder.getEmail(),
+            NotificationPayload.forComplaint(complaint)
+        );
+    }
+
+    @Transactional 
+    public void expireIfPending(Long complaintId) {
+        Complaint complaint = complaintRepository.findById(complaintId)
+            .orElseThrow(() -> new NotFoundException("Complaint", complaintId));
+
+        if (complaint.getStatus() != ComplaintStatus.PENDING_MODERATOR)
+            return;
+
+        complaint.setStatus(ComplaintStatus.EXPIRED);
+        complaintRepository.save(complaint);
+
+        XmlUser rightsholder = xmlUserRepository.findById(complaint.getRightsholderId())
+            .orElseThrow(() -> new NotFoundException("User", complaint.getRightsholderId()));
+        notificationProducer.sendNotification(
+            NotificationEventType.COMPLAINT_EXPIRED,
             rightsholder.getId(),
             rightsholder.getEmail(),
             NotificationPayload.forComplaint(complaint)

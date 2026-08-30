@@ -183,6 +183,18 @@
                     </validation>
                 </xa-datasource>
 
+                <datasource jndi-name="java:/jdbc/QuartzDS" pool-name="QuartzDS">
+                    <connection-url>jdbc:postgresql://host.docker.internal:5432/quartz</connection-url>
+                    <driver-class>org.postgresql.Driver</driver-class>
+                    <driver>lab2-0.0.1-SNAPSHOT.war_org.postgresql.Driver_42_7</driver>
+                    <security user-name="postgres"/>
+                    <validation>
+                        <valid-connection-checker class-name="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLValidConnectionChecker"/>
+                        <validate-on-match>true</validate-on-match>
+                        <exception-sorter class-name="org.jboss.jca.adapters.jdbc.extensions.postgres.PostgreSQLExceptionSorter"/>
+                    </validation>
+                </datasource>
+
                 <drivers>
                     <driver name="h2" module="com.h2database.h2">
                         <xa-datasource-class>org.h2.jdbcx.JdbcDataSource</xa-datasource-class>
