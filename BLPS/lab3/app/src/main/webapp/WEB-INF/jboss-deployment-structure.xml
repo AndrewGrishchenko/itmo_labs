@@ -1,0 +1,14 @@
+<jboss-deployment-structure>
+    <deployment>
+        <exclusions>
+            <module name="org.jboss.as.jpa"/>
+            <module name="org.hibernate"/>
+            <module name="jakarta.persistence.api"/>
+
+        </exclusions>
+
+        <exclude-subsystems>
+            <subsystem name="jpa"/>
+        </exclude-subsystems>
+    </deployment>
+</jboss-deployment-structure>

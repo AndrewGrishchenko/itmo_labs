@@ -1,0 +1,22 @@
+{"properties": [
+  {
+    "name": "notification.rabbitmq.host",
+    "type": "java.lang.String",
+    "description": "A description for 'notification.rabbitmq.host'"
+  },
+  {
+    "name": "notification.rabbitmq.port",
+    "type": "java.lang.String",
+    "description": "A description for 'notification.rabbitmq.port'"
+  },
+  {
+    "name": "notification.rabbitmq.username",
+    "type": "java.lang.String",
+    "description": "A description for 'notification.rabbitmq.username'"
+  },
+  {
+    "name": "notification.rabbitmq.password",
+    "type": "java.lang.String",
+    "description": "A description for 'notification.rabbitmq.password'"
+  }
+]}
