@@ -1,0 +1,22 @@
+spring:
+  application:
+    name: notification-service
+
+  datasource:
+    url: jdbc:postgresql://host.docker.internal:5432/notification
+    username: postgres
+
+  jpa:
+    database-platform: org.hibernate.dialect.PostgreSQLDialect
+    hibernate:
+      ddl-auto: update
+    show-sql: true
+    open-in-view: false
+
+notification:
+  rabbitmq:
+    host: host.docker.internal
+    port: 5672
+    username: notification
+    password: notification
+    queue: notification.events
